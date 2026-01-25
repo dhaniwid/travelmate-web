@@ -12,6 +12,7 @@ import { formatMoney } from '@/lib/utils';
 
 import TransportCard from './TransportCard';
 import ItineraryTimeline from './ItineraryTimeline';
+import DownloadPdfButton from './DownloadPdfButton';
 
 export default function TripResult({ data }: { data: TripResponse }) {
     // 1. Destructuring dengan safety guard
@@ -49,28 +50,36 @@ export default function TripResult({ data }: { data: TripResponse }) {
     if (!trip) return null;
 
     return (
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700" id="trip-result-container">
 
             {/* --- HEADER BANNER --- */}
             <div className="relative h-72 md:h-96 p-8 text-white flex flex-col justify-end">
                 <div
                     className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 bg-slate-900"
-                    style={{ backgroundImage: bgImage ? `url(${bgImage})` : 'none' }}
+                    style={{backgroundImage: bgImage ? `url(${bgImage})` : 'none'}}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+
+                <div className="absolute top-6 right-6 z-20">
+                    <DownloadPdfButton
+                        targetId="trip-result-container"
+                        tripTitle={trip.destination || "Trip-Plan"}
+                    />
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"/>
 
                 <div className="relative z-10 space-y-4">
                     <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-green-400" />
+                        <CheckCircle2 className="w-5 h-5 text-green-400"/>
                         <span className="text-xs font-bold uppercase tracking-widest text-green-400">Trip Ready</span>
                     </div>
                     <h2 className="text-5xl font-black tracking-tight">{trip.destination}</h2>
                     <div className="flex flex-wrap gap-3">
                         <Badge className="bg-white/20 backdrop-blur-md border-0 text-white gap-1 px-3 py-1">
-                            <Calendar className="w-3.5 h-3.5" /> {trip.trip_days} Days
+                            <Calendar className="w-3.5 h-3.5"/> {trip.trip_days} Days
                         </Badge>
                         <Badge className="bg-white/20 backdrop-blur-md border-0 text-white gap-1 px-3 py-1">
-                            <Wallet className="w-3.5 h-3.5" /> {trip.budget_range}
+                            <Wallet className="w-3.5 h-3.5"/> {trip.budget_range}
                         </Badge>
                         <Badge className="bg-white/20 backdrop-blur-md border-0 text-white capitalize px-3 py-1">
                             {trip.style}
@@ -83,7 +92,7 @@ export default function TripResult({ data }: { data: TripResponse }) {
             <div className="p-6 md:p-10">
                 <Tabs defaultValue="itinerary" className="w-full">
                     <TabsList className="grid w-full grid-cols-3 mb-10 p-1 bg-slate-100 rounded-xl">
-                        <TabsTrigger value="itinerary" className="rounded-lg font-bold">Itinerary</TabsTrigger>
+                    <TabsTrigger value="itinerary" className="rounded-lg font-bold">Itinerary</TabsTrigger>
                         <TabsTrigger value="transport" className="rounded-lg font-bold">Logistics</TabsTrigger>
                         <TabsTrigger value="budget" className="rounded-lg font-bold">Budget</TabsTrigger>
                     </TabsList>

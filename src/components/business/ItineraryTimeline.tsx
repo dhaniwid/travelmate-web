@@ -1,72 +1,90 @@
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion";
 import {Badge} from "@/components/ui/badge";
-import {Clock, MapPin, Star} from "lucide-react";
+import {Clock, MapPin} from "lucide-react";
 import {ItineraryItem} from "@/types";
 
 export default function ItineraryTimeline({days}: { days: ItineraryItem[] }) {
     return (
-        <Accordion type="single" collapsible defaultValue="day-1" className="w-full space-y-4">
+        <div className="w-full space-y-8">
             {days.map((day) => (
-                <AccordionItem
+                <div
                     key={day.day}
-                    value={`day-${day.day}`}
-                    className="border rounded-xl px-4 bg-white shadow-sm overflow-hidden"
+                    className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden break-inside-avoid"
                 >
-                    <AccordionTrigger className="hover:no-underline py-4">
-                        <div className="flex items-center gap-4 text-left">
-                            <div
-                                className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">
-                                {day.day}
-                            </div>
-                            <div>
-                                <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Day {day.day}</p>
-                                <h4 className="text-lg font-bold text-slate-800">{day.title}</h4>
-                            </div>
+                    {/* --- HEADER HARI --- */}
+                    <div className="bg-slate-50/50 p-6 border-b border-slate-100 flex items-center gap-4">
+                        {/* 1. KOTAK NOMOR HARI */}
+                        {/* Kembali ke Flexbox murni. Hapus padding top manual. */}
+                        <div
+                            className="flex-shrink-0 w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-blue-200 leading-none">
+                            {day.day}
                         </div>
-                    </AccordionTrigger>
 
-                    <AccordionContent className="pt-2 pb-6 border-t border-dashed">
-                        <div className="relative ml-5 border-l-2 border-slate-100 pl-8 space-y-6 mt-4">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                {/* 2. BADGE HARI */}
+                                {/* Gunakan py-0.5 agar tinggi otomatis seimbang atas-bawah */}
+                                <Badge variant="secondary"
+                                       className="bg-blue-100 text-blue-700 hover:bg-blue-100 px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold flex items-center">
+                                    Day {day.day}
+                                </Badge>
+                            </div>
+                            <h4 className="text-lg md:text-xl font-bold text-slate-800 leading-tight">
+                                {day.title}
+                            </h4>
+                        </div>
+                    </div>
+
+                    {/* --- KONTEN AKTIVITAS --- */}
+                    <div className="p-6 md:p-8">
+                        <div className="relative ml-4 md:ml-6 border-l-2 border-slate-100 pl-8 space-y-8">
                             {day.activities.map((act, i) => (
                                 <div key={i} className="relative group">
-                                    {/* Dot Indicator */}
+                                    {/* Timeline Dot */}
                                     <div
-                                        className="absolute -left-[37px] top-1 w-4 h-4 rounded-full bg-white border-2 border-blue-500 z-10"/>
+                                        className="absolute -left-[39px] top-1 w-5 h-5 rounded-full bg-white border-[3px] border-slate-300 group-hover:border-blue-500 transition-colors duration-300 z-10"/>
 
-                                    <div className="flex flex-col gap-1">
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant="outline" className="text-[10px] font-bold py-0 h-5">
-                                                <Clock className="w-3 h-3 mr-1"/> {act.time}
+                                    <div className="flex flex-col gap-2">
+                                        {/* Time & Tag Row */}
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            {/* 3. JAM */}
+                                            {/* Hapus height fix (h-6). Gunakan padding py-1. Hapus pt manual pada text. */}
+                                            <Badge variant="outline"
+                                                   className="font-bold border-slate-300 text-slate-600 px-2 py-1 flex items-center gap-1.5">
+                                                <Clock className="w-3 h-3"/>
+                                                <span className="text-xs leading-none">{act.time}</span>
                                             </Badge>
+
+                                            {/* 4. TIPE AKTIVITAS (TRANSPORT dll) */}
+                                            {/* Hapus pt-[2px]. Biarkan default font rendering. */}
                                             <span
-                                                className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
-                        {act.type}
-                      </span>
+                                                className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                {act.type}
+                                            </span>
                                         </div>
 
-                                        <h5 className="font-bold text-slate-900">{act.activity}</h5>
+                                        {/* Activity Title */}
+                                        <h5 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                            {act.activity}
+                                        </h5>
 
-                                        <div className="flex items-center gap-1 text-xs text-slate-500">
-                                            <MapPin className="w-3 h-3 text-rose-500"/>
+                                        {/* Location */}
+                                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                            <MapPin className="w-3.5 h-3.5 text-rose-500"/>
                                             {act.place_name}
                                         </div>
 
-                                        {/* Deskripsi lebih simpel, tanpa box abu-abu tebal */}
-                                        <p className="text-xs text-slate-500 italic mt-1 leading-relaxed">
-                                            {act.description}
-                                        </p>
+                                        {/* Description */}
+                                        <div
+                                            className="mt-1 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-600 italic leading-relaxed">
+                                            "{act.description}"
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    </AccordionContent>
-                </AccordionItem>
+                    </div>
+                </div>
             ))}
-        </Accordion>
+        </div>
     );
 }

@@ -25,6 +25,8 @@ export interface Activity {
     type: string;
     description: string;
     place_name: string;
+    latitude: number | null;
+    longitude: number | null;
 }
 
 export interface ItineraryItem {

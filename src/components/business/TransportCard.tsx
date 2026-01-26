@@ -1,50 +1,114 @@
-import { TransportOption } from '@/types';
-import { Card, CardContent } from "@/components/ui/card";
-import { formatMoney } from "@/lib/utils";
-import { Clock, Info } from 'lucide-react';
+import {Card} from "@/components/ui/card";
+import {Badge} from "@/components/ui/badge";
+import {Plane, Train, Bus, Car, ArrowRight, Clock, Wallet, Zap, Star} from "lucide-react";
+import {TransportOption} from "@/types";
 
-export default function TransportCard({ option }: { option: TransportOption }) {
-    // Helper untuk mendapatkan logo airline/transport
-    const getLogo = (name: string) => {
-        const n = name.toLowerCase();
-        if (n.includes('garuda')) return "https://logodownload.org/wp-content/uploads/2015/12/garuda-indonesia-logo-0.png";
-        if (n.includes('lion')) return "https://logodownload.org/wp-content/uploads/2020/03/lion-air-logo-0.png";
-        if (n.includes('citilink')) return "https://logodownload.org/wp-content/uploads/2020/03/citilink-logo-1.png";
-        if (n.includes('whoosh') || n.includes('kai')) return "https://upload.wikimedia.org/wikipedia/commons/5/58/Logo_KAI_Commuter.svg";
-        return null;
-    };
+const getIcon = (text: string) => {
+    const lower = text.toLowerCase();
+    if (lower.includes("flight") || lower.includes("pesawat") || lower.includes("air") || lower.includes("garuda")) return <Plane
+        className="w-4 h-4"/>;
+    if (lower.includes("train") || lower.includes("kereta") || lower.includes("whoosh") || lower.includes("rail")) return <Train
+        className="w-4 h-4"/>;
+    if (lower.includes("bus") || lower.includes("shuttle") || lower.includes("damri")) return <Bus
+        className="w-4 h-4"/>;
+    return <Car className="w-4 h-4"/>;
+};
 
-    const logoUrl = getLogo(option.name);
+// Helper formatRupiah (pastikan ada)
+const formatRupiah = (price: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price);
+};
+
+export default function TransportCard({option}: { option: TransportOption }) {
+    // Split berdasarkan " + "
+    const legs = option.name.split(/\s\+\s/);
+
+    // LOGIC HIGHLIGHT TAG (Diperbarui agar tidak "Comfort" semua)
+    let highlight = null;
+    let cardBorder = "border-slate-200";
+    const typeLower = option.type.toLowerCase();
+
+    if (typeLower.includes("budget") || typeLower.includes("hemat") || typeLower.includes("economy")) {
+        highlight = (
+            <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200 gap-1">
+                <Wallet className="w-3 h-3"/> Budget Saver
+            </Badge>
+        );
+        cardBorder = "border-green-200";
+    } else if (typeLower.includes("fast") || typeLower.includes("express") || typeLower.includes("quick")) {
+        highlight = (
+            <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200 gap-1">
+                <Zap className="w-3 h-3"/> Fastest
+            </Badge>
+        );
+        cardBorder = "border-blue-200";
+    } else {
+        // Default untuk Balanced / Comfort / Lainnya
+        highlight = (
+            <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 border-purple-200 gap-1">
+                <Star className="w-3 h-3"/> Recommended
+            </Badge>
+        );
+        cardBorder = "border-purple-200";
+    }
 
     return (
-        <Card className="mb-4 border-l-4 border-l-orange-400 hover:bg-slate-50 transition-colors">
-            <CardContent className="p-4">
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center gap-4 w-full sm:w-auto">
-                        {/* Logo Container */}
-                        <div className="w-12 h-12 flex-shrink-0 bg-white rounded-lg border p-2 flex items-center justify-center">
-                            {logoUrl ? (
-                                <img src={logoUrl} alt={option.name} className="max-w-full max-h-full object-contain" />
-                            ) : (
-                                <Info className="w-6 h-6 text-slate-300" />
-                            )}
-                        </div>
-
-                        <div>
-                            <h4 className="font-bold text-slate-800">{option.type} - {option.name}</h4>
-                            <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
-                                <span className="flex items-center gap-1"><Clock className="w-3 h-3"/> {option.estimated_time}</span>
-                                <span className="text-green-600 font-medium">{option.pros}</span>
-                            </div>
-                        </div>
+        <Card
+            className={`relative p-5 border shadow-sm hover:shadow-md transition-all duration-300 bg-white mt-4 ${cardBorder}`}>
+            {/* Header: Type Only (Harga Dihilangkan) */}
+            <div className="flex justify-between items-start mb-4">
+                <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                        {highlight}
                     </div>
-
-                    <div className="text-right w-full sm:w-auto border-t sm:border-t-0 pt-2 sm:pt-0">
-                        <p className="text-[10px] text-gray-400 uppercase">Est. Price</p>
-                        <p className="font-bold text-orange-600 text-lg">IDR {formatMoney(option.price)}</p>
+                    <div className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-slate-400"/>
+                        <span>Total Est. {option.estimated_time}</span>
                     </div>
                 </div>
-            </CardContent>
+                <div className="text-right">
+                    <div className="text-lg font-black text-slate-900 tracking-tight">
+                        {formatRupiah(Number(option.price))}
+                    </div>
+                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">per person</div>
+                </div>
+            </div>
+
+            {/* Route Visualizer (Timeline Horizontal) */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 scrollbar-hide">
+                {legs.map((leg, index) => {
+                    // Coba pisahkan Nama dan (Waktu)
+                    // Contoh: "Train to Gambir (3h)" -> name: "Train to Gambir", time: "3h"
+                    const timeMatch = leg.match(/\((.*?)\)/);
+                    const time = timeMatch ? timeMatch[1] : "";
+                    const name = leg.replace(/\(.*?\)/, "").trim();
+
+                    return (
+                        <div key={index}
+                             className="flex items-center flex-shrink-0 animate-in fade-in slide-in-from-left-2 duration-500"
+                             style={{animationDelay: `${index * 100}ms`}}>
+                            <div className="flex flex-col items-center gap-1">
+                                <div
+                                    className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-2 rounded-lg hover:bg-white hover:border-slate-300 transition-colors">
+                                    <div className="text-slate-500">{getIcon(name)}</div>
+                                    <span className="text-xs font-bold text-slate-700 whitespace-nowrap">{name}</span>
+                                </div>
+                                {/* Tampilkan waktu per segmen kecil di bawah box */}
+                                {time && <span className="text-[9px] font-mono text-slate-400">{time}</span>}
+                            </div>
+
+                            {index < legs.length - 1 &&
+                                <ArrowRight className="w-3 h-3 text-slate-300 mx-2 mb-3 flex-shrink-0"/>}
+                        </div>
+                    );
+                })}
+            </div>
+
+            <div className="mt-2 pt-3 border-t border-slate-50">
+                <p className="text-xs text-slate-500 italic">
+                    "{option.pros}"
+                </p>
+            </div>
         </Card>
     );
 }

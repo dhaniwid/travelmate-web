@@ -19,19 +19,38 @@ export interface Trip {
     created_at: string;
 }
 
+export interface MorningBriefing {
+    weather_forecast: string;
+    outfit_tip: string;
+    local_vibe: string;
+}
+
+export interface ActivityAlternative {
+    activity: string;
+    type: string;
+    description: string;
+    place_name: string;
+}
+
 export interface Activity {
     time: string;
     activity: string;
     type: string;
     description: string;
     place_name: string;
-    latitude: number | null;
-    longitude: number | null;
+    latitude?: number;
+    longitude?: number;
+
+    transit_time?: string;   // e.g. "15 min"
+    transit_method?: string; // e.g. "Walk"
+    transit_price?: number;  // e.g. 15000
+    alternative?: ActivityAlternative | null; // Shadow Option
 }
 
 export interface ItineraryItem {
     day: number;
     title: string;
+    morning_briefing?: MorningBriefing;
     activities: Activity[];
 }
 

@@ -1,13 +1,17 @@
 'use client';
 
 import React, {useEffect, useState} from 'react';
+import {useRouter} from 'next/navigation';
+import {useUser, useAuth} from '@clerk/nextjs'; // <--- 1. Import Clerk Auth
 import {TripResponse, BudgetBreakdown} from '@/types';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {Badge} from '@/components/ui/badge';
+import {Button} from '@/components/ui/button'; // <--- 2. Import Button
 import {Card, CardContent} from "@/components/ui/card";
 import {
     Calendar, Wallet, Hotel, Plane, Info, CheckCircle2, LucideProps,
-    Utensils, Ticket, MoreHorizontal, Calculator, MapPin, Star
+    Utensils, Ticket, MoreHorizontal, Calculator, MapPin, Star,
+    Save, Loader2 as LoaderIcon // <--- 3. Import Icons
 } from 'lucide-react';
 import {getDestinationImage} from '@/lib/images';
 import {formatMoney} from '@/lib/utils';
@@ -15,18 +19,25 @@ import {formatMoney} from '@/lib/utils';
 import TransportCard from './TransportCard';
 import ItineraryTimeline from './ItineraryTimeline';
 import DownloadPdfButton from './DownloadPdfButton';
-import dynamic from 'next/dynamic';
 
-const ItineraryMap = dynamic(() => import('./ItineraryMap'), {
-    ssr: false,
-    loading: () => <div className="h-[400px] w-full bg-slate-100 animate-pulse rounded-2xl flex items-center justify-center text-slate-400">Loading Map...</div>
-});
+import {tripService} from '@/services/trip';
 
-export default function TripResult({data}: { data: TripResponse }) {
-    // 1. Destructuring dengan safety guard
+interface TripResultProps {
+    data: TripResponse;
+    isSavedView?: boolean;
+}
+
+export default function TripResult({data, isSavedView = false}: TripResultProps) {
     const trip = data?.trip;
     const plan = data?.plan;
     const [bgImage, setBgImage] = useState<string>("");
+
+    // --- STATE & HOOKS FOR SAVE FEATURE ---
+    const {user, isLoaded: isUserLoaded} = useUser();
+    const {getToken} = useAuth();
+    const router = useRouter();
+    const [isSaving, setIsSaving] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
 
     useEffect(() => {
         if (trip?.destination) {
@@ -34,7 +45,6 @@ export default function TripResult({data}: { data: TripResponse }) {
         }
     }, [trip?.destination]);
 
-    // 2. Helper Perhitungan Budget yang Aman (Anti-Crash)
     const calculateTotal = (breakdown: BudgetBreakdown | undefined) => {
         if (!breakdown) return 0;
         return (breakdown.transport || 0) +
@@ -45,6 +55,42 @@ export default function TripResult({data}: { data: TripResponse }) {
     };
 
     const totalBudget = calculateTotal(plan?.budget_breakdown);
+
+    const handleSaveTrip = async () => {
+        if (!isUserLoaded || !user) {
+            alert("Please sign in to save your trip!");
+            return;
+        }
+
+        if (!plan || !trip) return;
+
+        setIsSaving(true);
+        try {
+            const token = await getToken();
+
+            const payload = {
+                user_id: user.id,
+                destination: trip.destination,
+                origin: trip.origin,
+                start_date: trip.start_date,
+                trip_days: trip.trip_days,
+                style: trip.style,
+                budget_range: trip.budget_range,
+                plan_data: plan
+            };
+
+            await tripService.saveTrip(payload, token);
+            setIsSaved(true);
+
+            // Opsional: Redirect ke history atau cukup beri notifikasi
+            // router.push('/history');
+        } catch (error) {
+            console.error("Failed to save:", error);
+            alert("Failed to save trip. Please try again.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const budgetConfig: Record<string, { icon: React.ReactNode, color: string, lightBg: string }> = {
         transport: {icon: <Plane className="w-4 h-4"/>, color: "bg-blue-600", lightBg: "bg-blue-50 text-blue-700"},
@@ -62,7 +108,7 @@ export default function TripResult({data}: { data: TripResponse }) {
         },
     };
 
-    // Jika data trip belum ada sama sekali (awal stream)
+    // Jika data trip belum ada sama sekali
     if (!trip) return null;
 
     return (
@@ -77,11 +123,45 @@ export default function TripResult({data}: { data: TripResponse }) {
                     style={{backgroundImage: bgImage ? `url(${bgImage})` : 'none'}}
                 />
 
-                <div className="absolute top-6 right-6 z-20">
+                {/* --- ACTION BUTTONS (TOP RIGHT) --- */}
+                <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
+                    {/* Tombol PDF */}
                     <DownloadPdfButton
                         targetId="trip-result-container"
                         tripTitle={trip.destination || "Trip-Plan"}
                     />
+
+                    {/* Tombol Save (NEW) */}
+                    {!isSavedView && (
+
+                        <Button
+                            onClick={handleSaveTrip}
+                            disabled={isSaving || isSaved}
+                            variant="secondary" // Agar terlihat kontras di atas background gelap/foto
+                            className={`rounded-full px-5 font-bold shadow-lg transition-all ${
+                                isSaved
+                                    ? "bg-green-500 text-white hover:bg-green-600 border-none"
+                                    : "bg-white/90 backdrop-blur text-slate-900 hover:bg-white"
+                            }`}
+                        >
+                            {isSaving ? (
+                                <>
+                                    <LoaderIcon className="w-4 h-4 mr-2 animate-spin"/>
+                                    Saving...
+                                </>
+                            ) : isSaved ? (
+                                <>
+                                    <CheckCircle2 className="w-4 h-4 mr-2"/>
+                                    Saved
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4 mr-2"/>
+                                    Save Trip
+                                </>
+                            )}
+                        </Button>
+                    )}
                 </div>
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"/>
@@ -109,6 +189,7 @@ export default function TripResult({data}: { data: TripResponse }) {
             {/* --- CONTENT SECTION --- */}
             <div className="p-6 md:p-10">
                 <Tabs defaultValue="itinerary" className="w-full">
+                    {/* Tabs List (Sama seperti sebelumnya) */}
                     <TabsList className="grid w-full grid-cols-3 mb-10 p-1 bg-slate-100 rounded-xl">
                         <TabsTrigger value="itinerary" className="rounded-lg font-bold">Itinerary</TabsTrigger>
                         <TabsTrigger value="transport" className="rounded-lg font-bold">Logistics</TabsTrigger>
@@ -116,19 +197,11 @@ export default function TripResult({data}: { data: TripResponse }) {
                     </TabsList>
 
                     {/* TAB 1: ITINERARY */}
-                    <TabsContent value="itinerary" className="focus-visible:outline-none space-y-8">
-
-                        {/* --- MAP SECTION --- */}
-                        <div className="bg-white p-1 rounded-3xl border border-slate-200 shadow-sm">
-                            <ItineraryMap days={plan?.itinerary ?? []} />
-                            <div className="p-3 text-center text-xs text-slate-400 italic">
-                                *Map markers are estimated based on location names.
-                            </div>
-                        </div>
-
-                        {/* TIMELINE (YANG LAMA) */}
-                        <ItineraryTimeline days={plan?.itinerary ?? []} />
-
+                    <TabsContent value="itinerary" className="focus-visible:outline-none">
+                        <ItineraryTimeline
+                            days={plan?.itinerary ?? []}
+                            startDate={trip?.start_date}
+                        />
                     </TabsContent>
 
                     {/* TAB 2: LOGISTICS (TRANSPORT & STAY) */}
@@ -158,21 +231,23 @@ export default function TripResult({data}: { data: TripResponse }) {
                                     className="w-5 h-5 text-indigo-600"/></div>
                                 Recommended Stays
                             </h3>
-                            {/* --- UPDATE ACCOMMODATION CARD (NO PRICE) --- */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                 {(plan?.accommodation_options ?? []).map((acc, i) => (
-                                    <Card key={i} className="group overflow-hidden border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                                        {/* Header Gambar */}
+                                    <Card key={i}
+                                          className="group overflow-hidden border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                                         <div className="h-32 bg-slate-100 relative overflow-hidden">
                                             {acc.image_url ? (
-                                                <img src={acc.image_url} alt={acc.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                                <img src={acc.image_url} alt={acc.name}
+                                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
                                             ) : (
-                                                <div className="w-full h-full bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center">
-                                                    <Hotel className="w-12 h-12 text-indigo-200" />
+                                                <div
+                                                    className="w-full h-full bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center">
+                                                    <Hotel className="w-12 h-12 text-indigo-200"/>
                                                 </div>
                                             )}
-                                            <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md shadow-sm flex items-center gap-1">
-                                                <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                                            <div
+                                                className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md shadow-sm flex items-center gap-1">
+                                                <Star className="w-3 h-3 text-amber-500 fill-amber-500"/>
                                                 <span className="text-xs font-bold text-slate-800">{acc.rating}</span>
                                             </div>
                                         </div>
@@ -181,7 +256,7 @@ export default function TripResult({data}: { data: TripResponse }) {
                                             <div className="mb-3">
                                                 <h4 className="font-bold text-slate-900 leading-tight text-lg mb-1 group-hover:text-indigo-600 transition-colors">{acc.name}</h4>
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                                                    <MapPin className="w-3 h-3" /> {acc.location_area}
+                                                    <MapPin className="w-3 h-3"/> {acc.location_area}
                                                 </p>
                                             </div>
 
@@ -189,9 +264,9 @@ export default function TripResult({data}: { data: TripResponse }) {
                                                 "{acc.description}"
                                             </p>
 
-                                            {/* Badge Type (Budget/Comfort/Luxury) pengganti harga */}
                                             <div className="mt-4 pt-3 border-t border-slate-50">
-                                                <Badge variant="secondary" className="text-[10px] font-bold bg-slate-100 text-slate-600">
+                                                <Badge variant="secondary"
+                                                       className="text-[10px] font-bold bg-slate-100 text-slate-600">
                                                     {acc.type}
                                                 </Badge>
                                             </div>
@@ -205,8 +280,7 @@ export default function TripResult({data}: { data: TripResponse }) {
                     {/* TAB 3: BUDGET BREAKDOWN */}
                     <TabsContent value="budget" className="focus-visible:outline-none outline-none">
                         <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-500">
-
-                            {/* Ringkasan Total dengan Card yang Menonjol */}
+                            {/* Summary Card */}
                             <div
                                 className="relative overflow-hidden bg-gradient-to-br from-blue-700 to-indigo-900 rounded-3xl p-8 text-white shadow-2xl shadow-blue-200">
                                 <div
@@ -221,11 +295,11 @@ export default function TripResult({data}: { data: TripResponse }) {
                                         <Calculator className="w-10 h-10 text-blue-200"/>
                                     </div>
                                 </div>
-                                {/* Dekorasi Background */}
                                 <div
                                     className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"/>
                             </div>
 
+                            {/* Breakdown Items */}
                             {plan?.budget_breakdown ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {Object.entries(plan.budget_breakdown).map(([key, val]) => {
@@ -275,7 +349,6 @@ export default function TripResult({data}: { data: TripResponse }) {
                                 </div>
                             )}
 
-                            {/* Info Tip */}
                             <p className="text-center text-[10px] text-slate-400 italic">
                                 *This estimation is based on real-time market data and AI analysis
                                 for {trip?.destination}.
@@ -284,7 +357,7 @@ export default function TripResult({data}: { data: TripResponse }) {
                     </TabsContent>
                 </Tabs>
 
-                {/* --- DECISION NOTES / AI INSIGHTS --- */}
+                {/* AI INSIGHTS */}
                 {plan?.decision_notes && plan.decision_notes.length > 0 && (
                     <div className="mt-12 p-6 bg-blue-50 rounded-2xl border border-blue-100 flex gap-4 items-start">
                         <Info className="w-6 h-6 text-blue-500 mt-1 flex-shrink-0"/>
@@ -306,16 +379,9 @@ export default function TripResult({data}: { data: TripResponse }) {
     );
 }
 
-/**
- * Komponen Loader internal.
- * Menggunakan LucideProps untuk memastikan kompatibilitas tipe data SVG
- * dan menghilangkan error "not assignable to ReactNode".
- */
+// Komponen Loader internal
 function Loader2({className, ...props}: LucideProps) {
     return (
-        <Info
-            className={`animate-spin ${className || ''}`}
-            {...props}
-        />
+        <Info className={`animate-spin ${className || ''}`} {...props} />
     );
 }

@@ -2,6 +2,8 @@ import {Card} from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
 import {Plane, Train, Bus, Car, ArrowRight, Clock, Wallet, Zap, Star} from "lucide-react";
 import {TransportOption} from "@/types";
+import {ExternalLink} from "lucide-react";
+import {bookingHelper} from "@/lib/booking";
 
 const getIcon = (text: string) => {
     const lower = text.toLowerCase();
@@ -16,7 +18,7 @@ const getIcon = (text: string) => {
 
 // Helper formatRupiah (pastikan ada)
 const formatRupiah = (price: number) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price);
+    return new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', maximumFractionDigits: 0}).format(price);
 };
 
 export default function TransportCard({option}: { option: TransportOption }) {
@@ -51,6 +53,16 @@ export default function TransportCard({option}: { option: TransportOption }) {
         );
         cardBorder = "border-purple-200";
     }
+
+    // Kita butuh props tambahan: origin, destination, date
+    // Tapi jika TransportCard hanya menerima 'option', kita mungkin perlu passing data context dari parent.
+    // UNTUK SIMPLIFIKASI SEKARANG: Kita arahkan ke Google Search nama transportnya saja dulu.
+
+    const handleBook = () => {
+        // Membuka tab baru ke Google Search untuk opsi ini
+        const url = `https://www.google.com/search?q=${encodeURIComponent(option.name + " tickets price")}`;
+        window.open(url, '_blank');
+    };
 
     return (
         <Card

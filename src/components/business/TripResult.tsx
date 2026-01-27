@@ -22,6 +22,9 @@ import DownloadPdfButton from './DownloadPdfButton';
 
 import {tripService} from '@/services/trip';
 
+import { ExternalLink } from 'lucide-react';
+import { bookingHelper } from '@/lib/booking';
+
 interface TripResultProps {
     data: TripResponse;
     isSavedView?: boolean;
@@ -227,52 +230,98 @@ export default function TripResult({data, isSavedView = false}: TripResultProps)
                         {/* Accommodation Section */}
                         <section>
                             <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-slate-800">
-                                <div className="p-2 bg-indigo-100 rounded-lg"><Hotel
-                                    className="w-5 h-5 text-indigo-600"/></div>
+                                <div className="p-2 bg-indigo-100 rounded-lg">
+                                    <Hotel className="w-5 h-5 text-indigo-600"/>
+                                </div>
                                 Recommended Stays
                             </h3>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                {(plan?.accommodation_options ?? []).map((acc, i) => (
-                                    <Card key={i}
-                                          className="group overflow-hidden border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                                        <div className="h-32 bg-slate-100 relative overflow-hidden">
-                                            {acc.image_url ? (
-                                                <img src={acc.image_url} alt={acc.name}
-                                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
-                                            ) : (
-                                                <div
-                                                    className="w-full h-full bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center">
-                                                    <Hotel className="w-12 h-12 text-indigo-200"/>
+                                {(plan?.accommodation_options ?? []).map((acc, i) => {
+
+                                    // 1. Generate Link Pencarian Hotel (Google Hotels)
+                                    // Menggunakan helper yang baru kita buat
+                                    const bookingUrl = bookingHelper.getHotelLink(
+                                        acc,
+                                        trip?.destination || "",
+                                        trip?.start_date || ""
+                                    );
+
+                                    return (
+                                        // 2. Bungkus Card dengan Link (<a> tag)
+                                        <a
+                                            key={i}
+                                            href={bookingUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block group h-full cursor-pointer" // block agar area klik luas
+                                        >
+                                            <Card
+                                                className="h-full group overflow-hidden border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative">
+
+                                                {/* Header Gambar */}
+                                                <div className="h-32 bg-slate-100 relative overflow-hidden">
+                                                    {acc.image_url ? (
+                                                        <img
+                                                            src={acc.image_url}
+                                                            alt={acc.name}
+                                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                        />
+                                                    ) : (
+                                                        <div
+                                                            className="w-full h-full bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center">
+                                                            <Hotel className="w-12 h-12 text-indigo-200"/>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Rating Badge (Kanan Atas) */}
+                                                    <div
+                                                        className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md shadow-sm flex items-center gap-1 z-10">
+                                                        <Star className="w-3 h-3 text-amber-500 fill-amber-500"/>
+                                                        <span
+                                                            className="text-xs font-bold text-slate-800">{acc.rating}</span>
+                                                    </div>
+
+                                                    {/* 3. New Visual Cue: External Link Icon (Kiri Atas - Muncul saat Hover) */}
+                                                    <div
+                                                        className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur p-1.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">
+                                                        <ExternalLink className="w-3.5 h-3.5 text-blue-600"/>
+                                                    </div>
                                                 </div>
-                                            )}
-                                            <div
-                                                className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md shadow-sm flex items-center gap-1">
-                                                <Star className="w-3 h-3 text-amber-500 fill-amber-500"/>
-                                                <span className="text-xs font-bold text-slate-800">{acc.rating}</span>
-                                            </div>
-                                        </div>
 
-                                        <CardContent className="p-5">
-                                            <div className="mb-3">
-                                                <h4 className="font-bold text-slate-900 leading-tight text-lg mb-1 group-hover:text-indigo-600 transition-colors">{acc.name}</h4>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                                                    <MapPin className="w-3 h-3"/> {acc.location_area}
-                                                </p>
-                                            </div>
+                                                <CardContent
+                                                    className="p-5 flex flex-col justify-between h-[calc(100%-8rem)]">
+                                                    <div>
+                                                        <div className="mb-3">
+                                                            <h4 className="font-bold text-slate-900 leading-tight text-lg mb-1 group-hover:text-indigo-600 transition-colors">
+                                                                {acc.name}
+                                                            </h4>
+                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                                                <MapPin className="w-3 h-3"/> {acc.location_area}
+                                                            </p>
+                                                        </div>
 
-                                            <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
-                                                "{acc.description}"
-                                            </p>
+                                                        <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed mb-4">
+                                                            "{acc.description}"
+                                                        </p>
+                                                    </div>
 
-                                            <div className="mt-4 pt-3 border-t border-slate-50">
-                                                <Badge variant="secondary"
-                                                       className="text-[10px] font-bold bg-slate-100 text-slate-600">
-                                                    {acc.type}
-                                                </Badge>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                                                    <div
+                                                        className="pt-3 border-t border-slate-50 flex justify-between items-center">
+                                                        <Badge variant="secondary"
+                                                               className="text-[10px] font-bold bg-slate-100 text-slate-600">
+                                                            {acc.type}
+                                                        </Badge>
+                                                        <span
+                                                            className="text-[10px] font-bold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Check Rates →
+                                </span>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        </a>
+                                    );
+                                })}
                             </div>
                         </section>
                     </TabsContent>

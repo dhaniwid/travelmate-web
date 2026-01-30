@@ -4,6 +4,7 @@
 
 @layer base {
     :root {
+        /* --- THEME 1: DEFAULT (BLUE - PROFESSIONAL) --- */
         --background: 0 0% 100%;
         --foreground: 222.2 84% 4.9%;
 
@@ -13,7 +14,7 @@
         --popover: 0 0% 100%;
         --popover-foreground: 222.2 84% 4.9%;
 
-        --primary: 222.2 47.4% 11.2%;
+        --primary: 221.2 83.2% 53.3%; /* Blue-600 */
         --primary-foreground: 210 40% 98%;
 
         --secondary: 210 40% 96.1%;
@@ -30,39 +31,63 @@
 
         --border: 214.3 31.8% 91.4%;
         --input: 214.3 31.8% 91.4%;
-        --ring: 222.2 84% 4.9%;
+        --ring: 221.2 83.2% 53.3%;
 
         --radius: 0.5rem;
     }
 
-    .dark {
-        --background: 222.2 84% 4.9%;
-        --foreground: 210 40% 98%;
+    /* --- THEME 2: MODERN EXPLORER (TEAL/ORANGE) --- */
+    [data-theme="teal"] {
+        --background: 0 0% 100%; /* Pure White */
+        --foreground: 180 50% 10%; /* Dark Teal Text */
 
-        --card: 222.2 84% 4.9%;
-        --card-foreground: 210 40% 98%;
+        --card: 0 0% 100%;
+        --card-foreground: 180 50% 10%;
 
-        --popover: 222.2 84% 4.9%;
-        --popover-foreground: 210 40% 98%;
+        --primary: 173 58% 39%; /* Teal-600 */
+        --primary-foreground: 0 0% 100%;
 
-        --primary: 210 40% 98%;
-        --primary-foreground: 222.2 47.4% 11.2%;
+        --secondary: 32 95% 94%; /* Light Orange (Background) */
+        --secondary-foreground: 24 95% 53%; /* Vivid Orange (Text) */
 
-        --secondary: 217.2 32.6% 17.5%;
-        --secondary-foreground: 210 40% 98%;
+        --muted: 180 20% 96%;
+        --muted-foreground: 180 10% 40%;
 
-        --muted: 217.2 32.6% 17.5%;
-        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 32 95% 94%; /* Orange tint for hover */
+        --accent-foreground: 180 50% 10%;
 
-        --accent: 217.2 32.6% 17.5%;
-        --accent-foreground: 210 40% 98%;
+        --border: 180 20% 90%;
+        --input: 180 20% 90%;
+        --ring: 173 58% 39%;
 
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 210 40% 98%;
+        --radius: 0.75rem; /* Lebih bulat (playful) */
+    }
 
-        --border: 217.2 32.6% 17.5%;
-        --input: 217.2 32.6% 17.5%;
-        --ring: 212.7 26.8% 83.9%;
+    /* --- THEME 3: TECH FUTURE (VIOLET/FUCHSIA) --- */
+    [data-theme="violet"] {
+        --background: 260 20% 98%; /* Very light purple tint */
+        --foreground: 260 25% 10%;
+
+        --card: 0 0% 100%;
+        --card-foreground: 260 25% 10%;
+
+        --primary: 262 83% 58%; /* Violet-600 */
+        --primary-foreground: 210 40% 98%;
+
+        --secondary: 290 30% 96%; /* Fuchsia tint */
+        --secondary-foreground: 262 83% 58%;
+
+        --muted: 260 20% 96%;
+        --muted-foreground: 260 10% 45%;
+
+        --accent: 260 20% 96%;
+        --accent-foreground: 262 83% 58%;
+
+        --border: 260 20% 90%;
+        --input: 260 20% 90%;
+        --ring: 262 83% 58%;
+
+        --radius: 0.3rem; /* Lebih kotak (techy/sharp) */
     }
 }
 
@@ -70,7 +95,6 @@
     * {
         @apply border-border;
     }
-
     body {
         @apply bg-background text-foreground;
     }

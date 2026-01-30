@@ -9,6 +9,7 @@ export interface TripRequest {
 
 export interface Trip {
     id: string;
+    user_id: string;
     origin: string;
     destination: string;
     start_date: string;
@@ -18,6 +19,8 @@ export interface Trip {
     budget_range: string;
     created_at: string;
 }
+
+// --- ITINERARY INTERFACES ---
 
 export interface MorningBriefing {
     weather_forecast: string;
@@ -41,10 +44,10 @@ export interface Activity {
     latitude?: number;
     longitude?: number;
 
-    transit_time?: string;   // e.g. "15 min"
-    transit_method?: string; // e.g. "Walk"
-    transit_price?: number;  // e.g. 15000
-    alternative?: ActivityAlternative | null; // Shadow Option
+    transit_time?: string;
+    transit_method?: string;
+    transit_price?: number;
+    alternative?: ActivityAlternative | null;
 }
 
 export interface ItineraryItem {
@@ -54,37 +57,44 @@ export interface ItineraryItem {
     activities: Activity[];
 }
 
+// --- NEW LOGISTICS INTERFACES ---
+
+export interface LogisticsContext {
+    distance_km: number;
+    route_type: string; // NEW
+    warning_alert: string;
+}
+
+export interface TransportBreakdown {
+    first_mile: string; // e.g. "Taxi to Halim"
+    main_leg: string;   // e.g. "Whoosh to Padalarang"
+    last_mile: string;  // e.g. "Feeder to City"
+}
+
+export interface HubDetails {
+    departure_node: string;
+    arrival_node: string;
+}
+
 export interface TransportOption {
-    type: string;
+    strategy_tag: string;
     name: string;
-    price: number;
-    estimated_time: string;
+    price_tier: 'LOW' | 'MED' | 'HIGH';
+    total_duration_display: string; // Renamed from estimated_time
+    breakdown: TransportBreakdown;
+    operators_hint: string;         // NEW
+    booking_query: string;          // NEW
     pros: string;
 }
 
 export interface AccommodationOption {
-    name: string;
     type: string;
-    rating: string;
-    price_per_night: number;
-    location_area: string;
-    description: string;
-    image_url?: string;
+    area_name: string;             // Renamed from location_area
+    recommendation_reason: string; // Renamed from location_note
+    vibe: string;                  // Renamed from description
 }
 
-export interface TripPlan {
-    trip_id: string;
-    itinerary: ItineraryItem[];
-    budget_breakdown: BudgetBreakdown;
-    transport_options: TransportOption[];
-    accommodation_options: AccommodationOption[];
-    decision_notes: string[];
-}
-
-export interface TripResponse {
-    trip: Trip;
-    plan: TripPlan;
-}
+// --- PLAN & RESPONSE ---
 
 export interface BudgetBreakdown {
     transport: number;
@@ -92,4 +102,24 @@ export interface BudgetBreakdown {
     food: number;
     tickets: number;
     misc: number;
+}
+
+export interface TripPlan {
+    trip_id: string;
+    itinerary: ItineraryItem[];
+    budget_breakdown: BudgetBreakdown;
+    decision_notes: string[];
+    total: number;
+
+    // Logistics Section Updated
+    logistics_context?: LogisticsContext;
+    transport_options: TransportOption[];
+
+    strategic_accommodation: AccommodationOption[];
+}
+
+export interface TripResponse {
+    trip: Trip;
+    plan: TripPlan;
+    is_saved: boolean;
 }

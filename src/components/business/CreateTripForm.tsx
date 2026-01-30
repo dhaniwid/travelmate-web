@@ -1,76 +1,97 @@
 'use client';
 
-import React from 'react';
-import {useState} from 'react';
-import {useMutation} from '@tanstack/react-query';
-import {tripService} from '@/services/trip';
-import {TripRequest} from '@/types';
+import React, { useState } from 'react';
+import { TripRequest } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
+import { toast } from "sonner";
+import { ProgressStep } from './GenerationProgress';
+import { useUser } from "@clerk/nextjs";
 
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {Label} from '@/components/ui/label';
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
-import {Slider} from '@/components/ui/slider';
-import {Switch} from '@/components/ui/switch';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {Loader2, Plane, Sparkles, MapPin, Wallet} from 'lucide-react';
+// Import Modular Components
+import DestinationSection from './create-trip/DestinationSection';
+import DateDurationSection from './create-trip/DateDurationSection';
+import VibeSection from './create-trip/VibeSection';
+import LoadingOverlay from './create-trip/LoadingOverlay';
 
-import {toast} from "sonner";
-import {formatMoney} from '@/lib/utils';
+export default function CreateTripForm({ onSuccess }: { onSuccess: (data: any) => void }) {
+    const { user } = useUser();
 
-import GenerationProgress, {ProgressStep} from './GenerationProgress';
-import ItinerarySkeleton from './ItinerarySkeleton';
-
-// -------------------------
-
-export default function CreateTripForm({onSuccess}: { onSuccess: (data: any) => void }) {
+    // --- FORM STATE ---
     const [isAutoDest, setIsAutoDest] = useState(false);
-    const [isAutoBudget, setIsAutoBudget] = useState(true);
+    const [isFlexibleDate, setIsFlexibleDate] = useState(false);
     const [isStreaming, setIsStreaming] = useState(false);
 
-    const [steps, setSteps] = useState<ProgressStep[]>([
-        {id: 'meta', label: 'Initializing', status: 'pending'},
-        {id: 'iti', label: 'Generating Itinerary', status: 'pending'},
-        {id: 'log', label: 'Finding Logistics', status: 'pending'},
-        {id: 'final', label: 'Fetching Photos', status: 'pending'},
-    ]);
+    // Sliders
+    const [paceVal, setPaceVal] = useState([50]);
+    const [socialVal, setSocialVal] = useState([50]);
 
+    // Data
     const [formData, setFormData] = useState<TripRequest>({
         origin: 'Jakarta',
         destination: '',
         start_date: new Date().toISOString().split('T')[0],
-        trip_days: 5,
-        style: 'general',
+        trip_days: 3,
+        style: '',
         budget: 0,
     });
 
+    // Loading Steps
+    const [steps, setSteps] = useState<ProgressStep[]>([
+        { id: 'meta', label: 'Analyzing Vibe...', status: 'pending' },
+        { id: 'iti', label: 'Crafting Experience', status: 'pending' },
+        { id: 'log', label: 'Planning Strategy', status: 'pending' },
+        { id: 'final', label: 'Finalizing', status: 'pending' },
+    ]);
+
     const updateStep = (id: string, status: 'loading' | 'complete') => {
-        setSteps(prev => prev.map(step => step.id === id ? {...step, status} : step));
+        setSteps(prev => prev.map(step => step.id === id ? { ...step, status } : step));
     };
 
-    const getTodayDate = () => {
-        const today = new Date();
-        return today.toISOString().split('T')[0];
+    // Helper: Generate Vibe String for AI
+    const generateStyleString = () => {
+        let styleDesc = [];
+        // Pace Logic
+        if (paceVal[0] < 30) styleDesc.push("Very Relaxed, mostly Staycation (60% Hotel time)");
+        else if (paceVal[0] < 70) styleDesc.push("Balanced mix of rest and activity");
+        else styleDesc.push("Fast paced, heavy exploration, maximize every hour");
+
+        // Social Logic
+        if (socialVal[0] < 30) styleDesc.push("Hidden gems, quiet places, avoid crowds");
+        else if (socialVal[0] < 70) styleDesc.push("Mix of popular spots and local secrets");
+        else styleDesc.push("Trendy spots, viral locations, social vibes");
+
+        return styleDesc.join(", ");
     };
 
+    // --- SUBMISSION LOGIC ---
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsStreaming(true);
 
-        // Reset steps
-        setSteps(prev => prev.map(s => ({...s, status: 'pending'})));
+        if (!isAutoDest && !formData.destination) {
+            toast.error("Where are we going? Or choose 'Surprise Me'!");
+            return;
+        }
+
+        setIsStreaming(true);
+        setSteps(prev => prev.map(s => ({ ...s, status: 'pending' })));
         updateStep('meta', 'loading');
 
+        const finalStyle = generateStyleString();
         const payload = {
             ...formData,
             destination: isAutoDest ? '' : formData.destination,
-            budget: isAutoBudget ? 0 : formData.budget,
+            style: finalStyle,
+            start_date: isFlexibleDate ? new Date().toISOString().split('T')[0] : formData.start_date,
+            budget: 0,
+            user_id: user?.id || "",
         };
 
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/trips/stream`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
 
@@ -79,24 +100,28 @@ export default function CreateTripForm({onSuccess}: { onSuccess: (data: any) => 
             const reader = response.body?.getReader();
             const decoder = new TextDecoder();
 
-            let finalData: any = {trip: payload, plan: {}};
+            let finalData: any = { trip: payload, plan: {} };
+            let buffer = '';
 
             while (true) {
-                const {value, done} = await reader!.read();
+                const { value, done } = await reader!.read();
                 if (done) break;
 
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n');
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
 
-                lines.forEach(line => {
-                    if (!line.trim()) return;
+                for (const line of lines) {
+                    const trimmedLine = line.trim();
+                    if (!trimmedLine) continue;
+
                     try {
-                        const event = JSON.parse(line);
-
+                        const event = JSON.parse(trimmedLine);
                         if (event.type === 'metadata') {
                             updateStep('meta', 'complete');
                             updateStep('iti', 'loading');
                             finalData.trip.id = event.data.trip_id;
+                            if (event.data.destination) finalData.trip.destination = event.data.destination;
                         } else if (event.type === 'itinerary') {
                             updateStep('iti', 'complete');
                             updateStep('log', 'loading');
@@ -104,193 +129,74 @@ export default function CreateTripForm({onSuccess}: { onSuccess: (data: any) => 
                         } else if (event.type === 'logistics') {
                             updateStep('log', 'complete');
                             updateStep('final', 'loading');
-                            finalData.plan = {...finalData.plan, ...event.data};
+                            finalData.plan = { ...finalData.plan, ...event.data };
+                        } else if (event.type === 'packing_list') {
+                            finalData.plan.packing_list = event.data;
                         }
                     } catch (e) {
-                        console.error("Error parsing stream chunk", e);
+                        console.warn("⚠️ JSON Parse warning:", trimmedLine);
                     }
-                });
+                }
             }
 
             updateStep('final', 'complete');
-            toast.success("Trip successfully crafted!");
-
-            // Berikan sedikit delay agar user bisa melihat semua centang hijau
+            toast.success("Itinerary Ready! 🚀");
             setTimeout(() => {
                 onSuccess(finalData);
                 setIsStreaming(false);
             }, 800);
 
         } catch (error) {
+            console.error("Stream Error:", error);
             setIsStreaming(false);
-            toast.error("Failed to generate plan. Please try again.");
+            toast.error("AI is taking a nap. Please try again.");
         }
     };
 
     if (isStreaming) {
-        return (
-            <div className="w-full max-w-2xl mx-auto space-y-6">
-                <Card className="border-t-4 border-t-blue-600 shadow-xl">
-                    <CardHeader>
-                        <CardTitle className="text-center text-blue-600 animate-pulse">
-                            Generating Your Dream Trip...
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <GenerationProgress steps={steps}/>
-                        <div className="mt-8 border-t pt-8">
-                            <h4 className="text-sm font-bold text-slate-500 mb-4 flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-yellow-500"/>
-                                Previewing your plan...
-                            </h4>
-                            <ItinerarySkeleton/>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        );
+        return <LoadingOverlay steps={steps} />;
     }
 
     return (
-        <Card className="w-full max-w-lg mx-auto shadow-lg border-t-4 border-t-blue-600">
+        <Card className="w-full max-w-xl mx-auto border-none shadow-2xl bg-white/90 backdrop-blur-sm ring-1 ring-slate-200/50">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                    <Plane className="h-6 w-6 text-blue-600"/>
-                    Plan Your Adventure
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent flex items-center gap-2">
+                    Design Your Trip 🎨
                 </CardTitle>
+                <CardDescription>
+                    No complex forms. Just tell us the vibe.
+                </CardDescription>
             </CardHeader>
+
             <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-8">
 
-                    {/* Origin & Destination */}
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="space-y-2">
-                            <Label>Origin</Label>
-                            <div className="relative">
-                                <MapPin className="absolute left-2 top-2.5 h-4 w-4 text-gray-400"/>
-                                <Input
-                                    className="pl-8"
-                                    value={formData.origin}
-                                    onChange={(e) => setFormData({...formData, origin: e.target.value})}
-                                />
-                            </div>
-                        </div>
+                    <DestinationSection
+                        destination={formData.destination}
+                        setDestination={(val) => setFormData({...formData, destination: val})}
+                        isAuto={isAutoDest}
+                        setAuto={setIsAutoDest}
+                    />
 
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                                <Label>Destination</Label>
-                                <div className="flex items-center gap-2">
-                                    <Switch
-                                        checked={isAutoDest}
-                                        onCheckedChange={setIsAutoDest}
-                                        id="auto-dest"
-                                    />
-                                    <Label htmlFor="auto-dest"
-                                           className="text-xs text-blue-600 font-bold cursor-pointer">
-                                        Surprise Me! ✨
-                                    </Label>
-                                </div>
-                            </div>
-                            <Input
-                                value={isAutoDest ? '' : formData.destination}
-                                onChange={(e) => setFormData({...formData, destination: e.target.value})}
-                                disabled={isAutoDest}
-                                placeholder={isAutoDest ? "We'll choose for you..." : "e.g. Bali"}
-                                className={isAutoDest ? "bg-gray-50 italic" : ""}
-                            />
-                        </div>
-                    </div>
+                    <DateDurationSection
+                        startDate={formData.start_date}
+                        setStartDate={(val) => setFormData({...formData, start_date: val})}
+                        tripDays={formData.trip_days}
+                        setTripDays={(val) => setFormData({...formData, trip_days: val})}
+                        isFlexible={isFlexibleDate}
+                        setFlexible={setIsFlexibleDate}
+                    />
 
-                    {/* Date & Days */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Start Date</Label>
-                            <Input
-                                type="date"
-                                min={getTodayDate()}
-                                value={formData.start_date}
-                                onChange={(e) => setFormData({...formData, start_date: e.target.value})}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Duration (Days)</Label>
-                            <Input
-                                type="number"
-                                min={1} max={14}
-                                value={formData.trip_days}
-                                onChange={(e) => setFormData({...formData, trip_days: parseInt(e.target.value)})}
-                            />
-                        </div>
-                    </div>
+                    <VibeSection
+                        paceVal={paceVal} setPaceVal={setPaceVal}
+                        socialVal={socialVal} setSocialVal={setSocialVal}
+                    />
 
-                    {/* Style */}
-                    <div className="space-y-2">
-                        <Label>Travel Style</Label>
-                        <Select
-                            value={formData.style}
-                            onValueChange={(val) => setFormData({...formData, style: val})}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select style"/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="general">Surprise Me / General</SelectItem>
-                                <SelectItem value="cultural">Cultural & History</SelectItem>
-                                <SelectItem value="relaxed">Relaxed & Chill</SelectItem>
-                                <SelectItem value="adventure">Nature & Adventure</SelectItem>
-                                <SelectItem value="foodie">Foodie Hunt</SelectItem>
-                                <SelectItem value="luxury">Luxury & Comfort</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Budget */}
-                    <div className="space-y-4 bg-slate-50 p-4 rounded-lg border">
-                        <div className="flex justify-between items-center">
-                            <Label className="flex items-center gap-2">
-                                <Wallet className="h-4 w-4 text-blue-600"/> Budget (IDR)
-                            </Label>
-                            <div className="flex items-center gap-2">
-                                <Switch
-                                    checked={isAutoBudget}
-                                    onCheckedChange={setIsAutoBudget}
-                                    id="auto-budget"
-                                />
-                                <Label htmlFor="auto-budget" className="text-xs text-blue-600 font-bold cursor-pointer">
-                                    Calculate for me
-                                </Label>
-                            </div>
-                        </div>
-
-                        {!isAutoBudget && (
-                            <>
-                                <div className="text-2xl font-bold text-slate-700">
-                                    Rp {formatMoney(formData.budget)}
-                                </div>
-                                <Slider
-                                    defaultValue={[formData.budget]}
-                                    max={50000000}
-                                    step={100000}
-                                    onValueChange={(vals) => setFormData({...formData, budget: vals[0]})}
-                                    className="py-4"
-                                />
-                            </>
-                        )}
-                        {isAutoBudget && (
-                            <p className="text-sm text-blue-600 italic text-center">
-                                We will estimate the standard cost for this trip.
-                            </p>
-                        )}
-                    </div>
-
-                    <Button
-                        type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-6 shadow-lg shadow-blue-100"
-                        disabled={isStreaming}
+                    <Button type="submit" disabled={isStreaming}
+                            className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-lg py-6 rounded-xl shadow-lg transition-all hover:scale-[1.01]"
                     >
-                        Check & Generate <Sparkles className="ml-2 h-4 w-4"/>
+                        {isStreaming ? <Loader2 className="animate-spin" /> : "Plan My Trip ✨"}
                     </Button>
-
                 </form>
             </CardContent>
         </Card>

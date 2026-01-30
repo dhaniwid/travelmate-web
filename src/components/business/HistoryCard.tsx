@@ -1,55 +1,110 @@
+import { useState } from 'react';
 import Link from 'next/link';
-import {Trip} from '@/types';
-import {Calendar, MapPin, ArrowRight} from 'lucide-react';
-import {Badge} from '@/components/ui/badge';
-import {formatMoney} from '@/lib/utils'; // Pastikan ada atau ganti dengan formatter biasa
+import { Trip } from '@/types';
+import { Calendar, MapPin, ArrowRight, Trash2, Loader2, Sparkles, Wallet } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { cn, formatMoney } from '@/lib/utils';
 
-export default function HistoryCard({trip}: { trip: Trip }) {
+interface HistoryCardProps {
+    trip: Trip;
+    onDelete: (id: string) => void;
+}
+
+export default function HistoryCard({ trip, onDelete }: HistoryCardProps) {
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Handler untuk tombol delete
+    const handleDeleteClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (confirm(`Are you sure you want to delete the trip to ${trip.destination}?`)) {
+            setIsDeleting(true);
+            onDelete(trip.id);
+        }
+    };
+
+    // Fallback display untuk budget jika budget_range kosong
+    const displayBudget = trip.budget_range || (trip.budget > 0 ? `~${formatMoney(trip.budget)}` : "TBD");
+
     return (
-        <Link href={`/trips/${trip.id}`}>
-            <div
-                className="group relative bg-white border border-slate-200 rounded-2xl p-5 hover:shadow-xl hover:border-blue-200 transition-all duration-300 cursor-pointer overflow-hidden">
+        <div className="group relative bg-white border border-slate-200 rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-blue-200 overflow-hidden h-full flex flex-col">
 
-                {/* Decorative Gradient Background on Hover */}
-                <div
-                    className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>
+            {/* --- DECORATION BACKGROUND --- */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-teal-50 rounded-bl-full opacity-50 transition-opacity group-hover:opacity-100 -z-10" />
 
-                <div className="relative z-10 flex flex-col h-full justify-between space-y-4">
-                    <div>
-                        <div className="flex justify-between items-start mb-2">
-                            <h3 className="font-bold text-lg text-slate-800 group-hover:text-blue-700 line-clamp-1">
-                                {trip.destination}
-                            </h3>
-                            <Badge variant="secondary"
-                                   className="bg-slate-100 text-slate-600 text-[10px] uppercase font-bold">
-                                {trip.style}
-                            </Badge>
-                        </div>
+            {/* --- TOMBOL DELETE --- */}
+            <button
+                onClick={handleDeleteClick}
+                disabled={isDeleting}
+                className={cn(
+                    "absolute top-3 right-3 z-20 p-2 rounded-xl transition-all duration-300 shadow-sm border border-transparent",
+                    "bg-white/80 backdrop-blur-sm text-slate-400 hover:bg-red-50 hover:text-red-500 hover:border-red-100",
+                    "opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0"
+                )}
+                title="Delete Trip"
+            >
+                {isDeleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                ) : (
+                    <Trash2 className="w-4 h-4" />
+                )}
+            </button>
 
-                        <div className="flex items-center text-xs text-slate-500 gap-1 mb-1">
-                            <MapPin className="w-3 h-3"/>
-                            <span>From {trip.origin}</span>
-                        </div>
+            {/* --- MAIN LINK --- */}
+            <Link href={`/trips/${trip.id}`} className="flex flex-col h-full p-5">
 
-                        <div className="flex items-center text-xs text-slate-500 gap-1">
-                            <Calendar className="w-3 h-3"/>
-                            <span>{trip.start_date} • {trip.trip_days} Days</span>
-                        </div>
+                {/* 1. HEADER: Destination & Origin */}
+                <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="secondary" className="bg-teal-50 text-teal-700 text-[10px] px-2 h-5 hover:bg-teal-100 border border-teal-100">
+                            {trip.trip_days} Days
+                        </Badge>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                            {new Date(trip.start_date).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })}
+                        </span>
                     </div>
 
-                    <div
-                        className="flex items-center justify-between pt-4 border-t border-slate-100 group-hover:border-blue-100 transition-colors">
-                        <div className="text-xs font-medium text-slate-500">
-                            Est. Budget: <span className="font-bold text-slate-700">{trip.budget_range}</span>
-                        </div>
+                    <h3 className="font-black text-xl text-slate-800 group-hover:text-blue-700 transition-colors line-clamp-1 mb-1">
+                        {trip.destination}
+                    </h3>
 
-                        <div
-                            className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                            <ArrowRight className="w-4 h-4"/>
-                        </div>
+                    <div className="flex items-center text-xs text-slate-500 gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                        <span>From <span className="font-medium text-slate-600">{trip.origin}</span></span>
                     </div>
                 </div>
-            </div>
-        </Link>
+
+                {/* 2. BODY: Vibe Description (Truncated) */}
+                <div className="flex-1 mb-4">
+                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                            <Sparkles className="w-3 h-3 text-purple-500" />
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trip Vibe</span>
+                        </div>
+                        {/* Menggunakan line-clamp-2 agar text panjang dari slider tidak merusak layout */}
+                        <p className="text-xs text-slate-600 leading-relaxed line-clamp-2 italic">
+                            "{trip.style}"
+                        </p>
+                    </div>
+                </div>
+
+                {/* 3. FOOTER: Budget & Action */}
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between mt-auto">
+                    <div>
+                        <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium uppercase mb-0.5">
+                            <Wallet className="w-3 h-3" /> Est. Budget
+                        </div>
+                        <div className="text-sm font-bold text-emerald-600">
+                            {displayBudget}
+                        </div>
+                    </div>
+
+                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                        <ArrowRight className="w-4 h-4" />
+                    </div>
+                </div>
+            </Link>
+        </div>
     );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {useParams} from 'next/navigation'; // Hook untuk ambil ID dari URL
+import {useParams} from 'next/navigation';
 import {tripService} from '@/services/trip';
 import {TripResponse} from '@/types';
 import TripResult from '@/components/business/TripResult';

@@ -43,5 +43,15 @@ export const tripService = {
         // Menembak endpoint /api/v1/trips/save yang baru kita buat
         const response = await api.post('/trips/save', data, config);
         return response.data;
+    },
+
+    deleteTrip: async (id: string, token: string | null, userId: string): Promise<void> => {
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'X-User-ID': userId
+            }
+        };
+        await api.delete(`/trips/${id}`, config);
     }
 };

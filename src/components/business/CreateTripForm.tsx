@@ -15,7 +15,12 @@ import DateDurationSection from './create-trip/DateDurationSection';
 import VibeSection from './create-trip/VibeSection';
 import LoadingOverlay from './create-trip/LoadingOverlay';
 
-export default function CreateTripForm({ onSuccess }: { onSuccess: (data: any) => void }) {
+interface CreateTripFormProps {
+    onSuccess: (data: any) => void;
+    initialDestination?: string;
+}
+
+export default function CreateTripForm({ onSuccess, initialDestination = '' }: CreateTripFormProps) {
     const { user } = useUser();
 
     // --- FORM STATE ---
@@ -30,7 +35,7 @@ export default function CreateTripForm({ onSuccess }: { onSuccess: (data: any) =
     // Data
     const [formData, setFormData] = useState<TripRequest>({
         origin: 'Jakarta',
-        destination: '',
+        destination: ''+initialDestination,
         start_date: new Date().toISOString().split('T')[0],
         trip_days: 3,
         style: '',
@@ -68,6 +73,12 @@ export default function CreateTripForm({ onSuccess }: { onSuccess: (data: any) =
     // --- SUBMISSION LOGIC ---
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validasi Origin
+        if (!formData.origin.trim()) {
+            toast.error("Please enter a starting point (Origin)");
+            return;
+        }
 
         if (!isAutoDest && !formData.destination) {
             toast.error("Where are we going? Or choose 'Surprise Me'!");
@@ -172,6 +183,8 @@ export default function CreateTripForm({ onSuccess }: { onSuccess: (data: any) =
                 <form onSubmit={handleSubmit} className="space-y-8">
 
                     <DestinationSection
+                        origin={formData.origin}
+                        setOrigin={(val) => setFormData({...formData, origin: val})}
                         destination={formData.destination}
                         setDestination={(val) => setFormData({...formData, destination: val})}
                         isAuto={isAutoDest}

@@ -87,9 +87,6 @@ export default function TripDetailPage() {
             </div>
 
             <div className="max-w-4xl mx-auto p-4 md:p-8">
-                {/* Render TripResult dengan mode "SavedView"
-                   agar tombol Save tidak muncul lagi
-                */}
                 <TripResult data={data} isSavedView={true}/>
             </div>
         </main>

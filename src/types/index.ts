@@ -123,3 +123,30 @@ export interface TripResponse {
     plan: TripPlan;
     is_saved: boolean;
 }
+
+export interface PlaceHighlight {
+    name: string;
+    type: string;
+    hook: string;
+}
+
+export interface CulinarySignature {
+    name: string;
+    description: string;
+    tip: string;
+}
+
+export interface HiddenGem {
+    name: string;
+    description: string;
+}
+
+export interface DiscoveryResponse {
+    city: string;
+    tagline: string;
+    vibes: string[];
+    highlights: PlaceHighlight[];
+    culinary_signature: CulinarySignature[];
+    hidden_gem: HiddenGem;
+    history_snippet: string;
+}

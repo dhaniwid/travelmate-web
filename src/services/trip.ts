@@ -1,17 +1,16 @@
 import { api } from '@/lib/api';
-import { Trip, TripRequest, TripResponse } from '@/types';
+// Pastikan import DiscoveryResponse ditambahkan
+import { Trip, TripRequest, TripResponse, DiscoveryResponse } from '@/types';
 
-// Interface khusus untuk Payload Save Trip
-// Menggabungkan metadata user dengan hasil generate AI (plan_data)
 export interface SaveTripPayload {
     user_id: string;
     destination: string;
     origin: string;
-    start_date: string; // Format: YYYY-MM-DD
+    start_date: string;
     trip_days: number;
     style: string;
     budget_range: string;
-    plan_data: any; // Bisa diganti dengan tipe TripPlan jika ingin lebih ketat
+    plan_data: any;
 }
 
 export const tripService = {
@@ -33,14 +32,12 @@ export const tripService = {
         return response.data;
     },
 
-    // 4. [NEW] Save Trip
-    // Kita butuh parameter 'token' karena ini endpoint terproteksi
+    // 4. Save Trip
     saveTrip: async (data: SaveTripPayload, token: string | null): Promise<{ message: string; trip_id: string }> => {
         const config = token
             ? { headers: { Authorization: `Bearer ${token}` } }
             : {};
 
-        // Menembak endpoint /api/v1/trips/save yang baru kita buat
         const response = await api.post('/trips/save', data, config);
         return response.data;
     },
@@ -53,5 +50,12 @@ export const tripService = {
             }
         };
         await api.delete(`/trips/${id}`, config);
-    }
+    },
+
+    // 5. [NEW] Get City Discovery (Fixed for Axios)
+    getCityDiscovery: async (city: string): Promise<DiscoveryResponse> => {
+        const response = await api.get(`/discovery?city=${encodeURIComponent(city)}`);
+
+        return response.data.data;
+    },
 };

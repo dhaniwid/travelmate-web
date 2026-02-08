@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {Badge} from '@/components/ui/badge';
 import {Button} from '@/components/ui/button';
-import {Save, Share2, Printer, Loader2, CheckCircle2, Trash2, MapPin, Sparkles} from 'lucide-react';
+import {Save, Share2, Printer, Loader2, CheckCircle2, Trash2, MapPin, Sparkles, History} from 'lucide-react';
 import {TripResponse} from '@/types';
 import {useRouter} from 'next/navigation';
 import {toast} from "sonner";

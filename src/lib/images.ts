@@ -1,5 +1,5 @@
 // Pastikan variable ini sesuai dengan key dari dashboard Unsplash Anda
-const UNSPLASH_ACCESS_KEY = process.env.NEXT_PUBLIC_UNSPLASH_KEY || 'geYRTotvLpltLXzVSpjoHXM3I_KQj8r_j_9ahrVrTZw';
+const UNSPLASH_ACCESS_KEY = process.env.NEXT_PUBLIC_UNSPLASH_KEY;
 
 export async function getDestinationImage(query: string): Promise<string> {
     const staticFallback = "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop";

@@ -1,32 +1,28 @@
-import React, {useState} from 'react';
-import {Badge} from '@/components/ui/badge';
-import {Button} from '@/components/ui/button';
-import {Save, Share2, Printer, Loader2, CheckCircle2, Trash2, MapPin, Sparkles, History} from 'lucide-react';
-import {TripResponse} from '@/types';
-import {useRouter} from 'next/navigation';
-import {toast} from "sonner";
-import {useAuth} from "@clerk/nextjs";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Save, Share2, Printer, Loader2, Trash2, MapPin, Sparkles, History, Sliders } from 'lucide-react';
+import { TripResponse } from '@/types';
+import { useRouter } from 'next/navigation';
+import { toast } from "sonner";
+import { useAuth } from "@clerk/nextjs";
 
 interface TripHeaderProps {
     data: TripResponse;
     totalBudget: number;
     isHistoryView?: boolean;
+    onOpenCustomize?: () => void;
 }
 
-export default function TripHeader({data, isHistoryView = false}: TripHeaderProps) {
-    const {trip, plan} = data;
+export default function TripHeader({ data, totalBudget, isHistoryView = false, onOpenCustomize }: TripHeaderProps) {
+    const { trip, plan } = data;
     const router = useRouter();
-    const {getToken} = useAuth();
+    const { getToken } = useAuth();
 
     const [isSaving, setIsSaving] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
     const isFinalized = isHistoryView || isSaved;
-
-    const getCityImage = (city: string) => {
-        return `https://source.unsplash.com/1600x900/?${city},travel,landscape`;
-    };
 
     const handleSaveTrip = async () => {
         setIsSaving(true);
@@ -86,7 +82,7 @@ export default function TripHeader({data, isHistoryView = false}: TripHeaderProp
             const token = await getToken();
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/trips/${trip.id}`, {
                 method: 'DELETE',
-                headers: {'Authorization': `Bearer ${token}`}
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
                 toast.success("Trip deleted");
@@ -106,133 +102,117 @@ export default function TripHeader({data, isHistoryView = false}: TripHeaderProp
         toast.success("Trip link copied to clipboard!");
     };
 
-    return (
-        <div className="relative w-full rounded-3xl overflow-hidden shadow-2xl shadow-slate-200/50 mb-8 group">
+    // Calculate Dates
+    const formattedDate = trip.start_date ? new Date(trip.start_date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+    }) : 'Oct 12';
 
-            {/* 1. BACKGROUND IMAGE & OVERLAY */}
-            <div className="absolute inset-0 bg-slate-900">
-                {/* Kita gunakan Unsplash Source sebagai placeholder visual cantik */}
+    const startDateObj = trip.start_date ? new Date(trip.start_date) : new Date();
+    const endDateObj = new Date(startDateObj.getTime() + (trip.trip_days - 1) * 24 * 60 * 60 * 1000);
+    const endDate = endDateObj.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
+
+    return (
+        <div className="relative w-full h-[600px] mb-32 group">
+            {/* 1. HERO IMAGE (Background Layer) */}
+            <div className="absolute top-0 left-0 w-full h-[450px] z-0 rounded-[2.5rem] overflow-hidden shadow-xl">
                 <div
-                    className="absolute inset-0 bg-cover bg-center opacity-60 group-hover:scale-105 transition-transform duration-[3s]"
-                    style={{backgroundImage: `url('https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1920&q=80')`}} // Default Bali/Tropical vibe, bisa diganti dynamic
+                    className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-[5s]"
+                    style={{ backgroundImage: `url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1920&q=80')` }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"/>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+
+                {/* Secondary Actions (Floating on top of image) */}
+                <div className="absolute top-6 right-8 flex gap-3 z-20">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => window.print()}
+                        className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/20 transition-all active:scale-95"
+                    >
+                        <Printer className="w-5 h-5" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleShare}
+                        className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/20 transition-all active:scale-95"
+                    >
+                        <Share2 className="w-5 h-5" />
+                    </Button>
+                </div>
             </div>
 
-            {/* 2. CONTENT CONTAINER */}
-            <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row justify-between items-end gap-6 mt-20">
-
-                {/* LEFT: Trip Info */}
-                <div className="space-y-4 text-white">
-                    {/* Status Badge */}
-                    <div className="flex items-center gap-3">
-                        {!isFinalized ? (
-                            <Badge
-                                className="bg-amber-500/20 backdrop-blur-md text-amber-200 border border-amber-500/50 px-3 py-1 text-xs uppercase tracking-widest font-bold">
-                                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse mr-2"/>
-                                Draft Mode
-                            </Badge>
-                        ) : (
-                            <Badge
-                                className="bg-emerald-500/20 backdrop-blur-md text-emerald-200 border border-emerald-500/50 px-3 py-1 text-xs uppercase tracking-widest font-bold">
-                                <CheckCircle2 className="w-3 h-3 mr-2 text-emerald-400"/>
-                                Saved Trip
-                            </Badge>
-                        )}
-
-                        {/* Days Badge */}
-                        <Badge variant="outline" className="text-white border-white/30 backdrop-blur-sm">
-                            {trip.trip_days} Days
-                        </Badge>
+            {/* 2. FLOATING SUMMARY CARD (Foreground Layer) */}
+            <div className="absolute top-[450px] left-1/2 -translate-x-1/2 -translate-y-[40%] w-[90%] max-w-3xl bg-white rounded-[2rem] p-8 md:p-10 z-10 shadow-[0_20px_50px_rgba(8,112,184,0.07)] border border-slate-50">
+                <div className="flex flex-col items-center text-center">
+                    {/* Title & Dates */}
+                    <div className="mb-6">
+                        <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-2 tracking-tight">
+                            Trip to {trip.destination}
+                        </h1>
+                        <p className="text-slate-500 font-medium text-lg">
+                            {formattedDate} - {endDate} • {trip.trip_days} Days
+                        </p>
                     </div>
 
-                    {/* Title */}
-                    <div>
-                        <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-2 drop-shadow-lg">
-                            {trip.destination}
-                        </h1>
-                        <div className="flex flex-wrap items-center gap-4 text-slate-300 font-medium">
-                            <div className="flex items-center gap-1.5">
-                                <MapPin className="w-4 h-4 text-teal-400"/>
-                                <span>From {trip.origin}</span>
-                            </div>
-                            <div className="w-1 h-1 rounded-full bg-slate-500"/>
-                            <div className="flex items-start gap-3 mt-4">
-                                <Sparkles className="w-5 h-5 text-purple-400 mt-0.5 shrink-0"/>
-
-                                {/* Container Tags dengan flex-wrap agar turun ke bawah jika penuh */}
-                                <div className="flex flex-wrap gap-2">
-                                    {trip.style ? (
-                                        trip.style.split(',').map((tag, idx) => (
-                                            <span
-                                                key={idx}
-                                                className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/20 text-slate-100 text-sm backdrop-blur-sm font-medium leading-relaxed hover:bg-white/20 transition-colors"
-                                            >
-                                                {tag.trim()}
-                                            </span>
-                                        ))
-                                    ) : (
-                                        <span className="text-slate-400 italic">General Trip</span>
-                                    )}
-                                </div>
-                            </div>
+                    {/* Pills Row */}
+                    <div className="flex flex-wrap justify-center gap-3 mb-10">
+                        <div className="flex items-center gap-2 bg-teal-50 text-teal-700 px-4 py-2.5 rounded-full text-sm font-bold border border-teal-100/50">
+                            <Sparkles className="w-4 h-4" />
+                            <span>{trip.budget} Tier</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-teal-50 text-teal-700 px-4 py-2.5 rounded-full text-sm font-bold border border-teal-100/50">
+                            <MapPin className="w-4 h-4" />
+                            <span>From {trip.origin}</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-teal-50 text-teal-700 px-4 py-2.5 rounded-full text-sm font-bold border border-teal-100/50">
+                            <History className="w-4 h-4" />
+                            <span>{trip.style || 'Leisure'}</span>
                         </div>
                     </div>
-                </div>
 
-                {/* RIGHT: Actions */}
-                <div className="flex items-center gap-3">
+                    {/* Primary Actions */}
+                    <div className="flex flex-wrap items-center justify-center gap-4 w-full">
+                        <Button
+                            onClick={onOpenCustomize}
+                            className="rounded-full bg-[#42707D] hover:bg-[#355963] text-white font-bold h-16 px-10 shadow-lg shadow-teal-900/10 transition-all active:scale-[0.98] text-lg"
+                        >
+                            <Sliders className="w-5 h-5 mr-3" />
+                            Customize Trip
+                        </Button>
 
-                    {/* Save / Unlock Button */}
-                    {!isHistoryView ? (
-                        !isSaved ? (
+                        {!isHistoryView && !isSaved && (
                             <Button
                                 onClick={handleSaveTrip}
                                 disabled={isSaving}
-                                size="lg"
-                                className="bg-white text-slate-900 hover:bg-slate-100 hover:scale-105 transition-all font-bold h-14 px-8 rounded-full shadow-xl shadow-black/20"
+                                className="rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-16 px-10 shadow-lg shadow-slate-900/10 transition-all active:scale-[0.98] text-lg"
                             >
-                                {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2"/> :
-                                    <Save className="w-5 h-5 mr-2 text-blue-600"/>}
-                                Save & Unlock Trip
+                                {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> :
+                                    <Save className="w-5 h-5 mr-3" />}
+                                Save & Unlock
                             </Button>
-                        ) : (
-                            <Button
-                                onClick={() => router.push('/history')}
-                                size="lg"
-                                className="bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/20 h-14 px-8 rounded-full"
-                            >
-                                <History className="w-5 h-5 mr-2"/>
-                                View in History
-                            </Button>
-                        )
-                    ) : (
-                        <Button
-                            variant="destructive"
-                            onClick={handleDeleteTrip}
-                            disabled={isDeleting}
-                            className="h-12 px-6 rounded-full"
-                        >
-                            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin"/> :
-                                <Trash2 className="w-4 h-4 mr-2"/>}
-                            Delete
-                        </Button>
-                    )}
+                        )}
 
-                    {/* Premium Buttons (Share/Print) - Only if finalized */}
-                    {isFinalized && (
-                        <div className="flex gap-2">
-                            <Button size="icon"
-                                    className="h-14 w-14 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10">
-                                <Share2 className="w-5 h-5"/>
+                        {isHistoryView && (
+                            <Button
+                                variant="ghost"
+                                onClick={handleDeleteTrip}
+                                disabled={isDeleting}
+                                className="h-16 px-8 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors font-bold text-lg"
+                            >
+                                <Trash2 className="w-5 h-5 mr-3" />
+                                Delete
                             </Button>
-                            <Button size="icon"
-                                    className="h-14 w-14 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10"
-                                    onClick={() => window.print()}>
-                                <Printer className="w-5 h-5"/>
-                            </Button>
-                        </div>
-                    )}
+                        )}
+                    </div>
+
+                    {/* Gradient Border Detail */}
+                    <div className="h-1 w-full bg-gradient-to-r from-teal-400 to-orange-400 rounded-full opacity-80 mt-10" />
                 </div>
             </div>
         </div>

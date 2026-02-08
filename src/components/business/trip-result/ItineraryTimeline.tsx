@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Calendar, ChevronDown, ChevronUp, Coffee, Sun, Sunset, Moon } from 'lucide-react';
+import { MapPin, Calendar, ChevronDown, ChevronUp, Coffee, Sun, Sunset, Moon, RefreshCw, Trash2, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TripResponse, ItineraryItem, Activity } from '@/types';
+import ActivityCard from './ActivityCard';
 
 // Helper Vibe Waktu
 const getTimeBasedStyle = (timeStr: string) => {
@@ -18,7 +19,14 @@ const getTimeBasedStyle = (timeStr: string) => {
     return { icon: Moon, color: "text-indigo-500", bg: "bg-indigo-50", border: "border-indigo-200" };
 };
 
-export default function ItineraryTimeline({ plan }: { plan: TripResponse['plan'] }) {
+interface ItineraryTimelineProps {
+    plan: TripResponse['plan'];
+    onReplace?: (day: number, index: number) => void;
+    onDelete?: (day: number, index: number) => void;
+    onAddBelow?: (day: number, index: number) => void;
+}
+
+export default function ItineraryTimeline({ plan, onReplace, onDelete, onAddBelow }: ItineraryTimelineProps) {
     // Default expand hari pertama (Day 1)
     const [expandedDays, setExpandedDays] = useState<number[]>([1]);
 
@@ -49,49 +57,29 @@ export default function ItineraryTimeline({ plan }: { plan: TripResponse['plan']
     }
 
     // Render Single Activity Item
-    const renderActivity = (act: Activity, idx: number, total: number) => {
+    const renderActivity = (act: Activity, idx: number, total: number, dayNum: number) => {
         const style = getTimeBasedStyle(act.time);
         const TimeIcon = style.icon;
 
         return (
-            <div key={idx} className="relative pl-8 pb-12 last:pb-0 group animate-in fade-in slide-in-from-top-2 duration-300">
-                {/* Connector Line */}
+            <div key={idx} className="relative pl-10 pb-12 last:pb-0 group/act animate-in fade-in slide-in-from-top-2 duration-300">
+                {/* Connector Line - Solid Gradient (Premium iOS Feel) */}
                 {idx !== total - 1 && (
-                    <div className="absolute left-[15px] top-8 bottom-0 w-0.5 bg-gradient-to-b from-slate-200 to-slate-50 group-hover:from-blue-200 group-hover:to-blue-50 transition-colors" />
+                    <div className="absolute left-[16.5px] top-8 bottom-0 w-[3px] bg-gradient-to-b from-[#42707D] via-[#42707D]/60 to-orange-400 rounded-full" />
                 )}
 
-                {/* Icon Marker */}
-                <div className={cn("absolute left-0 top-1 w-8 h-8 rounded-full flex items-center justify-center border-2 bg-white shadow-sm z-10 transition-transform group-hover:scale-110", style.border)}>
-                    <TimeIcon className={cn("w-4 h-4", style.color)} />
+                {/* Dot Marker - White with Teal Border (iOS Signature Look) */}
+                <div className="absolute left-0 top-1 w-9 h-9 rounded-full flex items-center justify-center border-4 border-[#42707D] bg-white shadow-xl z-10 transition-transform group-hover/act:scale-110">
+                    <TimeIcon className="w-4 h-4 text-[#42707D]" />
                 </div>
 
-                {/* Card Content */}
-                <div className={cn("rounded-xl p-4 border transition-all duration-300 hover:shadow-md bg-white relative overflow-hidden", "border-slate-100 hover:border-blue-100")}>
-                    {/* Background Blob Decoration */}
-                    <div className={cn("absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-10 blur-2xl", style.bg.replace('bg-', 'bg-'))} />
-
-                    <div className="flex justify-between items-start mb-2 relative z-10">
-                        <Badge variant="outline" className={cn("font-mono text-xs px-2 py-0.5 border-0", style.bg, style.color)}>
-                            {act.time || "TBA"}
-                        </Badge>
-                        <Badge variant="secondary" className="text-[10px] uppercase tracking-wider bg-slate-100 text-slate-500">
-                            {act.type || "Activity"}
-                        </Badge>
-                    </div>
-
-                    <h4 className="font-bold text-slate-800 text-lg group-hover:text-blue-700 transition-colors relative z-10">
-                        {act.activity}
-                    </h4>
-
-                    <div className="flex items-center gap-1.5 text-sm text-slate-500 mt-1 mb-3 relative z-10">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="font-medium">{act.place_name || "Location TBD"}</span>
-                    </div>
-
-                    <p className="text-sm text-slate-600 leading-relaxed border-l-2 border-slate-100 pl-3 italic relative z-10">
-                        "{act.description}"
-                    </p>
-                </div>
+                {/* Activity Card */}
+                <ActivityCard
+                    activity={act}
+                    onReplace={() => onReplace?.(dayNum, idx)}
+                    onDelete={() => onDelete?.(dayNum, idx)}
+                    onAddBelow={() => onAddBelow?.(dayNum, idx)}
+                />
             </div>
         );
     };
@@ -115,7 +103,7 @@ export default function ItineraryTimeline({ plan }: { plan: TripResponse['plan']
                 const activities = day.activities || [];
 
                 return (
-                    <div key={day.day} className="relative transition-all duration-300 group/day">
+                    <div id={`day-${day.day}`} key={day.day} className="relative transition-all duration-300 group/day">
                         {/* ACCORDION HEADER (Sticky) */}
                         <div
                             onClick={() => toggleDay(day.day)}
@@ -152,7 +140,7 @@ export default function ItineraryTimeline({ plan }: { plan: TripResponse['plan']
                         >
                             <div className="overflow-hidden min-h-0">
                                 <div className="ml-4 md:ml-8 border-l-2 border-dashed border-slate-200 pl-4 md:pl-8 py-2 space-y-2">
-                                    {activities.map((act, idx) => renderActivity(act, idx, activities.length))}
+                                    {activities.map((act, idx) => renderActivity(act, idx, activities.length, day.day))}
 
                                     {activities.length === 0 && (
                                         <p className="text-sm text-slate-400 italic py-2">No activities planned for this day.</p>

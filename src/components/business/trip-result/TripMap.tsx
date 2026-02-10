@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, Polyline, InfoWindow } from '@react-google-maps/api';
 import { Activity } from '@/types';
-import { getSmartImage } from '@/utils/image-generator';
+import { MapActivityThumbnail } from '@/components/business/MapActivityThumbnail';
 
 interface TripMapProps {
     activities: Activity[];
@@ -164,15 +164,14 @@ export default function TripMap({
                         position={{ lat: selectedActivity.latitude, lng: selectedActivity.longitude }}
                         onCloseClick={() => onActivitySelect(null)}
                     >
-                        <div className="p-2 max-w-[200px]">
-                            <img
-                                src={getSmartImage(`${selectedActivity.activity} in ${destination}`, 'activity')}
-                                alt={selectedActivity.activity}
-                                className="w-full h-24 object-cover rounded-lg mb-2"
-                            />
-                            <h5 className="font-bold text-sm mb-1">{selectedActivity.activity}</h5>
-                            <p className="text-xs text-slate-500 line-clamp-2">{selectedActivity.description}</p>
-                            <span className="text-[10px] font-bold text-teal-600 uppercase mt-2 block">{selectedActivity.time}</span>
+                        <div className="p-0 max-w-[220px]">
+                            <MapActivityThumbnail activity={selectedActivity} />
+
+                            <div className="p-3">
+                                <h5 className="font-bold text-sm mb-1 text-slate-800 line-clamp-1">{selectedActivity.activity}</h5>
+                                <p className="text-xs text-slate-500 line-clamp-2">{selectedActivity.description}</p>
+                                <span className="text-[10px] font-bold text-teal-600 uppercase mt-2 block">{selectedActivity.time}</span>
+                            </div>
                         </div>
                     </InfoWindow>
                 )}

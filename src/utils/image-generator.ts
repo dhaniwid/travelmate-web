@@ -13,9 +13,10 @@ export function getSmartImage(keyword: string, type: 'scenic' | 'food' | 'activi
         promptPrefix = "epic cinematic landscape shot of ";
     }
 
-    const fullPrompt = `${promptPrefix}${keyword}, highly detailed, 8k resolution, professional lighting`;
+    const fullPrompt = `${promptPrefix}${keyword}, highly detailed, 8k resolution, professional lighting, award winning`;
     const encodedPrompt = encodeURIComponent(fullPrompt);
 
     // Using 800x600 as a standard high-quality aspect ratio for cards and headers
+    // Pollinations AI is fast and free. We add nologo=true to remove watermarks.
     return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1280&height=720&nologo=true&seed=${Math.floor(Math.random() * 1000)}`;
 }

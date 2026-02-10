@@ -5,7 +5,7 @@ import { TripResponse, UserPreferences } from '@/types';
 import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
-import { getSmartImage } from '@/utils/image-generator';
+import { fetchUnsplashImage } from '@/services/imageService';
 import { useEffect } from 'react';
 
 interface TripHeaderProps {
@@ -35,8 +35,20 @@ export default function TripHeader({
     const [heroImage, setHeroImage] = useState<string>("");
 
     useEffect(() => {
-        // Using dynamic destination image
-        setHeroImage(getSmartImage(trip.destination, 'hero'));
+        let isMounted = true;
+        const loadHero = async () => {
+            const url = await fetchUnsplashImage(trip.destination);
+            if (isMounted) {
+                if (url) {
+                    setHeroImage(url);
+                } else {
+                    // Fallback handled by CSS if heroImage is empty
+                    // Or we can set a fallback state here if we want a specific behavior
+                }
+            }
+        };
+        loadHero();
+        return () => { isMounted = false; };
     }, [trip.destination]);
 
     const isFinalized = isHistoryView || isSaved;

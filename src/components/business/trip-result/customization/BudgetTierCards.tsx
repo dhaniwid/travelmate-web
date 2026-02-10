@@ -5,27 +5,27 @@ import { Mountain, Building2, Palmtree } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BudgetTierCardsProps {
-    selected: 'low' | 'med' | 'high';
-    onChange: (tier: 'low' | 'med' | 'high') => void;
+    selected: 'cheap' | 'moderate' | 'luxury';
+    onChange: (tier: 'cheap' | 'moderate' | 'luxury') => void;
 }
 
 const TIERS = [
     {
-        id: 'low',
+        id: 'cheap',
         label: 'Budget-friendly',
         price: '$',
         icon: Mountain,
         desc: 'Affordable stays & local eats.'
     },
     {
-        id: 'med',
+        id: 'moderate',
         label: 'Moderate',
         price: '$$',
         icon: Building2,
         desc: 'Comfortable hotels & diverse dining.'
     },
     {
-        id: 'high',
+        id: 'luxury',
         label: 'Luxury',
         price: '$$$',
         icon: Palmtree,

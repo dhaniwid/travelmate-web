@@ -10,7 +10,7 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 
 import DietaryTags from './customization/DietaryTags';
 import StyleTags from './customization/StyleTags';
@@ -21,33 +21,34 @@ interface TripCustomizationModalProps {
     onClose: () => void;
     currentPreferences: {
         dietary: string[];
-        styles: string[];
-        budgetTier: 'low' | 'med' | 'high';
+        interests: string[];
+        budgetTier: 'cheap' | 'moderate' | 'luxury';
     };
     onApply: (newPreferences: any) => void;
+    isSaving?: boolean;
 }
 
 export default function TripCustomizationModal({
     isOpen,
     onClose,
     currentPreferences,
-    onApply
+    onApply,
+    isSaving = false
 }: TripCustomizationModalProps) {
     const [dietary, setDietary] = useState<string[]>(currentPreferences.dietary);
-    const [styles, setStyles] = useState<string[]>(currentPreferences.styles);
-    const [budgetTier, setBudgetTier] = useState<'low' | 'med' | 'high'>(currentPreferences.budgetTier);
+    const [interests, setInterests] = useState<string[]>(currentPreferences.interests);
+    const [budgetTier, setBudgetTier] = useState<'cheap' | 'moderate' | 'luxury'>(currentPreferences.budgetTier);
 
     const toggleDietary = (tag: string) => {
         setDietary(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
     };
 
-    const toggleStyle = (tag: string) => {
-        setStyles(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+    const toggleInterest = (tag: string) => {
+        setInterests(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
     };
 
     const handleApply = () => {
-        onApply({ dietary, styles, budgetTier });
-        onClose();
+        onApply({ dietary, interests, budgetTier, pace: 'Balanced' });
     };
 
     return (
@@ -64,16 +65,22 @@ export default function TripCustomizationModal({
 
                 <div className="px-10 pb-8 space-y-10 overflow-y-auto max-h-[70vh]">
                     <DietaryTags selected={dietary} onToggle={toggleDietary} />
-                    <StyleTags selected={styles} onToggle={toggleStyle} />
+                    <StyleTags selected={interests} onToggle={toggleInterest} />
                     <BudgetTierCards selected={budgetTier} onChange={setBudgetTier} />
                 </div>
 
                 <DialogFooter className="px-10 pb-12 pt-4 bg-white">
                     <Button
                         onClick={handleApply}
+                        disabled={isSaving}
                         className="w-full rounded-[1.5rem] bg-[#42707D] hover:bg-[#355963] text-white font-bold h-[4.2rem] shadow-xl transition-all active:scale-[0.98] text-[1.1rem] tracking-wide"
                     >
-                        Apply Changes
+                        {isSaving ? (
+                            <div className="flex items-center gap-3">
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <span>Applying...</span>
+                            </div>
+                        ) : "Apply Changes"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

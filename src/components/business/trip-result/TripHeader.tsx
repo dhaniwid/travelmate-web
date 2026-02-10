@@ -1,19 +1,30 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Share2, Printer, Loader2, Trash2, MapPin, Sparkles, History, Sliders } from 'lucide-react';
-import { TripResponse } from '@/types';
+import { Save, Share2, Printer, Loader2, Trash2, MapPin, Sparkles, History, Sliders, Utensils } from 'lucide-react';
+import { TripResponse, UserPreferences } from '@/types';
 import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
+import { getSmartImage } from '@/utils/image-generator';
+import { useEffect } from 'react';
 
 interface TripHeaderProps {
     data: TripResponse;
     totalBudget: number;
     isHistoryView?: boolean;
     onOpenCustomize?: () => void;
+    onSaveSuccess?: () => void;
+    preferences?: UserPreferences;
 }
 
-export default function TripHeader({ data, totalBudget, isHistoryView = false, onOpenCustomize }: TripHeaderProps) {
+export default function TripHeader({
+    data,
+    totalBudget,
+    isHistoryView = false,
+    onOpenCustomize,
+    onSaveSuccess,
+    preferences
+}: TripHeaderProps) {
     const { trip, plan } = data;
     const router = useRouter();
     const { getToken } = useAuth();
@@ -21,6 +32,12 @@ export default function TripHeader({ data, totalBudget, isHistoryView = false, o
     const [isSaving, setIsSaving] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [heroImage, setHeroImage] = useState<string>("");
+
+    useEffect(() => {
+        // Using dynamic destination image
+        setHeroImage(getSmartImage(trip.destination, 'hero'));
+    }, [trip.destination]);
 
     const isFinalized = isHistoryView || isSaved;
 
@@ -60,6 +77,7 @@ export default function TripHeader({ data, totalBudget, isHistoryView = false, o
             }
 
             setIsSaved(true);
+            onSaveSuccess?.();
             toast.success("Trip secured! It's now in your history.", {
                 action: {
                     label: "View History",
@@ -117,104 +135,100 @@ export default function TripHeader({ data, totalBudget, isHistoryView = false, o
     });
 
     return (
-        <div className="relative w-full h-[600px] mb-32 group">
-            {/* 1. HERO IMAGE (Background Layer) */}
-            <div className="absolute top-0 left-0 w-full h-[450px] z-0 rounded-[2.5rem] overflow-hidden shadow-xl">
-                <div
-                    className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-[5s]"
-                    style={{ backgroundImage: `url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1920&q=80')` }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        <div className="relative w-full h-[60vh] min-h-[500px] overflow-hidden group shadow-2xl">
+            {/* 1. CINEMATIC HERO IMAGE */}
+            <div
+                className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-[10s] ease-out bg-slate-900"
+                style={{ backgroundImage: heroImage ? `url('${heroImage}')` : 'none' }}
+            />
 
-                {/* Secondary Actions (Floating on top of image) */}
-                <div className="absolute top-6 right-8 flex gap-3 z-20">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => window.print()}
-                        className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/20 transition-all active:scale-95"
-                    >
-                        <Printer className="w-5 h-5" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleShare}
-                        className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/20 transition-all active:scale-95"
-                    >
-                        <Share2 className="w-5 h-5" />
-                    </Button>
-                </div>
+            {/* 2. THE OVERLAY (Cinematic Gradient) */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+
+            {/* 3. TOP ACTIONS (Share, Print) */}
+            <div className="absolute top-6 right-8 flex gap-3 z-20">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => window.print()}
+                    className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/20 transition-all active:scale-95"
+                >
+                    <Printer className="w-5 h-5" />
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleShare}
+                    className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/20 transition-all active:scale-95"
+                >
+                    <Share2 className="w-5 h-5" />
+                </Button>
             </div>
 
-            {/* 2. FLOATING SUMMARY CARD (Foreground Layer) */}
-            <div className="absolute top-[450px] left-1/2 -translate-x-1/2 -translate-y-[40%] w-[90%] max-w-3xl bg-white rounded-[2rem] p-8 md:p-10 z-10 shadow-[0_20px_50px_rgba(8,112,184,0.07)] border border-slate-50">
-                <div className="flex flex-col items-center text-center">
-                    {/* Title & Dates */}
-                    <div className="mb-6">
-                        <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-2 tracking-tight">
-                            Trip to {trip.destination}
-                        </h1>
-                        <p className="text-slate-500 font-medium text-lg">
-                            {formattedDate} - {endDate} • {trip.trip_days} Days
-                        </p>
-                    </div>
-
-                    {/* Pills Row */}
-                    <div className="flex flex-wrap justify-center gap-3 mb-10">
-                        <div className="flex items-center gap-2 bg-teal-50 text-teal-700 px-4 py-2.5 rounded-full text-sm font-bold border border-teal-100/50">
-                            <Sparkles className="w-4 h-4" />
-                            <span>{trip.budget} Tier</span>
+            {/* 4. BOTTOM CONTENT (Title & Meta) */}
+            <div className="absolute bottom-24 md:bottom-28 left-0 right-0 p-8 md:p-12 z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+                <div className="flex-1">
+                    {/* Pills Row (Glassmorphism) */}
+                    <div className="flex flex-wrap gap-2 mb-6">
+                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[0.7rem] font-black uppercase tracking-widest border border-white/20">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>{preferences?.budgetTier || trip.budget_range || trip.budget} Tier</span>
                         </div>
-                        <div className="flex items-center gap-2 bg-teal-50 text-teal-700 px-4 py-2.5 rounded-full text-sm font-bold border border-teal-100/50">
-                            <MapPin className="w-4 h-4" />
-                            <span>From {trip.origin}</span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-teal-50 text-teal-700 px-4 py-2.5 rounded-full text-sm font-bold border border-teal-100/50">
-                            <History className="w-4 h-4" />
-                            <span>{trip.style || 'Leisure'}</span>
+                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[0.7rem] font-black uppercase tracking-widest border border-white/20">
+                            <MapPin className="w-3.5 h-3.5" />
+                            <span>{trip.origin}</span>
                         </div>
                     </div>
 
-                    {/* Primary Actions */}
-                    <div className="flex flex-wrap items-center justify-center gap-4 w-full">
+                    <h1 className="text-4xl md:text-6xl font-black text-white mb-3 tracking-tighter drop-shadow-2xl">
+                        {trip.destination}
+                    </h1>
+
+                    <p className="text-white/70 text-lg md:text-xl font-medium tracking-tight flex items-center gap-2">
+                        {formattedDate} — {endDate}
+                        <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                        {trip.trip_days} Days Journey
+                    </p>
+                </div>
+
+                {/* Primary Actions (Right aligned) */}
+                <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                        onClick={onOpenCustomize}
+                        className="rounded-full bg-[#42707D] hover:bg-[#355963] text-white font-bold h-14 md:h-16 px-8 shadow-2xl transition-all active:scale-[0.98] text-lg border border-teal-500/30"
+                    >
+                        <Sliders className="w-5 h-5 mr-3" />
+                        Customize
+                    </Button>
+
+                    {!isHistoryView && !isSaved && (
                         <Button
-                            onClick={onOpenCustomize}
-                            className="rounded-full bg-[#42707D] hover:bg-[#355963] text-white font-bold h-16 px-10 shadow-lg shadow-teal-900/10 transition-all active:scale-[0.98] text-lg"
+                            id="save-trip-btn"
+                            onClick={handleSaveTrip}
+                            disabled={isSaving}
+                            className="rounded-full bg-white hover:bg-slate-200 text-black font-bold h-14 md:h-16 px-8 shadow-2xl transition-all active:scale-[0.98] text-lg"
                         >
-                            <Sliders className="w-5 h-5 mr-3" />
-                            Customize Trip
+                            {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> :
+                                <Save className="w-5 h-5 mr-3" />}
+                            Secure Journey
                         </Button>
+                    )}
 
-                        {!isHistoryView && !isSaved && (
-                            <Button
-                                onClick={handleSaveTrip}
-                                disabled={isSaving}
-                                className="rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-16 px-10 shadow-lg shadow-slate-900/10 transition-all active:scale-[0.98] text-lg"
-                            >
-                                {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> :
-                                    <Save className="w-5 h-5 mr-3" />}
-                                Save & Unlock
-                            </Button>
-                        )}
-
-                        {isHistoryView && (
-                            <Button
-                                variant="ghost"
-                                onClick={handleDeleteTrip}
-                                disabled={isDeleting}
-                                className="h-16 px-8 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors font-bold text-lg"
-                            >
-                                <Trash2 className="w-5 h-5 mr-3" />
-                                Delete
-                            </Button>
-                        )}
-                    </div>
-
-                    {/* Gradient Border Detail */}
-                    <div className="h-1 w-full bg-gradient-to-r from-teal-400 to-orange-400 rounded-full opacity-80 mt-10" />
+                    {isHistoryView && (
+                        <Button
+                            variant="ghost"
+                            onClick={handleDeleteTrip}
+                            disabled={isDeleting}
+                            className="h-16 px-6 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors font-bold text-lg"
+                        >
+                            <Trash2 className="w-5 h-5" />
+                        </Button>
+                    )}
                 </div>
             </div>
+
+            {/* Gradient Border Accent */}
+            <div className="absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400/80 via-white/20 to-orange-400/80" />
         </div>
     );
 }

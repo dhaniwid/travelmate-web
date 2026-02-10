@@ -24,53 +24,74 @@ interface ItineraryTimelineProps {
     onReplace?: (day: number, index: number) => void;
     onDelete?: (day: number, index: number) => void;
     onAddBelow?: (day: number, index: number) => void;
+    destinationName: string;
+    activeDay: number;
+    selectedActivityId: string | null;
+    onActivitySelect: (id: string | null) => void;
+    onDayChange?: (day: number) => void;
+    totalDays?: number;
 }
 
-export default function ItineraryTimeline({ plan, onReplace, onDelete, onAddBelow }: ItineraryTimelineProps) {
-    // Default expand hari pertama (Day 1)
-    const [expandedDays, setExpandedDays] = useState<number[]>([1]);
-
+export default function ItineraryTimeline({
+    plan,
+    onReplace,
+    onDelete,
+    onAddBelow,
+    destinationName,
+    activeDay,
+    selectedActivityId,
+    onActivitySelect,
+    onDayChange,
+    totalDays
+}: ItineraryTimelineProps) {
     // 🛡️ Safe Access: Pastikan itinerary selalu array
     const itinerary = plan?.itinerary || [];
 
-    const toggleDay = (dayNum: number) => {
-        setExpandedDays(prev =>
-            prev.includes(dayNum) ? prev.filter(d => d !== dayNum) : [...prev, dayNum]
-        );
-    };
+    // STRICT TABS: Filter only for the active day
+    const dayPlan = (plan?.itinerary || []).find(d => d.day === activeDay);
 
-    const toggleAll = () => {
-        if (expandedDays.length === itinerary.length) {
-            setExpandedDays([]);
-        } else {
-            setExpandedDays(itinerary.map((d) => d.day));
-        }
-    };
-
-    // Jika data kosong, tampilkan placeholder
-    if (itinerary.length === 0) {
+    // Jika data kosong atau hari tidak ditemukan, tampilkan placeholder
+    if (!dayPlan || !dayPlan.activities || dayPlan.activities.length === 0) {
         return (
-            <div className="lg:col-span-2 p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 animate-in fade-in">
-                <p className="text-slate-400 italic">Waiting for itinerary details...</p>
+            <div className="lg:col-span-2 p-12 text-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200 animate-in fade-in">
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Calendar className="w-8 h-8 text-slate-300" />
+                </div>
+                <h4 className="text-lg font-bold text-slate-700 mb-1">No activities for Day {activeDay}</h4>
+                <p className="text-slate-400 text-sm italic">Planning is still in progress...</p>
             </div>
         );
     }
+
+    const activities = dayPlan.activities;
 
     // Render Single Activity Item
     const renderActivity = (act: Activity, idx: number, total: number, dayNum: number) => {
         const style = getTimeBasedStyle(act.time);
         const TimeIcon = style.icon;
+        const activityId = `${dayNum}-${idx}`;
+        const isSelected = selectedActivityId === activityId;
 
         return (
-            <div key={idx} className="relative pl-10 pb-12 last:pb-0 group/act animate-in fade-in slide-in-from-top-2 duration-300">
+            <div
+                key={idx}
+                id={`activity-${activityId}`}
+                className="relative pl-10 pb-12 last:pb-0 group/act animate-in fade-in slide-in-from-top-2 duration-300"
+            >
                 {/* Connector Line - Solid Gradient (Premium iOS Feel) */}
                 {idx !== total - 1 && (
                     <div className="absolute left-[16.5px] top-8 bottom-0 w-[3px] bg-gradient-to-b from-[#42707D] via-[#42707D]/60 to-orange-400 rounded-full" />
                 )}
 
                 {/* Dot Marker - White with Teal Border (iOS Signature Look) */}
-                <div className="absolute left-0 top-1 w-9 h-9 rounded-full flex items-center justify-center border-4 border-[#42707D] bg-white shadow-xl z-10 transition-transform group-hover/act:scale-110">
-                    <TimeIcon className="w-4 h-4 text-[#42707D]" />
+                <div className={cn(
+                    "absolute left-0 top-1 w-9 h-9 rounded-full flex items-center justify-center border-4 z-10 transition-all duration-300 group-hover/act:scale-110",
+                    isSelected ? "border-[#42707D] bg-[#42707D] scale-110 shadow-lg" : "border-[#42707D] bg-white shadow-xl"
+                )}>
+                    <TimeIcon className={cn(
+                        "w-4 h-4 transition-colors",
+                        isSelected ? "text-white" : "text-[#42707D]"
+                    )} />
                 </div>
 
                 {/* Activity Card */}
@@ -79,81 +100,42 @@ export default function ItineraryTimeline({ plan, onReplace, onDelete, onAddBelo
                     onReplace={() => onReplace?.(dayNum, idx)}
                     onDelete={() => onDelete?.(dayNum, idx)}
                     onAddBelow={() => onAddBelow?.(dayNum, idx)}
+                    destinationName={destinationName}
+                    isSelected={isSelected}
+                    onClick={() => onActivitySelect(isSelected ? null : activityId)}
                 />
             </div>
         );
     };
 
     return (
-        <div className="lg:col-span-2 space-y-6">
-            {/* Control Bar */}
-            <div className="flex items-center justify-between sticky top-20 z-30 bg-slate-50/95 backdrop-blur-sm py-3 rounded-xl border border-slate-200/50 px-4 shadow-sm mb-6">
-                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-teal-600" /> Journey Timeline
+        <div className="lg:col-span-2 space-y-8 pb-20">
+            {/* Header for Day Context */}
+            <div className="mb-8 animate-in fade-in delay-75">
+                <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
+                    {dayPlan.title}
                 </h3>
-                <Button variant="ghost" size="sm" onClick={toggleAll} className="text-xs text-blue-600 hover:text-blue-700 h-8">
-                    {expandedDays.length === itinerary.length ? "Collapse All" : "Expand All"}
-                </Button>
+                <p className="text-slate-500 font-medium">
+                    Day {activeDay} • {activities.length} planned activities
+                </p>
             </div>
 
-            {itinerary.map((day: ItineraryItem) => {
-                const isOpen = expandedDays.includes(day.day);
+            <div className="ml-2 md:ml-4 border-l-0 space-y-2">
+                {(activities || []).map((act, idx) => renderActivity(act, idx, activities.length, activeDay))}
+            </div>
 
-                // 🛡️ Safety: Pastikan activities array
-                const activities = day.activities || [];
-
-                return (
-                    <div id={`day-${day.day}`} key={day.day} className="relative transition-all duration-300 group/day">
-                        {/* ACCORDION HEADER (Sticky) */}
-                        <div
-                            onClick={() => toggleDay(day.day)}
-                            className={cn(
-                                "sticky top-36 z-20 mb-6 cursor-pointer select-none",
-                                "py-2 bg-slate-50/95 backdrop-blur-sm",
-                                "transition-all duration-200"
-                            )}
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className={cn(
-                                    "px-4 py-2 rounded-r-full rounded-l-lg shadow-sm font-bold text-sm flex items-center gap-2 transition-all border",
-                                    isOpen ? "bg-slate-900 text-white border-slate-900 shadow-md scale-105" : "bg-white border-slate-200 text-slate-600 hover:border-blue-300"
-                                )}>
-                                    <Calendar className={cn("w-4 h-4", isOpen ? "text-teal-400" : "text-slate-400")} />
-                                    Day {day.day}
-                                    {isOpen ? <ChevronUp className="w-3 h-3 ml-1 text-slate-400" /> : <ChevronDown className="w-3 h-3 ml-1 text-slate-400" />}
-                                </div>
-                                <div className="h-[1px] flex-1 bg-gradient-to-r from-slate-300 to-transparent"></div>
-                                <span className={cn("text-sm font-medium italic pr-4 truncate max-w-[200px] sm:max-w-none transition-colors", isOpen ? "text-blue-600" : "text-slate-400")}>
-                                    {day.title}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* ACCORDION CONTENT */}
-                        {/* 🔴 FIX: Tambahkan style manual gridTemplateRows agar animasi jalan sempurna */}
-                        <div
-                            className={cn(
-                                "grid transition-all duration-500 ease-in-out overflow-hidden",
-                                isOpen ? "opacity-100 mb-12" : "opacity-0 mb-0"
-                            )}
-                            style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
-                        >
-                            <div className="overflow-hidden min-h-0">
-                                <div className="ml-4 md:ml-8 border-l-2 border-dashed border-slate-200 pl-4 md:pl-8 py-2 space-y-2">
-                                    {activities.map((act, idx) => renderActivity(act, idx, activities.length, day.day))}
-
-                                    {activities.length === 0 && (
-                                        <p className="text-sm text-slate-400 italic py-2">No activities planned for this day.</p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            })}
+            {activeDay < (totalDays || 0) && (
+                <button
+                    onClick={() => onDayChange?.(activeDay + 1)}
+                    className="w-full py-4 mt-8 bg-slate-50 hover:bg-slate-100 text-slate-600 font-medium rounded-xl border border-dashed border-slate-300 transition-all flex items-center justify-center gap-2 group"
+                >
+                    Continue to Day {activeDay + 1}
+                    <RefreshCw className="w-4 h-4 transition-transform group-hover:rotate-12" />
+                </button>
+            )}
 
             <div className="flex justify-center py-8 opacity-50">
-                <span className="text-xs font-medium text-slate-400 uppercase tracking-widest border-b border-slate-300 pb-1">End of Trip</span>
+                <span className="text-xs font-medium text-slate-400 uppercase tracking-widest border-b border-slate-300 pb-1">End of Day {activeDay}</span>
             </div>
         </div>
     );

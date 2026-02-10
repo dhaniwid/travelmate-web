@@ -74,7 +74,7 @@ export default function HomePage() {
     if (isTripMode && generatedTrip) {
         return (
             <main className="min-h-screen bg-slate-50 relative">
-                <Navbar />
+                {!isTripMode && <Navbar />}
 
                 {/* Floating Nav untuk Back */}
                 <nav className="fixed top-6 left-6 z-50">

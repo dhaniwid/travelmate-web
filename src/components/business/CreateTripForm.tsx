@@ -14,6 +14,7 @@ import DestinationSection from './create-trip/DestinationSection';
 import DateDurationSection from './create-trip/DateDurationSection';
 import VibeSection from './create-trip/VibeSection';
 import LoadingOverlay from './create-trip/LoadingOverlay';
+import { generateTripAction } from '@/actions/trip';
 
 interface CreateTripFormProps {
     onSuccess: (data: any) => void;
@@ -35,7 +36,7 @@ export default function CreateTripForm({ onSuccess, initialDestination = '' }: C
     // Data
     const [formData, setFormData] = useState<TripRequest>({
         origin: 'Jakarta',
-        destination: ''+initialDestination,
+        destination: '' + initialDestination,
         start_date: new Date().toISOString().split('T')[0],
         trip_days: 3,
         style: '',
@@ -100,65 +101,37 @@ export default function CreateTripForm({ onSuccess, initialDestination = '' }: C
         };
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/trips/stream`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
+            // STEP 1: Metadata / Initial Analysis
+            updateStep('meta', 'loading');
 
-            if (!response.ok) throw new Error("Server error");
+            const data = await generateTripAction(payload);
 
-            const reader = response.body?.getReader();
-            const decoder = new TextDecoder();
+            // Advance steps to give a sense of progress
+            updateStep('meta', 'complete');
+            updateStep('iti', 'loading');
 
-            let finalData: any = { trip: payload, plan: {} };
-            let buffer = '';
-
-            while (true) {
-                const { value, done } = await reader!.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                    const trimmedLine = line.trim();
-                    if (!trimmedLine) continue;
-
-                    try {
-                        const event = JSON.parse(trimmedLine);
-                        if (event.type === 'metadata') {
-                            updateStep('meta', 'complete');
-                            updateStep('iti', 'loading');
-                            finalData.trip.id = event.data.trip_id;
-                            if (event.data.destination) finalData.trip.destination = event.data.destination;
-                        } else if (event.type === 'itinerary') {
-                            updateStep('iti', 'complete');
-                            updateStep('log', 'loading');
-                            finalData.plan.itinerary = event.data;
-                        } else if (event.type === 'logistics') {
-                            updateStep('log', 'complete');
-                            updateStep('final', 'loading');
-                            finalData.plan = { ...finalData.plan, ...event.data };
-                        } else if (event.type === 'packing_list') {
-                            finalData.plan.packing_list = event.data;
-                        }
-                    } catch (e) {
-                        console.warn("⚠️ JSON Parse warning:", trimmedLine);
-                    }
-                }
-            }
-
-            updateStep('final', 'complete');
-            toast.success("Itinerary Ready! 🚀");
             setTimeout(() => {
-                onSuccess(finalData);
-                setIsStreaming(false);
+                updateStep('iti', 'complete');
+                updateStep('log', 'loading');
             }, 800);
 
+            setTimeout(() => {
+                updateStep('log', 'complete');
+                updateStep('final', 'loading');
+            }, 1600);
+
+            setTimeout(() => {
+                updateStep('final', 'complete');
+                toast.success("Itinerary Ready! 🚀");
+            }, 2400);
+
+            setTimeout(() => {
+                onSuccess(data);
+                setIsStreaming(false);
+            }, 3200);
+
         } catch (error) {
-            console.error("Stream Error:", error);
+            console.error("Trip Generation Error:", error);
             setIsStreaming(false);
             toast.error("AI is taking a nap. Please try again.");
         }
@@ -184,18 +157,18 @@ export default function CreateTripForm({ onSuccess, initialDestination = '' }: C
 
                     <DestinationSection
                         origin={formData.origin}
-                        setOrigin={(val) => setFormData({...formData, origin: val})}
+                        setOrigin={(val) => setFormData({ ...formData, origin: val })}
                         destination={formData.destination}
-                        setDestination={(val) => setFormData({...formData, destination: val})}
+                        setDestination={(val) => setFormData({ ...formData, destination: val })}
                         isAuto={isAutoDest}
                         setAuto={setIsAutoDest}
                     />
 
                     <DateDurationSection
                         startDate={formData.start_date}
-                        setStartDate={(val) => setFormData({...formData, start_date: val})}
+                        setStartDate={(val) => setFormData({ ...formData, start_date: val })}
                         tripDays={formData.trip_days}
-                        setTripDays={(val) => setFormData({...formData, trip_days: val})}
+                        setTripDays={(val) => setFormData({ ...formData, trip_days: val })}
                         isFlexible={isFlexibleDate}
                         setFlexible={setIsFlexibleDate}
                     />
@@ -206,7 +179,7 @@ export default function CreateTripForm({ onSuccess, initialDestination = '' }: C
                     />
 
                     <Button type="submit" disabled={isStreaming}
-                            className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-lg py-6 rounded-xl shadow-lg transition-all hover:scale-[1.01]"
+                        className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-lg py-6 rounded-xl shadow-lg transition-all hover:scale-[1.01]"
                     >
                         {isStreaming ? <Loader2 className="animate-spin" /> : "Plan My Trip ✨"}
                     </Button>

@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, RefreshCw, Trash2, PlusCircle } from 'lucide-react';
+import { MapPin, RefreshCw, Trash2, PlusCircle, Utensils, Bed, Coffee, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Activity } from '@/types';
 
@@ -13,6 +12,9 @@ interface ActivityCardProps {
     onDelete?: () => void;
     onAddBelow?: () => void;
     className?: string;
+    destinationName: string;
+    isSelected?: boolean;
+    onClick?: () => void;
 }
 
 export default function ActivityCard({
@@ -20,24 +22,33 @@ export default function ActivityCard({
     onReplace,
     onDelete,
     onAddBelow,
-    className
+    className,
+    destinationName,
+    isSelected,
+    onClick
 }: ActivityCardProps) {
-    return (
-        <div className={cn(
-            "group relative bg-white rounded-[2rem] p-6 transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)]",
-            className
-        )}>
-            <div className="flex flex-col md:flex-row gap-6">
-                {/* Thumbnail Image */}
-                <div className="w-full md:w-40 h-32 shrink-0 rounded-2xl overflow-hidden shadow-sm">
-                    <img
-                        src={`https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=400&q=80`}
-                        alt={activity.activity}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                </div>
+    const isGeneric = activity.location_type === 'generic';
 
-                {/* Content */}
+    // Helper to get generic icon
+    const getGenericIcon = () => {
+        const type = activity.type?.toLowerCase() || '';
+        if (type.includes('culinary') || type.includes('eat') || type.includes('breakfast') || type.includes('lunch') || type.includes('dinner')) return <Utensils className="w-4 h-4 text-orange-500" />;
+        if (type.includes('stay') || type.includes('hotel') || type.includes('accommodation') || type.includes('check-in')) return <Bed className="w-4 h-4 text-blue-500" />;
+        if (type.includes('coffee') || type.includes('cafe') || type.includes('break')) return <Coffee className="w-4 h-4 text-amber-600" />;
+        return <Sparkles className="w-4 h-4 text-purple-500" />;
+    };
+
+    return (
+        <div
+            onClick={onClick}
+            className={cn(
+                "group relative bg-white rounded-[2rem] p-6 transition-all duration-500 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] cursor-pointer border-2",
+                isSelected ? "ring-4 ring-teal-500/20 border-teal-500 bg-teal-50/30 shadow-[0_20px_40px_rgb(20,184,166,0.1)]" : "border-transparent",
+                className
+            )}
+        >
+            <div className="flex flex-col gap-2">
+                {/* Content - Full Width */}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                         <span className="text-xs font-bold text-[#42707D] uppercase tracking-wider">
@@ -53,18 +64,34 @@ export default function ActivityCard({
                         {activity.activity}
                     </h4>
 
-                    <div className="flex items-center gap-1.5 text-sm text-slate-500 font-medium mb-3">
-                        <MapPin className="w-4 h-4 text-[#42707D]" />
-                        <span>{activity.place_name || "Location TBD"}</span>
-                    </div>
+                    {!isGeneric && (
+                        <div className="flex items-center gap-1.5 text-sm text-slate-500 font-medium mb-3">
+                            <MapPin className="w-4 h-4 text-[#42707D]" />
+                            <span>{activity.place_name || "Location TBD"}</span>
+                        </div>
+                    )}
 
-                    <p className="text-sm text-slate-500 leading-relaxed font-medium line-clamp-2">
+                    {isGeneric && (
+                        <div className="flex items-center gap-1.5 text-sm text-slate-500 font-bold mb-3 italic">
+                            {getGenericIcon()}
+                            <span>{activity.place_name || "Neighborhood"}</span>
+                        </div>
+                    )}
+
+                    <p className="text-sm text-slate-500 leading-relaxed font-medium">
                         {activity.description}
                     </p>
                 </div>
 
                 {/* Actions (Always subtle, pops on hover) */}
                 <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                        variant="ghost" size="icon"
+                        onClick={(e) => { e.stopPropagation(); onAddBelow?.(); }}
+                        className="h-9 w-9 rounded-full hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                    >
+                        <PlusCircle className="w-4 h-4" />
+                    </Button>
                     <Button
                         variant="ghost" size="icon"
                         onClick={(e) => { e.stopPropagation(); onReplace?.(); }}

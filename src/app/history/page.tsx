@@ -208,13 +208,13 @@ export default function HistoryPage() {
             </main>
 
             {/* MOBILE FAB */}
-            <div className="md:hidden fixed bottom-8 right-6 z-40">
+            <div className="md:hidden fixed bottom-24 right-4 z-[60]">
                 <Button
                     size="icon"
                     onClick={() => setIsPlannerOpen(true)}
-                    className="h-16 w-16 rounded-full bg-gradient-to-tr from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 shadow-2xl shadow-teal-500/40 text-white transition-all active:scale-95"
+                    className="h-14 w-14 rounded-full bg-gradient-to-tr from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 shadow-2xl shadow-teal-500/40 text-white transition-all active:scale-95"
                 >
-                    <Plus className="w-8 h-8" />
+                    <Plus className="w-6 h-6" />
                 </Button>
             </div>
         </div>

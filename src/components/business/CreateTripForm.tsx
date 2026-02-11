@@ -189,9 +189,14 @@ export default function CreateTripForm({ onSuccess, initialDestination = '' }: C
                                 accumulatedData.plan.transport_options = event.data.transport_options || [];
                                 accumulatedData.plan.decision_notes = event.data.decision_notes || [];
                                 updateStep('log', 'complete');
+                                updateStep('final', 'loading');
                                 break;
                             case 'packing_list':
                                 accumulatedData.plan.packing_list = event.data;
+                                updateStep('final', 'complete');
+                                break;
+                            case 'done':
+                                console.log("✅ Stream completed");
                                 break;
                         }
                     } catch (e) {
@@ -201,23 +206,19 @@ export default function CreateTripForm({ onSuccess, initialDestination = '' }: C
             }
 
             // --- FINALIZATION ---
-            updateStep('final', 'loading');
+            // Execute immediately after stream ends
+            console.log("🏁 Finalizing trip data...");
+            toast.success("Itinerary Ready! 🚀");
 
-            // Artificial delay for smooth transition to result
-            setTimeout(() => {
-                updateStep('final', 'complete');
-                toast.success("Itinerary Ready! 🚀");
-
-                onSuccess({
-                    trip: {
-                        ...accumulatedData.trip,
-                        created_at: new Date().toISOString()
-                    },
-                    plan: accumulatedData.plan,
-                    is_saved: false
-                });
-                setIsStreaming(false);
-            }, 800);
+            onSuccess({
+                trip: {
+                    ...accumulatedData.trip,
+                    created_at: new Date().toISOString()
+                },
+                plan: accumulatedData.plan,
+                is_saved: false
+            });
+            setIsStreaming(false);
 
         } catch (error) {
             console.error("Trip Generation Error:", error);

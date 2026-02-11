@@ -13,28 +13,32 @@ export const metadata: Metadata = {
     description: "Your intelligent travel planner",
 };
 
+import BottomNav from "@/components/navigation/BottomNav";
+
 export default function RootLayout({
-                                       children,
-                                   }: Readonly<{
+    children,
+}: Readonly<{
     children: React.ReactNode;
 }>) {
     return (
         <ClerkProvider>
             <html lang="en" suppressHydrationWarning>
-            <body className={inter.className}>
-            <Providers>
-                <ThemeProvider
-                    attribute="data-theme"
-                    defaultTheme="light"
-                    enableSystem
-                    themes={["light", "teal", "violet"]}
-                    disableTransitionOnChange
-                >
-                    {children}
-                    <Toaster position="top-center" />
-                </ThemeProvider>
-            </Providers>
-            </body>
+                <body className={inter.className}>
+                    <Providers>
+                        <ThemeProvider
+                            attribute="class"
+                            defaultTheme="light"
+                            enableSystem
+                            disableTransitionOnChange
+                        >
+                            <div className="pb-20 md:pb-0 min-h-screen">
+                                {children}
+                            </div>
+                            <BottomNav />
+                            <Toaster position="top-center" />
+                        </ThemeProvider>
+                    </Providers>
+                </body>
             </html>
         </ClerkProvider>
     );

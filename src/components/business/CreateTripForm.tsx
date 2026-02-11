@@ -101,34 +101,123 @@ export default function CreateTripForm({ onSuccess, initialDestination = '' }: C
         };
 
         try {
-            // STEP 1: Metadata / Initial Analysis
+            // STEP 1: Connect to Go Backend Streaming API
             updateStep('meta', 'loading');
 
-            const data = await generateTripAction(payload);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8889/api/v1'}/trips/stream`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
-            // Advance steps to give a sense of progress
-            updateStep('meta', 'complete');
-            updateStep('iti', 'loading');
+            if (!response.ok) throw new Error("Failed to connect to trip generator");
 
-            setTimeout(() => {
-                updateStep('iti', 'complete');
-                updateStep('log', 'loading');
-            }, 800);
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
 
-            setTimeout(() => {
-                updateStep('log', 'complete');
-                updateStep('final', 'loading');
-            }, 1600);
+            let accumulatedData: any = {
+                trip: payload, // Initialize with payload as fallback
+                plan: {
+                    itinerary: [],
+                    budget_breakdown: null,
+                    arrival_guide: null,
+                    strategic_accommodation: [],
+                    transport_options: [],
+                    packing_list: [],
+                    decision_notes: [],
+                    morning_briefing: "",
+                    highlights: [],
+                    tagline: "",
+                    vibes: [],
+                    culinary_signature: [],
+                    hidden_gem: null,
+                    history_snippet: ""
+                }
+            };
 
+            let incompleteLine = "";
+
+            while (reader) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                const currentChunk = incompleteLine + chunk;
+                const lines = currentChunk.split('\n');
+
+                // Keep the last part if it doesn't end in a newline
+                if (!currentChunk.endsWith('\n')) {
+                    incompleteLine = lines.pop() || "";
+                } else {
+                    incompleteLine = "";
+                }
+
+                for (const line of lines) {
+                    const trimmedLine = line.trim();
+                    if (!trimmedLine) continue;
+
+                    try {
+                        const event = JSON.parse(trimmedLine);
+                        console.log("🌊 Stream Event:", event.type);
+
+                        switch (event.type) {
+                            case 'metadata':
+                                accumulatedData.trip = {
+                                    ...accumulatedData.trip,
+                                    ...event.data
+                                };
+                                updateStep('meta', 'complete');
+                                updateStep('iti', 'loading');
+                                break;
+                            case 'itinerary':
+                                accumulatedData.plan.itinerary = event.data.itinerary || event.data;
+                                accumulatedData.plan.morning_briefing = event.data.morning_briefing;
+                                accumulatedData.plan.highlights = event.data.highlights;
+                                accumulatedData.plan.tagline = event.data.tagline;
+                                accumulatedData.plan.vibes = event.data.vibes;
+                                accumulatedData.plan.culinary_signature = event.data.culinary_signature;
+                                accumulatedData.plan.hidden_gem = event.data.hidden_gem;
+                                accumulatedData.plan.history_snippet = event.data.history_snippet;
+                                updateStep('iti', 'complete');
+                                updateStep('log', 'loading');
+                                break;
+                            case 'logistics':
+                                // Merge logistics data
+                                accumulatedData.plan.arrival_guide = event.data.arrival_guide;
+                                accumulatedData.plan.budget_breakdown = event.data.budget_breakdown;
+                                accumulatedData.plan.strategic_accommodation = event.data.strategic_accommodation;
+                                accumulatedData.plan.transport_options = event.data.transport_options || [];
+                                accumulatedData.plan.decision_notes = event.data.decision_notes || [];
+                                updateStep('log', 'complete');
+                                break;
+                            case 'packing_list':
+                                accumulatedData.plan.packing_list = event.data;
+                                break;
+                        }
+                    } catch (e) {
+                        console.error("Error parsing stream line:", e);
+                    }
+                }
+            }
+
+            // --- FINALIZATION ---
+            updateStep('final', 'loading');
+
+            // Artificial delay for smooth transition to result
             setTimeout(() => {
                 updateStep('final', 'complete');
                 toast.success("Itinerary Ready! 🚀");
-            }, 2400);
 
-            setTimeout(() => {
-                onSuccess(data);
+                onSuccess({
+                    trip: {
+                        ...accumulatedData.trip,
+                        created_at: new Date().toISOString()
+                    },
+                    plan: accumulatedData.plan,
+                    is_saved: false
+                });
                 setIsStreaming(false);
-            }, 3200);
+            }, 800);
 
         } catch (error) {
             console.error("Trip Generation Error:", error);

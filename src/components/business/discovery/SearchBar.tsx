@@ -1,7 +1,7 @@
 import React from 'react';
-import {Search, Loader2, X} from 'lucide-react';
-import {Input} from '@/components/ui/input';
-import {Button} from '@/components/ui/button';
+import { Search, Loader2, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface SearchBarProps {
     city: string;
@@ -12,12 +12,12 @@ interface SearchBarProps {
 }
 
 export default function SearchBar({
-                                      city,
-                                      setCity,
-                                      onSearch,
-                                      isLoading,
-                                      isCompact
-                                  }: SearchBarProps) {
+    city,
+    setCity,
+    onSearch,
+    isLoading,
+    isCompact
+}: SearchBarProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,7 +30,7 @@ export default function SearchBar({
             className={`relative w-full group transition-all duration-700 ${isCompact ? 'max-w-md ml-auto md:ml-0' : 'max-w-lg mx-auto'}`}
         >
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className={`w-5 h-5 ${isLoading ? 'text-teal-500' : 'text-slate-400'}`}/>
+                <Search className={`w-5 h-5 ${isLoading ? 'text-teal-500' : 'text-slate-400'}`} />
             </div>
 
             <Input
@@ -48,7 +48,7 @@ export default function SearchBar({
                     onClick={() => setCity('')}
                     className="absolute right-24 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
                 >
-                    <X className="w-4 h-4"/>
+                    <X className="w-4 h-4" />
                 </button>
             )}
 
@@ -61,7 +61,7 @@ export default function SearchBar({
                 >
                     {/* Menggunakan key memaksa React me-rerender text saat loading berubah */}
                     <span key={isLoading ? "loading" : "idle"}>
-                         {isLoading ? <Loader2 className="w-5 h-5 animate-spin"/> : "Discover"}
+                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Plan Trip"}
                     </span>
                 </Button>
             </div>

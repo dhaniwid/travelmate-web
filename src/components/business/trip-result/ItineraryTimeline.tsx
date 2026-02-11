@@ -124,18 +124,35 @@ export default function ItineraryTimeline({
                 {(activities || []).map((act, idx) => renderActivity(act, idx, activities.length, activeDay))}
             </div>
 
-            {activeDay < (totalDays || 0) && (
-                <button
-                    onClick={() => onDayChange?.(activeDay + 1)}
-                    className="w-full py-4 mt-8 bg-slate-50 hover:bg-slate-100 text-slate-600 font-medium rounded-xl border border-dashed border-slate-300 transition-all flex items-center justify-center gap-2 group"
-                >
-                    Continue to Day {activeDay + 1}
-                    <RefreshCw className="w-4 h-4 transition-transform group-hover:rotate-12" />
-                </button>
-            )}
+            {/* Day Navigation Footer */}
+            <div className="flex justify-between mt-12 pt-8 border-t border-slate-100">
+                {activeDay > 1 ? (
+                    <button
+                        onClick={() => {
+                            onDayChange?.(activeDay - 1);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="flex items-center gap-2 text-slate-500 hover:text-blue-600 font-medium transition-colors"
+                    >
+                        ← Day {activeDay - 1}
+                    </button>
+                ) : <div />}
 
-            <div className="flex justify-center py-8 opacity-50">
-                <span className="text-xs font-medium text-slate-400 uppercase tracking-widest border-b border-slate-300 pb-1">End of Day {activeDay}</span>
+                {activeDay < (totalDays || 0) ? (
+                    <button
+                        onClick={() => {
+                            onDayChange?.(activeDay + 1);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="flex items-center gap-2 font-black text-blue-600 hover:text-blue-700 transition-all hover:translate-x-1"
+                    >
+                        Day {activeDay + 1} →
+                    </button>
+                ) : (
+                    <span className="text-slate-400 font-bold flex items-center gap-2 italic">
+                        End of Trip 🎉
+                    </span>
+                )}
             </div>
         </div>
     );

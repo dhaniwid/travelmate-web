@@ -60,10 +60,63 @@ export interface ItineraryItem {
     activities: Activity[];
 }
 
+export interface TripHighlight {
+    title: string;
+    type: string;
+    hook: string;
+    image_prompt: string;
+}
+
+export interface CulinarySignature {
+    name: string;
+    description: string;
+    tip: string;
+}
+
+export interface HiddenGem {
+    name: string;
+    description: string;
+}
+
+// --- LOGISTICS ---
+
+export interface TransportBreakdown {
+    first_mile: string;
+    main_leg: string;
+    last_mile: string;
+}
+
+export interface TransportOption {
+    strategy_tag: string;
+    name: string;
+    price_tier: 'LOW' | 'MED' | 'HIGH';
+    total_duration_display: string;
+    breakdown: TransportBreakdown;
+    operators_hint: string;
+    booking_query: string;
+    pros: string;
+}
+
+export interface AccommodationOption {
+    type: string;
+    area_name: string;
+    reason: string;
+    vibe: string;
+    hotel_suggestions: string[];
+    photo_url?: string; // Optional if we fetch images
+}
+
+export interface PackingItem {
+    category: string;
+    items: string[];
+}
+
 export interface ArrivalGuide {
-    primary_transport: 'plane' | 'train' | 'bus' | 'car';
+    primary_transport: string;
     travel_time: string;
     estimated_price_range: string;
+    visa_info: string;
+    best_time_visit: string;
 }
 
 export interface TripPlan {
@@ -71,12 +124,19 @@ export interface TripPlan {
     itinerary: ItineraryItem[];
     budget_breakdown: BudgetBreakdown;
     decision_notes: string[];
-    total: number;
+    total?: number; // Calculated or from DB
     logistics_context?: any;
-    transport_options: any[];
-    strategic_accommodation: any[];
-    highlights?: any[];
+    transport_options: TransportOption[];
+    strategic_accommodation: AccommodationOption[];
     arrival_guide?: ArrivalGuide;
+    packing_list?: PackingItem[]; // Added
+    morning_briefing?: string;
+    highlights?: TripHighlight[];
+    tagline?: string;
+    vibes?: string[];
+    culinary_signature?: CulinarySignature[];
+    hidden_gem?: HiddenGem;
+    history_snippet?: string;
 }
 
 export interface BudgetBreakdown {

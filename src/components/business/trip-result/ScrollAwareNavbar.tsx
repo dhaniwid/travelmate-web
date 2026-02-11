@@ -26,7 +26,7 @@ export default function ScrollAwareNavbar({
 
     useEffect(() => {
         const handleScroll = () => {
-            const scrollThreshold = 300; // Match cinematic header height area
+            const scrollThreshold = 200; // Match new compact header threshold
             setIsVisible(window.scrollY > scrollThreshold);
         };
 
@@ -56,32 +56,21 @@ export default function ScrollAwareNavbar({
             </div>
 
             <div className="flex items-center gap-3">
-                {isHistoryView ? (
+                {!isSaved && (
                     <Button
-                        variant="ghost"
-                        onClick={() => router.push('/history')}
-                        className="rounded-full font-bold text-slate-500 hover:text-slate-900"
+                        onClick={onSave}
+                        disabled={isSaving}
+                        className="rounded-full bg-[#42707D] hover:bg-[#355963] text-white font-bold h-10 px-6 shadow-lg transition-all active:scale-95 text-xs"
                     >
-                        <History className="w-4 h-4 mr-2" />
-                        History
+                        {isSaving ? (
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : (
+                            <Save className="w-4 h-4 mr-2" />
+                        )}
+                        Save Trip
                     </Button>
-                ) : (
-                    !isSaved && (
-                        <Button
-                            onClick={onSave}
-                            disabled={isSaving}
-                            className="rounded-full bg-[#42707D] hover:bg-[#355963] text-white font-bold h-10 px-6 shadow-lg transition-all active:scale-95"
-                        >
-                            {isSaving ? (
-                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                            ) : (
-                                <Save className="w-4 h-4 mr-2" />
-                            )}
-                            Save Trip
-                        </Button>
-                    )
                 )}
             </div>
-        </div>
+        </div >
     );
 }

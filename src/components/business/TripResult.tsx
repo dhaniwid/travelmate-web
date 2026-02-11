@@ -4,20 +4,27 @@ import React, { useTransition } from 'react';
 import { TripResponse, Activity, ActivityAlternative } from '@/types';
 import ScrollAwareNavbar from './trip-result/ScrollAwareNavbar';
 import TripHeader from './trip-result/TripHeader';
-import ItineraryTimeline from './trip-result/ItineraryTimeline';
-import HighlightsRow from './trip-result/HighlightsRow';
-import DayNavigator from './trip-result/DayNavigator';
 import TripCustomizationModal from './trip-result/TripCustomizationModal';
 import ActivityReplacementDrawer from './trip-result/ActivityReplacementDrawer';
 import AddActivityModal from './trip-result/AddActivityModal';
-import TripMap from './trip-result/TripMap';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import LogisticsDashboard from '../trip/LogisticsDashboard';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+
+// New Modular Views
+import StickyTabNav, { TabType } from '@/components/trip/StickyTabNav';
+import OverviewView from '@/components/trip/views/OverviewView';
+import ItineraryView from '@/components/trip/views/ItineraryView';
+import LogisticsView from '@/components/trip/views/LogisticsView';
+import EssentialsView from '@/components/trip/views/EssentialsView';
+import MapView from '@/components/trip/views/MapView';
+import { PassportView } from '@/components/passport/PassportView';
+
 import { confirmActivitySwap, deleteActivity } from '@/actions/ai-swap';
 import { updateTripPreferences } from '@/actions/preferences';
 import { addActivity } from '@/actions/trip';
-import { Loader2, Map as MapIcon, List as ListIcon } from 'lucide-react';
+import { Loader2, Stamp } from 'lucide-react';
+import { useAuth } from '@clerk/nextjs';
 
 interface TripResultProps {
     data: TripResponse;
@@ -28,6 +35,18 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     const { trip, plan, is_saved } = data;
     const [isPending, startTransition] = useTransition();
     const [currentPlan, setCurrentPlan] = React.useState(plan);
+    const { userId } = useAuth();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    const [isSaved, setIsSaved] = React.useState(is_saved || isSavedView || (trip.user_id === userId && !!userId));
+
+    // Sync state with props when data changes (e.g. after stream completes or trip switches)
+    useEffect(() => {
+        setCurrentPlan(data.plan);
+        setIsSaved(data.is_saved || isSavedView || (data.trip?.user_id === userId && !!userId));
+    }, [data, isSavedView, userId]);
+
     const [isCustomizeOpen, setIsCustomizeOpen] = React.useState(false);
     const [isReplaceOpen, setIsReplaceOpen] = React.useState(false);
     const [isAddOpen, setIsAddOpen] = React.useState(false);
@@ -45,7 +64,19 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
         pace: trip.user_preferences?.pace || 'Balanced'
     });
 
-    const [isSaved, setIsSaved] = React.useState(is_saved);
+    // Tab Management
+    const initialTab = (searchParams.get('view') as TabType) || 'overview';
+    const [activeTab, setActiveTab] = React.useState<TabType>(initialTab);
+
+    // Sync Tab with URL
+    useEffect(() => {
+        const currentView = searchParams.get('view');
+        if (currentView !== activeTab) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.set('view', activeTab);
+            router.replace(`?${params.toString()}`, { scroll: false });
+        }
+    }, [activeTab, router, searchParams]);
 
     const handleApplyPreferences = async (newPrefs: any) => {
         // 1. Optimistic Update
@@ -228,7 +259,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
         setActiveDay(day);
         const element = document.getElementById(`day-${day}`);
         if (element) {
-            const yOffset = -80; // Account for sticky navigator
+            const yOffset = -110; // Account for stacked sticky navs (56px section nav + 52px day nav)
             const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
@@ -240,109 +271,88 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
         return currentPlan.itinerary?.find(d => d.day === activeDay)?.activities || [];
     }, [currentPlan.itinerary, activeDay]);
 
+    const allActivities = React.useMemo(() => {
+        return currentPlan.itinerary?.flatMap(d => d.activities) || [];
+    }, [currentPlan.itinerary]);
+
     return (
-        <div className="animate-in fade-in duration-700 pb-20">
+        <div className="animate-in fade-in duration-700 pb-20 bg-white min-h-screen">
             {/* 0. Scroll-Aware Navbar */}
             <ScrollAwareNavbar
-                title={`Trip to ${trip.destination}`}
+                title={`Trip to ${trip.destination || 'Unknown'}`}
                 isSaved={isSaved}
                 isSaving={isUpdating}
                 isHistoryView={isSavedView}
                 onSave={handleSaveTrigger}
             />
 
-            {/* 1. Magazine Style Header (Full Width Cinematic) */}
+            {/* 1. Dashboard Header (Compact version) */}
             <TripHeader
                 data={data}
-                totalBudget={currentPlan.total}
+                planState={currentPlan}
+                totalBudget={currentPlan.total || 0}
                 isHistoryView={isSavedView}
                 onOpenCustomize={() => setIsCustomizeOpen(true)}
                 onSaveSuccess={() => setIsSaved(true)}
                 preferences={preferences}
+                compact={activeTab !== 'overview'}
             />
 
-            {/* 2. Logistics Dashboard */}
-            <LogisticsDashboard trip={trip} plan={currentPlan} />
+            {/* 2. Sticky Tab Navigation */}
+            <StickyTabNav activeTab={activeTab} onTabChange={setActiveTab} />
 
-            {/* 2. Highlights Row */}
-            <HighlightsRow highlights={currentPlan.highlights} destination={trip.destination} />
+            {/* 3. Dynamic Content Area */}
+            <main className="max-w-7xl mx-auto py-8 px-4 md:px-8">
+                {activeTab === 'overview' && (
+                    <OverviewView
+                        trip={trip}
+                        plan={currentPlan}
+                    />
+                )}
 
-            {/* 3. Sticky Day Navigator */}
-            <DayNavigator
-                days={dayArray}
-                activeDay={activeDay}
-                onDayClick={handleDayClick}
-            />
+                {activeTab === 'itinerary' && (
+                    <ItineraryView
+                        trip={trip}
+                        plan={currentPlan}
+                        activeDay={activeDay}
+                        onDayChange={handleDayClick}
+                        onReplace={handleReplace}
+                        onDelete={handleDelete}
+                        onAddBelow={handleAddBelow}
+                        selectedActivityId={selectedActivityId}
+                        onActivitySelect={setSelectedActivityId}
+                    />
+                )}
 
-            {/* 4. Main Content: Split Layout (Desktop) / Tabs (Mobile) */}
-            <div className="max-w-7xl mx-auto px-4 md:px-8 pt-6">
-                <Tabs defaultValue="list" className="w-full md:hidden mb-8">
-                    <TabsList className="grid w-full grid-cols-2 h-12 rounded-full p-1 bg-slate-100">
-                        <TabsTrigger value="list" className="rounded-full flex items-center gap-2 font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all">
-                            <ListIcon className="w-4 h-4" /> List
-                        </TabsTrigger>
-                        <TabsTrigger value="map" className="rounded-full flex items-center gap-2 font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all">
-                            <MapIcon className="w-4 h-4" /> Map
-                        </TabsTrigger>
-                    </TabsList>
+                {activeTab === 'logistics' && (
+                    <LogisticsView
+                        trip={trip}
+                        plan={currentPlan}
+                    />
+                )}
 
-                    <TabsContent value="list" className="mt-6">
-                        <ItineraryTimeline
-                            plan={currentPlan}
-                            onReplace={handleReplace}
-                            onDelete={handleDelete}
-                            onAddBelow={handleAddBelow}
-                            destinationName={trip.destination}
-                            activeDay={activeDay}
-                            selectedActivityId={selectedActivityId}
-                            onActivitySelect={setSelectedActivityId}
-                            onDayChange={handleDayClick}
-                            totalDays={dayArray.length}
-                        />
-                    </TabsContent>
+                {activeTab === 'essentials' && (
+                    <EssentialsView
+                        trip={trip}
+                        plan={currentPlan}
+                    />
+                )}
 
-                    <TabsContent value="map" className="mt-6">
-                        <div className="h-[70vh] w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200">
-                            <TripMap
-                                activities={activeDayActivities}
-                                destination={trip.destination}
-                                activeDay={activeDay}
-                                selectedActivityId={selectedActivityId}
-                                onActivitySelect={setSelectedActivityId}
-                            />
-                        </div>
-                    </TabsContent>
-                </Tabs>
-
-                <div className="hidden md:grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-                    {/* Left: Timeline */}
-                    <div className="md:col-span-7">
-                        <ItineraryTimeline
-                            plan={currentPlan}
-                            onReplace={handleReplace}
-                            onDelete={handleDelete}
-                            onAddBelow={handleAddBelow}
-                            destinationName={trip.destination}
-                            activeDay={activeDay}
-                            selectedActivityId={selectedActivityId}
-                            onActivitySelect={setSelectedActivityId}
-                        />
+                {activeTab === 'passport' && (
+                    <div className="animate-in fade-in zoom-in-95 duration-300">
+                        <PassportView />
                     </div>
+                )}
 
-                    {/* Right: Sticky Map */}
-                    <div className="md:col-span-5 sticky top-32 h-[calc(100vh-160px)] min-h-[500px]">
-                        <div className="h-full w-full">
-                            <TripMap
-                                activities={activeDayActivities}
-                                destination={trip.destination}
-                                activeDay={activeDay}
-                                selectedActivityId={selectedActivityId}
-                                onActivitySelect={setSelectedActivityId}
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
+                {activeTab === 'map' && (
+                    <MapView
+                        trip={trip}
+                        activities={allActivities}
+                        selectedActivityId={selectedActivityId}
+                        onActivitySelect={setSelectedActivityId}
+                    />
+                )}
+            </main>
 
             <TripCustomizationModal
                 isOpen={isCustomizeOpen}
@@ -371,12 +381,14 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                 onSelect={handleSelectAlternative}
             />
 
-            {isUpdating && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl z-50 animate-in slide-in-from-bottom-4">
-                    <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-                    <span className="text-sm font-bold">Saving Changes...</span>
-                </div>
-            )}
-        </div>
+            {
+                isUpdating && (
+                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl z-50 animate-in slide-in-from-bottom-4">
+                        <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+                        <span className="text-sm font-bold">Saving Changes...</span>
+                    </div>
+                )
+            }
+        </div >
     );
 }

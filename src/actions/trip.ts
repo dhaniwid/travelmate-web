@@ -381,3 +381,40 @@ export async function getAddActivitySuggestions(tripId: string, dayNum: number, 
         return [];
     }
 }
+export async function getTripAction(id: string): Promise<TripResponse | null> {
+    try {
+        console.log(`🔍 Fetching Trip context: ${id}`);
+        const trips = await sql`SELECT * FROM trips WHERE id = ${id}`;
+        if (trips.length === 0) {
+            console.warn(`⚠️ Trip not found in DB: ${id}`);
+            return null;
+        }
+
+        const tripData = trips[0];
+        let plan = tripData.plan_data;
+        if (typeof plan === 'string') {
+            plan = JSON.parse(plan);
+        }
+
+        return {
+            trip: {
+                id: tripData.id,
+                user_id: tripData.user_id,
+                origin: tripData.origin,
+                destination: tripData.destination,
+                start_date: tripData.start_date,
+                trip_days: tripData.trip_days,
+                style: tripData.style,
+                budget: tripData.budget,
+                budget_range: tripData.budget_range,
+                created_at: tripData.created_at,
+                user_preferences: tripData.user_preferences
+            } as any,
+            plan: plan as TripPlan,
+            is_saved: true
+        };
+    } catch (error) {
+        console.error("Error fetching trip:", error);
+        return null;
+    }
+}

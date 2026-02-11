@@ -1,38 +1,49 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Share2, Printer, Loader2, Trash2, MapPin, Sparkles, History, Sliders, Utensils } from 'lucide-react';
+import { Save, Share2, Printer, Loader2, Trash2, MapPin, Sparkles, History, Sliders, Utensils, ChevronLeft } from 'lucide-react';
 import { TripResponse, UserPreferences } from '@/types';
 import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
 import { fetchUnsplashImage } from '@/services/imageService';
+import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
 
 interface TripHeaderProps {
     data: TripResponse;
+    planState?: any; // Add this to support state-managed plans
     totalBudget: number;
     isHistoryView?: boolean;
     onOpenCustomize?: () => void;
     onSaveSuccess?: () => void;
     preferences?: UserPreferences;
+    compact?: boolean;
 }
 
 export default function TripHeader({
     data,
+    planState,
     totalBudget,
     isHistoryView = false,
     onOpenCustomize,
     onSaveSuccess,
-    preferences
+    preferences,
+    compact = false
 }: TripHeaderProps) {
     const { trip, plan } = data;
+    const activePlan = planState || plan; // Use the latest plan from state if available
     const router = useRouter();
-    const { getToken } = useAuth();
+    const { getToken, userId } = useAuth();
 
     const [isSaving, setIsSaving] = useState(false);
-    const [isSaved, setIsSaved] = useState(false);
+    const [isSaved, setIsSaved] = useState(data.is_saved || isHistoryView || false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [heroImage, setHeroImage] = useState<string>("");
+
+    // Sync isSaved state if data prop changes
+    useEffect(() => {
+        setIsSaved(data.is_saved || isHistoryView || false);
+    }, [data.is_saved, isHistoryView]);
 
     useEffect(() => {
         let isMounted = true;
@@ -62,16 +73,31 @@ export default function TripHeader({
                 return;
             }
 
+            const finalUserId = userId || (trip as any).user_id || "";
+
+            if (!finalUserId) {
+                console.warn("Saving trip without User ID (Token was present, but userId is empty)");
+            }
+
+            // [FIX] Ensure trip ID is present (handle both id and ID just in case)
+            const tripId = trip.id || (trip as any).ID || "";
+            if (!tripId) {
+                toast.error("Trip ID is missing. Cannot save.");
+                console.error("Missing Trip ID. Trip Object Contents:", JSON.stringify(trip));
+                console.error("Full Data Object:", JSON.stringify(data));
+                return;
+            }
+
             const payload = {
-                id: trip.id,
-                user_id: trip.user_id,
+                id: tripId,
+                user_id: finalUserId,
                 destination: trip.destination,
                 origin: trip.origin,
                 start_date: trip.start_date,
                 trip_days: trip.trip_days,
                 style: trip.style,
                 budget: trip.budget,
-                plan_data: plan
+                plan_data: activePlan
             };
 
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/trips/save`, {
@@ -133,114 +159,126 @@ export default function TripHeader({
     };
 
     // Calculate Dates
-    const formattedDate = trip.start_date ? new Date(trip.start_date).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-    }) : 'Oct 12';
+    const parseDate = (dateStr: string) => {
+        if (!dateStr) return null;
+        const d = new Date(dateStr);
+        return isNaN(d.getTime()) ? null : d;
+    };
 
-    const startDateObj = trip.start_date ? new Date(trip.start_date) : new Date();
-    const endDateObj = new Date(startDateObj.getTime() + (trip.trip_days - 1) * 24 * 60 * 60 * 1000);
-    const endDate = endDateObj.toLocaleDateString('en-US', {
+    const startDateObj = parseDate(trip.start_date);
+    const formattedDate = startDateObj ? startDateObj.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
-        year: 'numeric'
-    });
+    }) : 'Date TBD';
+
+    let endDate = '';
+    if (startDateObj && trip.trip_days > 0) {
+        const endDateObj = new Date(startDateObj);
+        endDateObj.setDate(startDateObj.getDate() + (trip.trip_days - 1));
+        endDate = endDateObj.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    }
 
     return (
-        <div className="relative w-full h-[60vh] min-h-[500px] overflow-hidden group shadow-2xl">
-            {/* 1. CINEMATIC HERO IMAGE */}
+        <div className={cn(
+            "relative w-full overflow-hidden group transition-all duration-500 rounded-2xl shadow-2xl",
+            "h-80 md:h-96"
+        )}>
+            {/* 1. HERO IMAGE with Ken Burns effect */}
             <div
-                className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-[10s] ease-out bg-slate-900"
+                className="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-[15s] ease-out bg-slate-900"
                 style={{ backgroundImage: heroImage ? `url('${heroImage}')` : 'none' }}
             />
 
-            {/* 2. THE OVERLAY (Cinematic Gradient) */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+            {/* 2. STRONGER GRADIENT OVERLAY + VIGNETTE */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
+            <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(0,0,0,0.4)]" />
 
-            {/* 3. TOP ACTIONS (Share, Print) */}
-            <div className="absolute top-6 right-8 flex gap-3 z-20">
+            {/* 3. TOP NAVIGATION (Minimal - Back + Share only) */}
+            <div className="absolute top-6 left-6 z-20">
                 <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => window.print()}
-                    className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/20 transition-all active:scale-95"
+                    onClick={() => isHistoryView ? router.push('/history') : router.back()}
+                    className="h-10 w-10 rounded-lg bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/20 transition-all active:scale-95 shadow-lg"
                 >
-                    <Printer className="w-5 h-5" />
+                    <ChevronLeft className="w-5 h-5" />
                 </Button>
+            </div>
+
+            <div className="absolute top-6 right-6 z-20">
                 <Button
                     variant="ghost"
                     size="icon"
                     onClick={handleShare}
-                    className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/20 transition-all active:scale-95"
+                    className="h-10 w-10 rounded-lg bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/20 transition-all active:scale-95 shadow-lg"
                 >
-                    <Share2 className="w-5 h-5" />
+                    <Share2 className="w-4 h-4" />
                 </Button>
             </div>
 
-            {/* 4. BOTTOM CONTENT (Title & Meta) */}
-            <div className="absolute bottom-24 md:bottom-28 left-0 right-0 p-8 md:p-12 z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            {/* 4. CONTENT (Bottom) */}
+            <div className="absolute inset-x-0 bottom-0 p-8 md:p-12 z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                 <div className="flex-1">
-                    {/* Pills Row (Glassmorphism) */}
-                    <div className="flex flex-wrap gap-2 mb-6">
-                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[0.7rem] font-black uppercase tracking-widest border border-white/20">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>{preferences?.budgetTier || trip.budget_range || trip.budget} Tier</span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[0.7rem] font-black uppercase tracking-widest border border-white/20">
-                            <MapPin className="w-3.5 h-3.5" />
-                            <span>{trip.origin}</span>
-                        </div>
+                    {/* Budget Badge (Small, Teal) */}
+                    <div className="inline-flex items-center gap-1.5 bg-teal-500 text-white px-3 py-1 rounded-full text-[0.65rem] font-black uppercase tracking-widest mb-3 shadow-lg">
+                        <Sparkles className="w-3 h-3" />
+                        <span>{preferences?.budgetTier || trip.budget_range || 'Budget'} Tier</span>
                     </div>
 
-                    <h1 className="text-4xl md:text-6xl font-black text-white mb-3 tracking-tighter drop-shadow-2xl">
-                        {trip.destination}
+                    <h1 className="text-5xl md:text-6xl font-black text-white mb-2 tracking-tighter drop-shadow-2xl">
+                        {trip.destination || 'Trip to Unknown'}
                     </h1>
 
-                    <p className="text-white/70 text-lg md:text-xl font-medium tracking-tight flex items-center gap-2">
-                        {formattedDate} — {endDate}
-                        <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                        {trip.trip_days} Days Journey
+                    <p className="text-white/80 text-base md:text-lg font-medium tracking-tight flex items-center gap-2">
+                        {formattedDate}
+                        {endDate && ` — ${endDate}`}
+                        <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]" />
+                        {trip.trip_days || 0} Days Journey
                     </p>
                 </div>
 
-                {/* Primary Actions (Right aligned) */}
-                <div className="flex flex-wrap items-center gap-3">
-                    <Button
-                        onClick={onOpenCustomize}
-                        className="rounded-full bg-[#42707D] hover:bg-[#355963] text-white font-bold h-14 md:h-16 px-8 shadow-2xl transition-all active:scale-[0.98] text-lg border border-teal-500/30"
-                    >
-                        <Sliders className="w-5 h-5 mr-3" />
-                        Customize
-                    </Button>
-
-                    {!isHistoryView && !isSaved && (
+                {/* Primary CTA + Edit Link */}
+                <div className="flex flex-col items-start md:items-end gap-2">
+                    {/* Show 'Secure Journey' if NOT saved */}
+                    {!(isSaved || (trip.user_id && trip.user_id === userId)) && (
                         <Button
                             id="save-trip-btn"
                             onClick={handleSaveTrip}
                             disabled={isSaving}
-                            className="rounded-full bg-white hover:bg-slate-200 text-black font-bold h-14 md:h-16 px-8 shadow-2xl transition-all active:scale-[0.98] text-lg"
+                            className="rounded-lg bg-teal-500 hover:bg-teal-600 text-white font-bold h-12 px-8 shadow-xl transition-all active:scale-[0.98] text-sm"
                         >
-                            {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> :
-                                <Save className="w-5 h-5 mr-3" />}
+                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> :
+                                <Sparkles className="w-4 h-4 mr-2" />}
                             Secure Journey
                         </Button>
                     )}
 
-                    {isHistoryView && (
+                    {/* Edit Link (Subtle) */}
+                    <button
+                        onClick={onOpenCustomize}
+                        className="text-white/60 hover:text-white text-sm font-medium transition-colors underline underline-offset-2"
+                    >
+                        Edit Trip Details
+                    </button>
+
+                    {/* Delete (only in history view) */}
+                    {isHistoryView && trip.user_id === userId && (
                         <Button
                             variant="ghost"
                             onClick={handleDeleteTrip}
                             disabled={isDeleting}
-                            className="h-16 px-6 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors font-bold text-lg"
+                            className="h-10 px-4 text-white/50 hover:text-red-400 hover:bg-red-400/10 transition-colors text-sm"
                         >
-                            <Trash2 className="w-5 h-5" />
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
                         </Button>
                     )}
                 </div>
             </div>
-
-            {/* Gradient Border Accent */}
-            <div className="absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400/80 via-white/20 to-orange-400/80" />
         </div>
     );
 }

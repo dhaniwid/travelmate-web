@@ -5,29 +5,31 @@ interface DayNavigatorProps {
     days: number[];
     activeDay: number;
     onDayClick: (day: number) => void;
+    className?: string;
 }
 
-export default function DayNavigator({ days, activeDay, onDayClick }: DayNavigatorProps) {
+export default function DayNavigator({ days, activeDay, onDayClick, className }: DayNavigatorProps) {
     return (
-        <div className="sticky top-16 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-100 py-2 shadow-sm overflow-x-auto no-scrollbar">
-            <div className="max-w-7xl mx-auto px-4 md:px-8">
-                <div className="flex items-center space-x-8 h-16">
+        <div className={cn(
+            "sticky top-[56px] z-30 w-full bg-white/80 backdrop-blur-md border-b border-slate-100 py-1 overflow-x-auto no-scrollbar",
+            className
+        )}>
+            <div className="px-4 md:px-0">
+                <div className="flex items-center space-x-1 h-12">
                     {days.map((day) => (
                         <button
                             key={day}
                             onClick={() => onDayClick(day)}
                             className={cn(
-                                "flex-shrink-0 relative h-full flex items-center px-4 font-bold text-sm transition-all hover:text-[#42707D]",
-                                activeDay === day ? "text-[#42707D]" : "text-slate-400"
+                                "flex-shrink-0 px-4 py-2 rounded-lg font-bold text-xs transition-all",
+                                activeDay === day
+                                    ? "bg-blue-600 text-white shadow-sm"
+                                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                             )}
                         >
                             Day {day}
-                            {activeDay === day && (
-                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#42707D] rounded-t-full" />
-                            )}
                         </button>
                     ))}
-                    {/* Add a spacer or 'View More' if needed */}
                 </div>
             </div>
         </div>

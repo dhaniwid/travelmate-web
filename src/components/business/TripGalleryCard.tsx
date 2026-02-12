@@ -7,7 +7,7 @@ import {
     Calendar, Clock, Trash2, Loader2, Plane, MapPin
 } from 'lucide-react';
 import { fetchUnsplashImage } from '@/services/imageService';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 
 interface TripGalleryCardProps {
     trip: Trip;
@@ -130,7 +130,7 @@ export default function TripGalleryCard({ trip, onDelete }: TripGalleryCardProps
                 </h3>
                 <p className="text-slate-200 text-sm font-medium flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5 opacity-80" />
-                    {new Date(trip.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                    {formatDate(trip.start_date)}
                     <span className="w-1 h-1 rounded-full bg-white/50" />
                     {trip.trip_days} Days
                 </p>

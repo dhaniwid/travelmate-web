@@ -1,17 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Share2, Printer, Loader2, Trash2, MapPin, Sparkles, History, Sliders, Utensils, ChevronLeft } from 'lucide-react';
+import {
+    Share2,
+    Loader2,
+    Trash2,
+    Sparkles,
+    ChevronLeft,
+    Pencil,
+    MoreHorizontal,
+    Calendar,
+    Gauge,
+    Download,
+    Lock
+} from 'lucide-react';
 import { TripResponse, UserPreferences } from '@/types';
 import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
 import { fetchUnsplashImage } from '@/services/imageService';
-import { cn } from '@/lib/utils';
-import { useEffect } from 'react';
+import { cn, formatDate } from '@/lib/utils';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface TripHeaderProps {
     data: TripResponse;
-    planState?: any; // Add this to support state-managed plans
+    planState?: any;
     totalBudget: number;
     isHistoryView?: boolean;
     onOpenCustomize?: () => void;
@@ -35,56 +52,42 @@ export default function TripHeader({
     const router = useRouter();
     const { getToken, userId } = useAuth();
 
+    // State
     const [isSaving, setIsSaving] = useState(false);
     const [isSaved, setIsSaved] = useState(data.is_saved || isHistoryView || false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [heroImage, setHeroImage] = useState<string>("");
 
-    // Sync isSaved state if data prop changes
+    // Sync isSaved state
     useEffect(() => {
         setIsSaved(data.is_saved || isHistoryView || false);
     }, [data.is_saved, isHistoryView]);
 
+    // Load Hero Image
     useEffect(() => {
         let isMounted = true;
         const loadHero = async () => {
             const url = await fetchUnsplashImage(trip.destination);
-            if (isMounted) {
-                if (url) {
-                    setHeroImage(url);
-                } else {
-                    // Fallback handled by CSS if heroImage is empty
-                    // Or we can set a fallback state here if we want a specific behavior
-                }
-            }
+            if (isMounted && url) setHeroImage(url);
         };
         loadHero();
         return () => { isMounted = false; };
     }, [trip.destination]);
-
-    const isFinalized = isHistoryView || isSaved;
 
     const handleSaveTrip = async () => {
         setIsSaving(true);
         try {
             const token = await getToken();
             if (!token) {
-                toast.error("You must be logged in to save a trip.");
+                router.push(`/sign-in?redirect_url=${encodeURIComponent(window.location.href)}`);
                 return;
             }
 
             const finalUserId = userId || (trip as any).user_id || "";
-
-            if (!finalUserId) {
-                console.warn("Saving trip without User ID (Token was present, but userId is empty)");
-            }
-
-            // [FIX] Ensure trip ID is present (handle both id and ID just in case)
             const tripId = trip.id || (trip as any).ID || "";
+
             if (!tripId) {
-                toast.error("Trip ID is missing. Cannot save.");
-                console.error("Missing Trip ID. Trip Object Contents:", JSON.stringify(trip));
-                console.error("Full Data Object:", JSON.stringify(data));
+                toast.error("Trip ID is missing.");
                 return;
             }
 
@@ -111,21 +114,19 @@ export default function TripHeader({
 
             if (!response.ok) {
                 const errData = await response.json();
+                if (response.status === 403 && errData.error === 'quota_exceeded') {
+                    toast.error("Limit Reached 🚫", { description: errData.message });
+                    return;
+                }
                 throw new Error(errData.message || "Failed to save trip");
             }
 
             setIsSaved(true);
             onSaveSuccess?.();
-            toast.success("Trip secured! It's now in your history.", {
-                action: {
-                    label: "View History",
-                    onClick: () => router.push('/history')
-                }
-            });
-
+            toast.success("Trip secured!");
         } catch (error) {
             console.error("Save Error:", error);
-            toast.error(error instanceof Error ? error.message : "Failed to save trip.");
+            toast.error("Failed to save trip.");
         } finally {
             setIsSaving(false);
         }
@@ -152,131 +153,218 @@ export default function TripHeader({
         }
     };
 
+
+
+    const handleExportPDF = async () => {
+        const toastId = toast.loading("Generating PDF Magazine...");
+        try {
+            const token = await getToken();
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/trips/${trip.id}/export/pdf`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (res.status === 403) {
+                toast.dismiss(toastId);
+                toast.error("Premium Feature 💎", {
+                    description: "Upgrade to Miru PRO to export magazine-style PDFs!",
+                    action: {
+                        label: "Upgrade",
+                        onClick: () => router.push('/subscription')
+                    }
+                });
+                return;
+            }
+
+            if (!res.ok) throw new Error("Export failed");
+
+            // Handle Blob Download
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Miru_Trip_${trip.destination}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            toast.dismiss(toastId);
+            toast.success("PDF Downloaded!");
+        } catch (e) {
+            console.error(e);
+            toast.dismiss(toastId);
+            toast.error("Failed to generate PDF");
+        }
+    };
+
     const handleShare = () => {
+        if (typeof window === "undefined") return;
         const url = `${window.location.origin}/trips/${trip.id}`;
         navigator.clipboard.writeText(url);
-        toast.success("Trip link copied to clipboard!");
+        toast.success("Link copied!");
     };
 
-    // Calculate Dates
-    const parseDate = (dateStr: string) => {
-        if (!dateStr) return null;
-        const d = new Date(dateStr);
-        return isNaN(d.getTime()) ? null : d;
-    };
+    // Date Calculation
+    const startDateObj = trip.start_date ? new Date(trip.start_date) : null;
+    let dateRange = 'TBD';
 
-    const startDateObj = parseDate(trip.start_date);
-    const formattedDate = startDateObj ? startDateObj.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-    }) : 'Date TBD';
+    if (startDateObj && !isNaN(startDateObj.getTime())) {
+        const formattedStart = formatDate(startDateObj); // e.g. 11 Feb 2026
 
-    let endDate = '';
-    if (startDateObj && trip.trip_days > 0) {
-        const endDateObj = new Date(startDateObj);
-        endDateObj.setDate(startDateObj.getDate() + (trip.trip_days - 1));
-        endDate = endDateObj.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
+        let formattedEnd = '';
+        if (trip.trip_days > 0) {
+            const endDateObj = new Date(startDateObj);
+            endDateObj.setDate(startDateObj.getDate() + (trip.trip_days - 1));
+            formattedEnd = formatDate(endDateObj);
+        }
+
+        // Use shorter format for range if same month/year
+        // But for now, full format is safer and clearer as per requirement
+        dateRange = formattedEnd ? `${formattedStart} - ${formattedEnd}` : formattedStart;
     }
+
+    const pace = preferences?.pace || trip.user_preferences?.pace || 'Balanced';
 
     return (
         <div className={cn(
-            "relative w-full overflow-hidden group transition-all duration-500 rounded-2xl shadow-2xl",
-            "h-80 md:h-96"
+            "relative w-full overflow-hidden group transition-all duration-500 rounded-3xl shadow-2xl isolate mb-6",
+            "h-[28rem] md:h-[32rem]"
         )}>
-            {/* 1. HERO IMAGE with Ken Burns effect */}
+            {/* 1. HERO IMAGE */}
             <div
-                className="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-[15s] ease-out bg-slate-900"
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] ease-out scale-105 group-hover:scale-110 bg-slate-900"
                 style={{ backgroundImage: heroImage ? `url('${heroImage}')` : 'none' }}
             />
 
-            {/* 2. STRONGER GRADIENT OVERLAY + VIGNETTE */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
-            <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(0,0,0,0.4)]" />
+            {/* 2. GRADIENT OVERLAY (Task 1: Updated) */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/90" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60" />
 
-            {/* 3. TOP NAVIGATION (Minimal - Back + Share only) */}
-            <div className="absolute top-6 left-6 z-20">
+            {/* 3. TOP NAVIGATION (Task 2 & 4) */}
+            <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-6">
+                {/* Left: Glassmorphic Back Button (Task 4) */}
                 <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => isHistoryView ? router.push('/history') : router.back()}
-                    className="h-10 w-10 rounded-lg bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/20 transition-all active:scale-95 shadow-lg"
+                    className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-xl text-white hover:bg-white/20 border border-white/10 transition-all active:scale-95 shadow-sm"
                 >
                     <ChevronLeft className="w-5 h-5" />
                 </Button>
-            </div>
 
-            <div className="absolute top-6 right-6 z-20">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleShare}
-                    className="h-10 w-10 rounded-lg bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/20 transition-all active:scale-95 shadow-lg"
-                >
-                    <Share2 className="w-4 h-4" />
-                </Button>
-            </div>
-
-            {/* 4. CONTENT (Bottom) */}
-            <div className="absolute inset-x-0 bottom-0 p-8 md:p-12 z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-                <div className="flex-1">
-                    {/* Budget Badge (Small, Teal) */}
-                    <div className="inline-flex items-center gap-1.5 bg-teal-500 text-white px-3 py-1 rounded-full text-[0.65rem] font-black uppercase tracking-widest mb-3 shadow-lg">
-                        <Sparkles className="w-3 h-3" />
-                        <span>{preferences?.budgetTier || trip.budget_range || 'Budget'} Tier</span>
-                    </div>
-
-                    <h1 className="text-5xl md:text-6xl font-black text-white mb-2 tracking-tighter drop-shadow-2xl">
-                        {trip.destination || 'Trip to Unknown'}
-                    </h1>
-
-                    <p className="text-white/80 text-base md:text-lg font-medium tracking-tight flex items-center gap-2">
-                        {formattedDate}
-                        {endDate && ` — ${endDate}`}
-                        <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]" />
-                        {trip.trip_days || 0} Days Journey
-                    </p>
-                </div>
-
-                {/* Primary CTA + Edit Link */}
-                <div className="flex flex-col items-start md:items-end gap-2">
-                    {/* Show 'Secure Journey' if NOT saved */}
+                {/* Right: Glassmorphic Action Bar (Task 2) */}
+                <div className="flex items-center gap-2">
+                    {/* Save Button (If not saved) */}
                     {!(isSaved || (trip.user_id && trip.user_id === userId)) && (
                         <Button
-                            id="save-trip-btn"
                             onClick={handleSaveTrip}
                             disabled={isSaving}
-                            className="rounded-lg bg-teal-500 hover:bg-teal-600 text-white font-bold h-12 px-8 shadow-xl transition-all active:scale-[0.98] text-sm"
-                        >
-                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> :
-                                <Sparkles className="w-4 h-4 mr-2" />}
-                            Secure Journey
-                        </Button>
-                    )}
-
-                    {/* Edit Link (Subtle) */}
-                    <button
-                        onClick={onOpenCustomize}
-                        className="text-white/60 hover:text-white text-sm font-medium transition-colors underline underline-offset-2"
-                    >
-                        Edit Trip Details
-                    </button>
-
-                    {/* Delete (only in history view) */}
-                    {isHistoryView && trip.user_id === userId && (
-                        <Button
                             variant="ghost"
-                            onClick={handleDeleteTrip}
-                            disabled={isDeleting}
-                            className="h-10 px-4 text-white/50 hover:text-red-400 hover:bg-red-400/10 transition-colors text-sm"
+                            size="icon"
+                            className="h-10 w-10 rounded-full bg-teal-500/80 backdrop-blur-xl text-white hover:bg-teal-500 border border-white/10 transition-all active:scale-95 shadow-sm"
                         >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
+                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                         </Button>
                     )}
+
+                    {/* Share Button (Existing) */}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleShare}
+                        className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-xl text-white hover:bg-white/20 border border-white/10 transition-all active:scale-95 shadow-sm"
+                    >
+                        <Share2 className="w-4 h-4" />
+                    </Button>
+
+                    {/* Edit Button (New Icon) */}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onOpenCustomize}
+                        className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-xl text-white hover:bg-white/20 border border-white/10 transition-all active:scale-95 shadow-sm"
+                    >
+                        <Pencil className="w-4 h-4" />
+                    </Button>
+
+                    {/* More Menu (New Dropdown) */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-xl text-white hover:bg-white/20 border border-white/10 transition-all active:scale-95 shadow-sm"
+                            >
+                                <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 rounded-xl bg-white/95 backdrop-blur-xl border-white/20">
+                            {isHistoryView && trip.user_id === userId && (
+                                <DropdownMenuItem
+                                    onClick={handleDeleteTrip}
+                                    disabled={isDeleting}
+                                    className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Trip
+                                </DropdownMenuItem>
+                            )}
+
+                            {/* EXPORT PDF - Always Visible but Protected */}
+                            <DropdownMenuItem
+                                onClick={handleExportPDF}
+                                className="cursor-pointer text-slate-700 focus:bg-slate-50"
+                            >
+                                <Download className="w-4 h-4 mr-2" />
+                                Export as PDF
+                                <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-teal-400 to-emerald-500 text-transparent bg-clip-text border border-teal-200 rounded px-1">
+                                    PRO
+                                </span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </div>
+
+            {/* 4. HERO CONTENT (Bottom) */}
+            <div className="absolute inset-x-0 bottom-0 p-8 md:p-10 z-10 flex flex-col justify-end gap-3">
+
+                {/* Title (Task 1: Typography) */}
+                <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight drop-shadow-md">
+                    {trip.destination || 'Trip to Unknown'}
+                </h1>
+
+                {/* Metadata Row (Task 3: Refine Metadata Layout) */}
+                <div className="flex flex-wrap items-center gap-4 text-white/90">
+
+                    {/* Date & Duration */}
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                        <Calendar className="w-4 h-4 text-white/70" />
+                        <span className="text-gray-200">{dateRange}</span>
+                        <span className="text-white/30">•</span>
+                        <span className="text-gray-200">{trip.trip_days} Days</span>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="hidden md:block w-px h-4 bg-white/20" />
+
+                    {/* Pace Tag (Moved from top) */}
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                        <Gauge className="w-4 h-4 text-white/70" />
+                        <span className="text-gray-200 capitalize">{pace}</span>
+                    </div>
+
+                    {/* Divider */}
+                    {totalBudget > 0 && <div className="hidden md:block w-px h-4 bg-white/20" />}
+
+                    {/* Budget Tag */}
+                    {totalBudget > 0 && (
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                            <Sparkles className="w-4 h-4 text-teal-300" />
+                            <span className="text-gray-200">{preferences?.budgetTier || trip.budget_range || 'Standard'}</span>
+                        </div>
+                    )}
+
                 </div>
             </div>
         </div>

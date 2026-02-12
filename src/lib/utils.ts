@@ -23,3 +23,16 @@ export function formatMoney(amount: number | string | undefined | null): string 
     maximumFractionDigits: 0,
   }).format(num);
 }
+
+// --- STANDARD DATE FORMATTER (DD MMM YYYY) ---
+export function formatDate(date: string | Date | undefined | null): string {
+  if (!date) return "";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "";
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  }).format(d);
+}

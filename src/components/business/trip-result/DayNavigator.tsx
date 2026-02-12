@@ -16,9 +16,9 @@ export default function DayNavigator({ days, activeDay, onDayClick, className }:
         )}>
             <div className="px-4 md:px-0">
                 <div className="flex items-center space-x-1 h-12">
-                    {days.map((day) => (
+                    {days.map((day, index) => (
                         <button
-                            key={day}
+                            key={`${day}-${index}`}
                             onClick={() => onDayClick(day)}
                             className={cn(
                                 "flex-shrink-0 px-4 py-2 rounded-lg font-bold text-xs transition-all",

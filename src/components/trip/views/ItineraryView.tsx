@@ -17,6 +17,7 @@ interface ItineraryViewProps {
     onAddBelow: (day: number, index: number) => void;
     selectedActivityId: string | null;
     onActivitySelect: (id: string | null) => void;
+    isEnriching?: boolean; // NEW
 }
 
 export default function ItineraryView({
@@ -28,7 +29,8 @@ export default function ItineraryView({
     onDelete,
     onAddBelow,
     selectedActivityId,
-    onActivitySelect
+    onActivitySelect,
+    isEnriching = false
 }: ItineraryViewProps) {
     const dayArray = (plan?.itinerary || []).map(d => d.day);
     const activeDayActivities = React.useMemo(() => {
@@ -68,6 +70,8 @@ export default function ItineraryView({
                         onActivitySelect={onActivitySelect}
                         onDayChange={onDayChange}
                         totalDays={dayArray.length}
+                        startDate={trip.start_date}
+                        isEnriching={isEnriching}
                     />
                 </div>
 

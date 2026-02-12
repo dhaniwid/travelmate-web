@@ -9,8 +9,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "TravelMate AI",
-    description: "Your intelligent travel planner",
+    title: "Miru | AI Travel Planner",
+    description: "Discover your perfect journey with AI-powered travel planning. Personalized itineraries, smart recommendations, and magical experiences.",
 };
 
 import BottomNav from "@/components/navigation/BottomNav";

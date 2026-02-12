@@ -61,7 +61,7 @@ const StorySection = ({ text }: { text: string }) => (
         </div>
         <div className="md:col-span-9">
             <h3 className="text-teal-600 font-bold uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
-                <span className="w-4 h-[1px] bg-teal-600"/> The Story
+                <span className="w-4 h-[1px] bg-teal-600" /> The Story
             </h3>
             <p className="text-xl md:text-3xl font-serif text-slate-800 leading-relaxed">
                 {text}
@@ -103,7 +103,7 @@ const HighlightCard = ({ place, index }: { place: PlaceHighlight, index: number 
                     <Icon className="w-3 h-3" /> {place.type}
                 </div>
                 <h4 className={`text-3xl font-black mb-3 ${textClass} leading-tight`}>
-                    {place.name}
+                    {place.title}
                 </h4>
             </div>
 

@@ -4,7 +4,6 @@
 
 @layer base {
     :root {
-        /* --- THEME 1: DEFAULT (BLUE - PROFESSIONAL) --- */
         --background: 0 0% 100%;
         --foreground: 222.2 84% 4.9%;
 
@@ -14,26 +13,28 @@
         --popover: 0 0% 100%;
         --popover-foreground: 222.2 84% 4.9%;
 
-        --primary: 221.2 83.2% 53.3%; /* Blue-600 */
-        --primary-foreground: 210 40% 98%;
+        --primary: 173 80% 40%; /* Miru Teal */
+        --primary-foreground: 0 0% 100%;
 
-        --secondary: 210 40% 96.1%;
-        --secondary-foreground: 222.2 47.4% 11.2%;
+        --secondary: 271 91% 65%; /* Miru Purple */
+        --secondary-foreground: 0 0% 100%;
+
+        --accent: 0 91% 71%; /* Miru Coral */
+        --accent-foreground: 0 0% 100%;
 
         --muted: 210 40% 96.1%;
         --muted-foreground: 215.4 16.3% 46.9%;
-
-        --accent: 210 40% 96.1%;
-        --accent-foreground: 222.2 47.4% 11.2%;
 
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 210 40% 98%;
 
         --border: 214.3 31.8% 91.4%;
         --input: 214.3 31.8% 91.4%;
-        --ring: 221.2 83.2% 53.3%;
+        --ring: 173 80% 40%;
 
         --radius: 0.5rem;
+
+        --miru-gradient: linear-gradient(135deg, #14b8a6, #a855f7, #f87171);
     }
 
     /* --- THEME 2: MODERN EXPLORER (TEAL/ORANGE) --- */
@@ -44,23 +45,23 @@
         --card: 0 0% 100%;
         --card-foreground: 180 50% 10%;
 
-        --primary: 173 58% 39%; /* Teal-600 */
+        --primary: 173 80% 40%; /* Miru Teal */
         --primary-foreground: 0 0% 100%;
 
-        --secondary: 32 95% 94%; /* Light Orange (Background) */
-        --secondary-foreground: 24 95% 53%; /* Vivid Orange (Text) */
+        --secondary: 271 91% 96%; /* Very Light Purple */
+        --secondary-foreground: 271 91% 65%; /* Miru Purple */
 
         --muted: 180 20% 96%;
         --muted-foreground: 180 10% 40%;
 
-        --accent: 32 95% 94%; /* Orange tint for hover */
-        --accent-foreground: 180 50% 10%;
+        --accent: 0 91% 96%; /* Very Light Coral */
+        --accent-foreground: 0 91% 71%; /* Miru Coral */
 
         --border: 180 20% 90%;
         --input: 180 20% 90%;
-        --ring: 173 58% 39%;
+        --ring: 173 80% 40%;
 
-        --radius: 0.75rem; /* Lebih bulat (playful) */
+        --radius: 0.75rem; 
     }
 
     /* --- THEME 3: TECH FUTURE (VIOLET/FUCHSIA) --- */

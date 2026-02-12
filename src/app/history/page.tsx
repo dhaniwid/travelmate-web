@@ -3,6 +3,7 @@
 import { useAuth, UserButton } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Trip } from '@/types';
 import TripGalleryCard from '@/components/business/TripGalleryCard';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import TripPlannerModal from '@/components/business/create-trip/TripPlannerModal
 
 export default function HistoryPage() {
     const { getToken, isLoaded, isSignedIn } = useAuth();
+    const router = useRouter();
     const [trips, setTrips] = useState<Trip[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -71,6 +73,27 @@ export default function HistoryPage() {
         }
     };
 
+    // HANDLE TRIP GENERATED: Auto-redirect to trip page
+    const handleTripGenerated = (data: any) => {
+        const newTrip = data.trip;
+
+        // Prevent duplicates (Fixes "Two children with same key" error)
+        setTrips(prev => {
+            if (prev.some(t => t.id === newTrip.id)) return prev;
+            return [newTrip, ...prev];
+        });
+
+        toast.success("Trip created! Redirecting...");
+
+        // ALWAYS redirect to /trips/:id
+        if (newTrip?.id) {
+            // Use router.push to navigate
+            router.push(`/trips/${newTrip.id}`);
+        } else {
+            router.push('/');
+        }
+    };
+
     // --- RENDER STATES ---
 
     // --- 4. RENDER STATES ---
@@ -101,10 +124,7 @@ export default function HistoryPage() {
                 isOpen={isPlannerOpen}
                 onClose={() => setIsPlannerOpen(false)}
                 initialDestination=""
-                onTripGenerated={(data) => {
-                    setTrips(prev => [data.trip, ...prev]);
-                    toast.success("Trip created successfully!");
-                }}
+                onTripGenerated={handleTripGenerated}
             />
 
             {/* HEADER NAV */}
@@ -118,7 +138,9 @@ export default function HistoryPage() {
                             <Map className="w-5 h-5 text-teal-600" /> My Adventures
                         </h1>
                     </div>
-                    <UserButton afterSignOutUrl="/" />
+                    <div className="hidden sm:block">
+                        <UserButton afterSignOutUrl="/" />
+                    </div>
                 </div>
             </header>
 
@@ -208,7 +230,7 @@ export default function HistoryPage() {
             </main>
 
             {/* MOBILE FAB */}
-            <div className="md:hidden fixed bottom-24 right-4 z-[60]">
+            <div className="md:hidden fixed bottom-24 right-4 z-40">
                 <Button
                     size="icon"
                     onClick={() => setIsPlannerOpen(true)}

@@ -10,10 +10,13 @@ import TripPlannerModal from '@/components/business/create-trip/TripPlannerModal
 import { TripResponse } from '@/types';
 import Navbar from '@/components/layout/Navbar';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
+import { toast } from 'sonner';
 
 export default function HomePage() {
     // --- HOOKS & STATES ---
     const router = useRouter();
+    const { isSignedIn } = useAuth();
     const [searchCity, setSearchCity] = useState('');
     const [isLoading] = useState(false);
 
@@ -25,34 +28,54 @@ export default function HomePage() {
     // Jika terisi = Auto-fill dari Discovery (Discovery Flow)
     const [plannerDestination, setPlannerDestination] = useState('');
 
+    // --- HELPERS ---
+    // Transition to Preview-First: Allow unauthenticated generation
+    const openPlannerWithAuthCheck = (destination: string) => {
+        // We no longer block here. Instead, we let them generate.
+        // We show a conversion toast to encourage sign-in
+        if (!isSignedIn) {
+            toast.info("Try Miru for free! ✨", {
+                description: "You're generating a preview. Sign in later to save your trip!"
+            });
+        }
+        setPlannerDestination(destination);
+        setIsPlannerOpen(true);
+    };
+
     // --- HANDLERS ---
 
     // 1. Search Handler (Directly opens planner now)
     const handleSearch = () => {
         if (!searchCity.trim()) return;
-        setPlannerDestination(searchCity);
-        setIsPlannerOpen(true);
+        openPlannerWithAuthCheck(searchCity);
     };
 
     const handleChipSelect = (city: string) => {
         setSearchCity(city);
-        setPlannerDestination(city);
-        setIsPlannerOpen(true);
+        openPlannerWithAuthCheck(city);
     };
 
     // 3. Direct Plan Handler (Triggered from "Surprise Me")
     const handleSurpriseMe = () => {
-        setPlannerDestination(''); // Empty dest triggers "Surprise Me" logic in AI backend
-        setIsPlannerOpen(true);
+        openPlannerWithAuthCheck(''); // Empty dest triggers "Surprise Me" logic in AI backend
     };
 
-    // 4. Trip Generated Handler (Callback from Modal)
     const handleTripGenerated = (data: TripResponse) => {
-        // Redirect to the dedicated trip page for persistence
-        router.push(`/trips/${data.trip.id}`);
+        toast.success("Trip created! Redirecting...");
+
+        // ALWAYS redirect to /trips/:id (fetch from DB, no stale sessionStorage)
+        // The backend saves the trip via FinalizeAndSaveToDB
+        if (data.trip?.id) {
+            router.push(`/trips/${data.trip.id}`);
+        } else {
+            // Fallback: if no trip ID, go home
+            console.error("No trip ID in response:", data);
+            router.push('/');
+        }
     };
 
     // --- HELPER VARS ---
+    const showHeader = !isLoading;
 
     // --- RENDER: DISCOVERY / HERO MODE ---
     return (

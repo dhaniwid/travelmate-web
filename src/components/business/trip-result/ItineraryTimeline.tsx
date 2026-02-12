@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Calendar, ChevronDown, ChevronUp, Coffee, Sun, Sunset, Moon, RefreshCw, Trash2, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { TripResponse, ItineraryItem, Activity } from '@/types';
 import ActivityCard from './ActivityCard';
 
@@ -30,6 +30,8 @@ interface ItineraryTimelineProps {
     onActivitySelect: (id: string | null) => void;
     onDayChange?: (day: number) => void;
     totalDays?: number;
+    startDate?: string; // NEW PROP
+    isEnriching?: boolean; // NEW: Progressive Loading State
 }
 
 export default function ItineraryTimeline({
@@ -42,13 +44,25 @@ export default function ItineraryTimeline({
     selectedActivityId,
     onActivitySelect,
     onDayChange,
-    totalDays
+    totalDays,
+    startDate,
+    isEnriching = false
 }: ItineraryTimelineProps) {
     // 🛡️ Safe Access: Pastikan itinerary selalu array
     const itinerary = plan?.itinerary || [];
 
     // STRICT TABS: Filter only for the active day
     const dayPlan = (plan?.itinerary || []).find(d => d.day === activeDay);
+
+    // Calculate Date for this day
+    let dateDisplay = "";
+    if (startDate) {
+        const d = new Date(startDate);
+        if (!isNaN(d.getTime())) {
+            d.setDate(d.getDate() + (activeDay - 1));
+            dateDisplay = ` • ${formatDate(d)}`;
+        }
+    }
 
     // Jika data kosong atau hari tidak ditemukan, tampilkan placeholder
     if (!dayPlan || !dayPlan.activities || dayPlan.activities.length === 0) {
@@ -103,10 +117,24 @@ export default function ItineraryTimeline({
                     destinationName={destinationName}
                     isSelected={isSelected}
                     onClick={() => onActivitySelect(isSelected ? null : activityId)}
+                    isLoading={isEnriching}
                 />
             </div>
         );
     };
+
+    // Auto-scroll to first activity when activeDay changes
+    React.useEffect(() => {
+        const firstActivityId = `activity-${activeDay}-0`;
+        const element = document.getElementById(firstActivityId);
+        if (element) {
+            // Offset to ensure the activity is not hidden behind sticky headers
+            // 150px roughly accounts for Navbar + DayNavigator + Day Header
+            const yOffset = -150;
+            const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+    }, [activeDay]);
 
     return (
         <div className="lg:col-span-2 space-y-8 pb-20">
@@ -116,7 +144,7 @@ export default function ItineraryTimeline({
                     {dayPlan.title}
                 </h3>
                 <p className="text-slate-500 font-medium">
-                    Day {activeDay} • {activities.length} planned activities
+                    Day {activeDay}{dateDisplay} • {activities.length} planned activities
                 </p>
             </div>
 
@@ -128,10 +156,7 @@ export default function ItineraryTimeline({
             <div className="flex justify-between mt-12 pt-8 border-t border-slate-100">
                 {activeDay > 1 ? (
                     <button
-                        onClick={() => {
-                            onDayChange?.(activeDay - 1);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
+                        onClick={() => onDayChange?.(activeDay - 1)}
                         className="flex items-center gap-2 text-slate-500 hover:text-blue-600 font-medium transition-colors"
                     >
                         ← Day {activeDay - 1}
@@ -140,10 +165,7 @@ export default function ItineraryTimeline({
 
                 {activeDay < (totalDays || 0) ? (
                     <button
-                        onClick={() => {
-                            onDayChange?.(activeDay + 1);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
+                        onClick={() => onDayChange?.(activeDay + 1)}
                         className="flex items-center gap-2 font-black text-blue-600 hover:text-blue-700 transition-all hover:translate-x-1"
                     >
                         Day {activeDay + 1} →

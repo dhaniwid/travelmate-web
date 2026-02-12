@@ -130,8 +130,15 @@ export default function TripMap({
         if (map && selectedActivity && isValidCoordinate(selectedActivity.latitude, selectedActivity.longitude)) {
             map.panTo({ lat: selectedActivity.latitude!, lng: selectedActivity.longitude! });
             map.setZoom(15);
+        } else if (map && validActivities.length > 0) {
+            // If nothing selected, fit bounds to show all points for this day
+            const bounds = new google.maps.LatLngBounds();
+            validActivities.forEach(({ act }) => {
+                bounds.extend({ lat: act.latitude!, lng: act.longitude! });
+            });
+            map.fitBounds(bounds);
         }
-    }, [map, selectedActivity]);
+    }, [map, selectedActivity, validActivities]);
 
     const center = useMemo(() => {
         if (validActivities.length > 0) {
@@ -140,7 +147,7 @@ export default function TripMap({
                 lng: validActivities[0].act.longitude!,
             };
         }
-        return { lat: -6.2, lng: 106.8 }; // Default (Jakarta)
+        return { lat: 0, lng: 0 }; // World center if no coordinates
     }, [validActivities]);
 
     const path = useMemo(() => {

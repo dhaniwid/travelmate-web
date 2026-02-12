@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Map, User } from 'lucide-react';
+import { Home, Map, User, Compass } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@clerk/nextjs';
 
@@ -11,10 +11,15 @@ export default function BottomNav() {
     const { isSignedIn } = useAuth();
 
     // Don't show if not signed in or on auth pages
-    if (!isSignedIn) return null;
+    // Also hide on specific trip details page for immersive mode (e.g. /trips/123)
+    // But keep visible on /trips (if listing exists there) or /history
+    const isTripDetails = /^\/trips\/[^/]+$/.test(pathname || '');
+
+    if (!isSignedIn || isTripDetails) return null;
 
     const navItems = [
         { href: '/dashboard', icon: Home, label: 'Home' },
+        { href: '/explore', icon: Compass, label: 'Explore' },
         { href: '/history', icon: Map, label: 'My Trips' },
         { href: '/profile', icon: User, label: 'Profile' },
     ];

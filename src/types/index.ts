@@ -30,11 +30,17 @@ export interface TransportOption {
     strategy_tag: string;
     name: string;
     price_tier: 'LOW' | 'MED' | 'HIGH';
-    total_duration_display: string; // Renamed from estimated_time
+    total_duration_display: string;
     breakdown: TransportBreakdown;
-    operators_hint: string;         // NEW
-    booking_query: string;          // NEW
+    operators_hint: string;
+    booking_query: string;
     pros: string;
+    cons: string; // Add cons
+    // Fields expected by TransportCard
+    description?: string;
+    price?: number;
+    estimated_time?: string;
+    type?: string;
 }
 
 export interface AccommodationOption {
@@ -42,11 +48,14 @@ export interface AccommodationOption {
     area_name: string;             // Renamed from location_area
     recommendation_reason: string; // Renamed from location_note
     vibe: string;                  // Renamed from description
+    name: string; // Add name
 }
 
 export interface PlaceHighlight {
     title: string;
     image_prompt: string;
+    type: string;
+    hook: string;
 }
 
 export interface CulinarySignature {

@@ -67,7 +67,7 @@ export const generateTripPDF = async (elementId: string, tripTitle: string) => {
         }
 
         const safeTitle = tripTitle.replace(/[^a-z0-9]/gi, '-').toLowerCase();
-        pdf.save(`TravelMate-${safeTitle}.pdf`);
+        pdf.save(`Miru-${safeTitle}.pdf`);
 
     } catch (error) {
         console.error("PDF Gen Error:", error);

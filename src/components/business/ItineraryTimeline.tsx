@@ -1,11 +1,11 @@
 'use client';
 
-import {useState} from "react";
-import {Badge} from "@/components/ui/badge";
-import {Button} from "@/components/ui/button";
-import {Clock, MapPin, RefreshCw, Footprints, Car, CalendarDays} from "lucide-react";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Clock, MapPin, RefreshCw, Footprints, Car, CalendarDays } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import {ItineraryItem, Activity} from "@/types";
+import { ItineraryItem, Activity } from "@/types";
 import DailyBriefingCard from "./DailyBriefingCard";
 
 const formatDate = (startDateStr: string, dayOffset: number) => {
@@ -47,7 +47,7 @@ export default function ItineraryTimeline({ days, startDate }: ItineraryTimeline
                                     <div className="flex items-center gap-2 text-slate-500 mt-1">
                                         <CalendarDays className="w-3.5 h-3.5" />
                                         <span className="text-sm font-medium">
-                                            {formatDate(startDate, day.day)}
+                                            {formatDate(startDate || new Date().toISOString(), day.day)}
                                         </span>
                                     </div>
                                 </div>
@@ -109,7 +109,7 @@ function TimelineItem({ activity, isLast, isFirst }: { activity: Activity, isLas
             {activity.transit_method && activity.transit_method !== "Start" && !isFirst && (
                 <div className="absolute -top-6 left-[-60px] md:left-[-80px] w-full flex items-center mb-4 z-0 pointer-events-none">
                     <div className="ml-[60px] md:ml-[80px] bg-slate-50 border border-slate-200 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1.5 shadow-sm transform -translate-y-1/2">
-                        {activity.transit_method.toLowerCase().includes("walk") ? <Footprints className="w-3 h-3"/> : <Car className="w-3 h-3"/>}
+                        {activity.transit_method.toLowerCase().includes("walk") ? <Footprints className="w-3 h-3" /> : <Car className="w-3 h-3" />}
                         <span>{activity.transit_method}</span>
                         <span className="text-slate-300">•</span>
                         <span>{activity.transit_time}</span>
@@ -152,9 +152,9 @@ function TimelineItem({ activity, isLast, isFirst }: { activity: Activity, isLas
 
                 <div className={`p-4 rounded-2xl border transition-all duration-300
                     ${isSwapped
-                    ? 'bg-purple-50/50 border-purple-100'
-                    : 'bg-white border-slate-100 hover:border-blue-200 hover:shadow-md'
-                }`}>
+                        ? 'bg-purple-50/50 border-purple-100'
+                        : 'bg-white border-slate-100 hover:border-blue-200 hover:shadow-md'
+                    }`}>
 
                     <h5 className={`text-base font-bold transition-colors mb-1
                         ${isSwapped ? 'text-purple-900' : 'text-slate-900 group-hover:text-blue-600'}`}>

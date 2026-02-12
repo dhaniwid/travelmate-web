@@ -11,10 +11,11 @@ interface TripPlannerModalProps {
     isOpen: boolean;
     onClose: () => void;
     initialDestination: string;
+    initialIsSurprise?: boolean;
     onTripGenerated: (data: any) => void;
 }
 
-export default function TripPlannerModal({ isOpen, onClose, initialDestination, onTripGenerated }: TripPlannerModalProps) {
+export default function TripPlannerModal({ isOpen, onClose, initialDestination, initialIsSurprise = false, onTripGenerated }: TripPlannerModalProps) {
 
     const handleSuccess = (data: any) => {
         // Data format: { trip: {...}, plan: {...} }
@@ -36,8 +37,10 @@ export default function TripPlannerModal({ isOpen, onClose, initialDestination, 
                     <DialogTitle>Create Trip</DialogTitle>
                 </VisuallyHidden.Root>
                 <CreateTripForm
+                    key={isOpen ? 'open' : 'closed'}
                     onSuccess={handleSuccess}
                     initialDestination={initialDestination}
+                    initialIsSurprise={initialIsSurprise}
                 />
             </DialogContent>
         </Dialog>

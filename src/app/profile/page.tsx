@@ -1,13 +1,54 @@
 'use client';
 
-import { useUser, useClerk } from '@clerk/nextjs';
+import { useUser, useClerk, useAuth } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, Award, MapPin } from 'lucide-react';
-import React from 'react';
+import { LogOut, Settings, Award, MapPin, Edit3 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import TravelDNAEditor from '@/components/profile/TravelDNAEditor';
+import { toast } from 'sonner';
+
+interface UserPreferences {
+    pace: string;
+    budget_tier: string;
+    dietary: string[];
+    interests: string[];
+    travel_style: string[];
+}
 
 export default function ProfilePage() {
     const { user, isLoaded } = useUser();
     const { signOut, openUserProfile } = useClerk();
+    const { getToken } = useAuth();
+
+    // State
+    const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [prefs, setPrefs] = useState<UserPreferences | null>(null);
+    const [isLoadingDNA, setIsLoadingDNA] = useState(true);
+
+    const fetchPreferences = async () => {
+        try {
+            const token = await getToken();
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/preferences`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setPrefs(data);
+            }
+        } catch (error) {
+            console.error(error);
+            // Don't toast on initial load to avoid noise given it might be empty
+        } finally {
+            setIsLoadingDNA(false);
+        }
+    };
+
+    useEffect(() => {
+        if (isLoaded) {
+            fetchPreferences();
+        }
+    }, [isLoaded]);
 
     if (!isLoaded) {
         return (
@@ -19,6 +60,12 @@ export default function ProfilePage() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32 safe-area-bottom">
+            <TravelDNAEditor
+                isOpen={isEditorOpen}
+                onClose={() => setIsEditorOpen(false)}
+                onUpdate={fetchPreferences}
+            />
+
             {/* Hero Header */}
             <div className="bg-gradient-to-br from-teal-600 to-blue-600 pt-16 pb-24 relative overflow-hidden">
                 {/* Decorative circles */}
@@ -51,30 +98,50 @@ export default function ProfilePage() {
                 {/* Travel DNA Card */}
                 <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-black text-slate-800">Travel DNA</h2>
-                        <Button variant="ghost" size="sm" className="text-teal-600 h-8 px-2 text-xs hover:bg-teal-50 hover:text-teal-700">Edit</Button>
+                        <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                            🧬 Travel DNA
+                        </h2>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsEditorOpen(true)}
+                            className="text-teal-600 h-8 px-2 text-xs hover:bg-teal-50 hover:text-teal-700 gap-1"
+                        >
+                            <Edit3 className="w-3 h-3" /> Edit
+                        </Button>
                     </div>
 
-                    <div className="space-y-4">
-                        <PreferenceRow
-                            label="Pace"
-                            value="Balanced"
-                            description="Mixed sightseeing & chill"
-                            icon="☯️"
-                        />
-                        <PreferenceRow
-                            label="Diet"
-                            value="No Restrictions"
-                            description="Open to try anything"
-                            icon="🍽️"
-                        />
-                        <PreferenceRow
-                            label="Budget"
-                            value="Medium"
-                            description="Comfort over luxury"
-                            icon="💰"
-                        />
-                    </div>
+                    {isLoadingDNA ? (
+                        <div className="space-y-4 animate-pulse">
+                            <div className="h-14 bg-slate-100 rounded-xl" />
+                            <div className="h-14 bg-slate-100 rounded-xl" />
+                            <div className="h-14 bg-slate-100 rounded-xl" />
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <PreferenceRow
+                                label="Pace"
+                                value={prefs?.pace || 'Not Set'}
+                                description={getPaceDescription(prefs?.pace)}
+                                icon="☯️"
+                                onClick={() => setIsEditorOpen(true)}
+                            />
+                            <PreferenceRow
+                                label="Diet"
+                                value={prefs?.dietary && prefs.dietary.length > 0 ? `${prefs.dietary.length} Selected` : 'No Restrictions'}
+                                description={prefs?.dietary?.join(", ") || "Open to anything"}
+                                icon="🍽️"
+                                onClick={() => setIsEditorOpen(true)}
+                            />
+                            <PreferenceRow
+                                label="Budget"
+                                value={prefs?.budget_tier || 'Not Set'}
+                                description={getBudgetDescription(prefs?.budget_tier)}
+                                icon="💰"
+                                onClick={() => setIsEditorOpen(true)}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* Account Settings */}
@@ -99,24 +166,44 @@ export default function ProfilePage() {
                 </div>
 
                 <p className="text-center text-xs text-slate-400 py-4 font-medium">
-                    TravelMate AI v1.0.0
+                    Miru v1.0.0
                 </p>
             </div>
         </div>
     );
 }
 
-function PreferenceRow({ label, value, description, icon }: { label: string, value: string, description: string, icon: string }) {
+function PreferenceRow({ label, value, description, icon, onClick }: { label: string, value: string, description: string, icon: string, onClick?: () => void }) {
     return (
-        <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-teal-200 transition-colors cursor-pointer group">
+        <div onClick={onClick} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-teal-200 transition-colors cursor-pointer group">
             <div className="flex items-center gap-3">
                 <span className="text-xl bg-white w-10 h-10 flex items-center justify-center rounded-full shadow-sm">{icon}</span>
-                <div>
+                <div className="flex flex-col items-start text-left">
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-0.5">{label}</p>
                     <p className="text-sm font-bold text-slate-800">{value}</p>
+                    {description && <p className="text-[10px] text-slate-400 max-w-[150px] truncate">{description}</p>}
                 </div>
             </div>
             <div className="w-2 h-2 rounded-full bg-teal-400 group-hover:scale-125 transition-transform" />
         </div>
     );
+}
+
+// Helpers
+function getPaceDescription(pace?: string) {
+    switch (pace) {
+        case 'RELAXED': return 'Take it slow';
+        case 'FAST': return 'See everything';
+        case 'BALANCED': return 'Mix of both';
+        default: return 'Set your preference';
+    }
+}
+
+function getBudgetDescription(tier?: string) {
+    switch (tier) {
+        case 'BUDGET': return 'Cost conscious';
+        case 'LUXURY': return 'Spare no expense';
+        case 'MID': return 'Comfort focus';
+        default: return 'Set your preference';
+    }
 }

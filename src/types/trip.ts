@@ -20,6 +20,7 @@ export interface Trip {
     budget: number;
     budget_range?: string;
     created_at: string;
+    enrichment_status?: 'pending' | 'enriching' | 'completed';
     user_preferences?: UserPreferences;
 }
 
@@ -49,6 +50,7 @@ export interface Activity {
     transit_method?: string;
     transit_price?: number;
     location_type?: 'specific' | 'generic'; // specific = real landmark, generic = neighborhood center
+    image_url?: string; // Enriched photo
     alternative?: ActivityAlternative | null;
     alternatives?: ActivityAlternative[];
 }
@@ -119,6 +121,17 @@ export interface ArrivalGuide {
     best_time_visit: string;
 }
 
+export interface Essentials {
+    currency: string;
+    language: string;
+    voltage: string;
+}
+
+export interface LogisticsData {
+    arrival_guide?: ArrivalGuide;
+    essentials?: Essentials;
+}
+
 export interface TripPlan {
     trip_id: string;
     itinerary: ItineraryItem[];
@@ -137,6 +150,7 @@ export interface TripPlan {
     culinary_signature?: CulinarySignature[];
     hidden_gem?: HiddenGem;
     history_snippet?: string;
+    logistics?: LogisticsData; // NEW: M-124
 }
 
 export interface BudgetBreakdown {

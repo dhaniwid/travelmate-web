@@ -51,7 +51,7 @@ const MOCK_ALTERNATIVES: ActivityAlternative[] = [
     }
 ];
 
-export default function TravelMateTestPage() {
+export default function MiruTestPage() {
     const [activities, setActivities] = useState<Activity[]>(MOCK_ACTIVITIES);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -88,6 +88,7 @@ export default function TravelMateTestPage() {
                         <ActivityCard
                             key={idx}
                             activity={activity}
+                            destinationName="Test City"
                             onReplace={() => handleReplaceClick(idx)}
                             onDelete={() => toast.error("Delete requested for index " + idx)}
                             onAddBelow={() => toast.info("Add below requested for index " + idx)}
@@ -96,15 +97,17 @@ export default function TravelMateTestPage() {
                 </div>
 
                 <footer className="pt-10 border-t border-slate-200 text-center">
-                    <p className="text-sm text-slate-400 font-mono">TravelMate Design System v2.0</p>
+                    <p className="text-sm text-slate-400 font-mono">Miru Design System v2.0</p>
                 </footer>
             </div>
 
             <ActivityReplacementDrawer
                 isOpen={isDrawerOpen}
                 onClose={() => setIsDrawerOpen(false)}
+                tripId="test-trip"
+                day={1}
+                activityIndex={selectedIndex ?? 0}
                 originalActivity={selectedIndex !== null ? activities[selectedIndex] : null}
-                alternatives={MOCK_ALTERNATIVES}
                 onSelect={handleSelectAlternative}
             />
         </div>

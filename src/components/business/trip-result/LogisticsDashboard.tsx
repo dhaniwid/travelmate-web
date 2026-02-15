@@ -36,20 +36,19 @@ export default function LogisticsDashboard({ trip, plan }: LogisticsDashboardPro
     const breakdown = plan.budget_breakdown;
     let totalBudget = 0;
 
-    if (breakdown) {
-        // Handle FlexibleInt64 which might be number or object
-        const getValue = (val: any) => {
-            if (typeof val === 'number') return val;
-            if (typeof val === 'string') return parseInt(val) || 0;
-            return 0; // fallback
-        };
+    const parseIDR = (val: any) => {
+        if (typeof val === 'number') return val;
+        if (typeof val === 'string') return parseInt(val.replace(/[^0-9]/g, '')) || 0;
+        return 0;
+    };
 
+    if (breakdown) {
         totalBudget =
-            getValue(breakdown.transport) +
-            getValue(breakdown.accommodation) +
-            getValue(breakdown.food) +
-            getValue(breakdown.tickets) +
-            getValue(breakdown.misc);
+            parseIDR(breakdown.transport) +
+            parseIDR(breakdown.accommodation) +
+            parseIDR(breakdown.food) +
+            parseIDR(breakdown.tickets) +
+            parseIDR(breakdown.misc);
     } else {
         // Fallback to trip budget if breakdown missing
         totalBudget = trip.budget || 0;

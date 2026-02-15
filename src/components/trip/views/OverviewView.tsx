@@ -13,80 +13,102 @@ interface OverviewViewProps {
 }
 
 export default function OverviewView({ trip, plan }: OverviewViewProps) {
-    return (
-        <div className="space-y-12 animate-in fade-in duration-300 pb-20">
-            {/* 1. The Big Header / Morning Briefing */}
-            <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-teal-600 to-teal-400 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-                <div className="relative bg-white rounded-2xl p-10 border border-slate-100 shadow-xl overflow-hidden">
-                    {/* Background Accent */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full -translate-y-1/2 translate-x-1/2" />
+    // Fallback: If no highlights, use top activities from itinerary
+    const highlights = React.useMemo(() => {
+        if (plan.highlights && plan.highlights.length > 0) return plan.highlights;
 
-                    <div className="relative flex flex-col md:flex-row gap-8 items-start">
-                        <div className="w-16 h-16 rounded-2xl bg-teal-600 flex items-center justify-center text-white shadow-xl shrink-0">
-                            <Sparkles className="w-8 h-8" />
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <h3 className="text-sm font-black text-teal-600 uppercase tracking-widest mb-1">Morning Briefing</h3>
-                                <h2 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-2">
-                                    {plan.tagline || `Adventure in ${trip.destination}`}
-                                </h2>
-                                {/* Vibes */}
-                                {plan.vibes && plan.vibes.length > 0 && (
-                                    <div className="flex flex-wrap gap-2 mb-4">
-                                        {plan.vibes.map((vibe, idx) => (
-                                            <span key={idx} className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-wider border border-slate-200">
-                                                {vibe}
-                                            </span>
-                                        ))}
+        // Take first activity of each of the first 3 days
+        const fallback = (plan.itinerary || [])
+            .slice(0, 3)
+            .map(day => (day.activities || [])[0])
+            .filter(Boolean)
+            .map(act => ({
+                title: act.place_name || act.activity,
+                type: act.type,
+                hook: act.description,
+                image_prompt: `High-quality cinematic photo of ${act.place_name || act.activity} in ${trip.destination}`,
+            }));
+
+        return fallback;
+    }, [plan.highlights, plan.itinerary]);
+
+    return (
+        <div className="space-y-20 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+            {/* 1. Morning Briefing & Discovery Area */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                {/* Briefing Card */}
+                <div className="lg:col-span-12 relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-teal-600 to-teal-400 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+                    <div className="relative bg-white rounded-3xl p-8 md:p-12 border border-slate-100 shadow-xl overflow-hidden">
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-slate-50 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50" />
+
+                        <div className="relative z-10 space-y-8">
+                            <div className="flex flex-col md:flex-row gap-8 items-start">
+                                <div className="w-16 h-16 rounded-2xl bg-teal-600 flex items-center justify-center text-white shadow-xl shrink-0">
+                                    <Sparkles className="w-8 h-8" />
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <h3 className="text-xs font-black text-teal-600 uppercase tracking-[0.3em] mb-2">Morning Briefing</h3>
+                                        <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+                                            {plan.tagline || `Adventure in ${trip.destination}`}
+                                        </h2>
                                     </div>
-                                )}
+
+                                    {plan.vibes && plan.vibes.length > 0 && (
+                                        <div className="flex flex-wrap gap-2">
+                                            {plan.vibes.map((vibe, idx) => (
+                                                <span key={idx} className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-wider border border-slate-200">
+                                                    {vibe}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
-                            <p className="text-xl text-slate-600 leading-relaxed max-w-3xl font-medium">
+                            <p className="text-xl text-slate-600 leading-relaxed max-w-4xl font-medium">
                                 {plan.morning_briefing || `Ready for your adventure in ${trip.destination || 'Unknown'}? Today's vibe is exploration. We've optimized your transport routes and selected the best starting points.`}
                             </p>
                         </div>
                     </div>
                 </div>
+
+                {/* 2. Must Visit Spots */}
+                <div className="lg:col-span-12 space-y-8">
+                    <div className="flex items-center justify-between px-2">
+                        <div>
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-500 mb-1">Editor's Choice</h3>
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Must Visit Spots</h2>
+                        </div>
+                    </div>
+                    <HighlightsRow highlights={highlights} destination={trip.destination} />
+                </div>
+
+                {/* 3. Discovery & DNA */}
+                <div className="lg:col-span-8">
+                    <DiscoverySection
+                        culinary={plan.culinary_signature}
+                        hiddenGem={plan.hidden_gem}
+                        history={plan.history_snippet}
+                    />
+                </div>
+
+                {/* 4. Logistics Sidebar */}
+                <div className="lg:col-span-4">
+                    <div className="sticky top-24 space-y-6">
+                        <section className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
+                            <div className="px-8 py-5 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+                                <h3 className="font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wide text-xs">
+                                    <Info className="w-4 h-4 text-teal-500" />
+                                    Quick Logistics
+                                </h3>
+                            </div>
+                            <LogisticsDashboard trip={trip} plan={plan} />
+                        </section>
+                    </div>
+                </div>
             </div>
-
-            {/* 2. Editorial Discovery Content */}
-            <section className="space-y-6">
-                <div className="flex items-center gap-4">
-                    <span className="h-px flex-1 bg-slate-100"></span>
-                    <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Destination DNA</h2>
-                    <span className="h-px flex-1 bg-slate-100"></span>
-                </div>
-                <DiscoverySection
-                    culinary={plan.culinary_signature}
-                    hiddenGem={plan.hidden_gem}
-                    history={plan.history_snippet}
-                />
-            </section>
-
-            {/* 3. Logistics Summary (Stats Bar) */}
-            <section className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                <div className="px-8 py-5 bg-slate-50/50 border-b border-slate-200 flex items-center justify-between">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wide text-sm">
-                        <Info className="w-4 h-4 text-teal-500" />
-                        Travel Essentials
-                    </h3>
-                </div>
-                <LogisticsDashboard trip={trip} plan={plan} />
-            </section>
-
-            {/* 4. Highlights */}
-            <section>
-                <div className="mb-6 flex items-center justify-between">
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
-                        <span className="w-2.5 h-10 bg-teal-500 rounded-full" />
-                        Must Visit Spots
-                    </h2>
-                </div>
-                <HighlightsRow highlights={plan.highlights} destination={trip.destination} />
-            </section>
         </div>
     );
 }

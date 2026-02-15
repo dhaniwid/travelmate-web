@@ -38,8 +38,14 @@ export default function EssentialsView({ trip, plan }: EssentialsViewProps) {
     const TransportIcon = arrival.primary_transport.toLowerCase().includes('train') ? Train : Plane;
     const breakdown = plan.budget_breakdown;
 
+    const parseIDR = (val: any) => {
+        if (typeof val === 'number') return val;
+        if (typeof val === 'string') return parseInt(val.replace(/[^0-9]/g, '')) || 0;
+        return 0;
+    };
+
     const formatCurrency = (val: any) => {
-        let num = typeof val === 'number' ? val : (parseInt(val) || 0);
+        let num = parseIDR(val);
         if (num > 0 && num < 5000) num *= 15500; // Mock conversion
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
@@ -65,7 +71,13 @@ export default function EssentialsView({ trip, plan }: EssentialsViewProps) {
 
     const totalBudget = React.useMemo(() => {
         if (!breakdown) return 0;
-        return Object.values(breakdown).reduce((acc, curr) => acc + (typeof curr === 'number' ? curr : 0), 0);
+        return (
+            parseIDR(breakdown.transport) +
+            parseIDR(breakdown.accommodation) +
+            parseIDR(breakdown.food) +
+            parseIDR(breakdown.tickets) +
+            parseIDR(breakdown.misc)
+        );
     }, [breakdown]);
 
     return (

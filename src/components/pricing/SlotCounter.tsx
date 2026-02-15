@@ -25,8 +25,8 @@ export default function SlotCounter({ count, className }: SlotCounterProps) {
         );
     }
 
-    // State B: Low Availability (<= 20)
-    if (remaining <= 20) {
+    // State B: Low Availability (showing for all founder slots now)
+    if (remaining <= 100) {
         return (
             <div className={cn("flex flex-col items-center gap-1.5 animate-in fade-in duration-700", className)}>
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-600 border border-rose-100 shadow-sm animate-pulse">

@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import {
     CreditCard,
     QrCode,
-    MessageCircle,
     Copy,
     Sparkles,
     Mail,
@@ -31,7 +30,7 @@ interface ManualPaymentModalProps {
 export default function ManualPaymentModal({ isOpen, onClose }: ManualPaymentModalProps) {
     const { user } = useUser();
     const [qrError, setQrError] = useState(false);
-    const [activeTab, setActiveTab] = useState('qris');
+    const [activeTab, setActiveTab] = useState('bank');
 
     const bankDetails = {
         name: process.env.NEXT_PUBLIC_BANK_NAME || "Bank Mandiri",
@@ -53,10 +52,6 @@ export default function ManualPaymentModal({ isOpen, onClose }: ManualPaymentMod
         window.location.href = `mailto:support@miru.travel?subject=${subject}&body=${body}`;
     };
 
-    const handleWhatsAppConfirm = () => {
-        const message = encodeURIComponent(`Hi Miru Team, I have transferred ${bankDetails.amount} for the PRO plan. My account email is: ${userEmail}`);
-        window.open(`https://wa.me/628123456789?text=${message}`, '_blank');
-    };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -83,14 +78,15 @@ export default function ManualPaymentModal({ isOpen, onClose }: ManualPaymentMod
 
                 {/* Scrollable Body */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-[300px]">
-                    <Tabs defaultValue="qris" onValueChange={setActiveTab} className="w-full">
+                    <Tabs defaultValue="bank" onValueChange={setActiveTab} className="w-full">
                         <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-slate-100 p-1 h-12">
                             <TabsTrigger
                                 value="qris"
-                                className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs gap-2"
+                                disabled
+                                className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-[10px] gap-1 opacity-50"
                             >
-                                <QrCode className="w-4 h-4" />
-                                Scan QRIS
+                                <QrCode className="w-3.5 h-3.5" />
+                                QRIS (Soon)
                             </TabsTrigger>
                             <TabsTrigger
                                 value="bank"
@@ -168,14 +164,6 @@ export default function ManualPaymentModal({ isOpen, onClose }: ManualPaymentMod
                         Konfirmasi via Email
                     </Button>
 
-                    <Button
-                        variant="ghost"
-                        onClick={handleWhatsAppConfirm}
-                        className="w-full h-12 rounded-2xl border-2 border-[#25D366]/20 bg-white text-[#25D366] hover:bg-[#25D366]/5 font-black text-xs gap-2 transition-all"
-                    >
-                        <MessageCircle className="w-4 h-4 fill-[#25D366]" />
-                        Alternatif: WhatsApp
-                    </Button>
 
                     <p className="text-center text-[9px] text-slate-300 font-bold uppercase tracking-widest">
                         Aktivasi Manual (10-30 Menit)

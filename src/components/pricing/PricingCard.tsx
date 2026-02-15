@@ -85,7 +85,7 @@ export function PricingCard({
 
                     {!isIDR && isPopular && (
                         <p className="text-[10px] font-medium text-amber-600 mt-2 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 flex items-center gap-1 w-fit">
-                            <span>💡 processed in IDR (approx. Rp 79k)</span>
+                            <span>💡 processed in IDR (approx. Rp 29k)</span>
                         </p>
                     )}
 

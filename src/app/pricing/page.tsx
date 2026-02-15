@@ -31,10 +31,10 @@ export default function PricingPage() {
 
     // Pricing strings
     const proPrice = isIDR
-        ? (isYearly ? "Rp 63.200" : "Rp 79.000")
-        : (isYearly ? "$3.99" : "$4.99");
+        ? (isYearly ? "Rp 23.200" : "Rp 29.000")
+        : (isYearly ? "$1.99" : "$2.49");
 
-    const originalProPrice = isIDR ? "Rp 150.000" : "$9.99";
+    const originalProPrice = isIDR ? "Rp 99.000" : "$6.99";
 
     const billingText = isIDR
         ? (isYearly ? "Ditagih Rp 758.400 per tahun" : "Ditagih bulanan")
@@ -111,13 +111,13 @@ export default function PricingPage() {
                         onButtonClick={() => { }}
                     />
                     <PricingCard
-                        title={isIDR ? "Pengembara Dunia" : "The World Voyager"}
+                        title={isIDR ? "Founder Member" : "Founder Member"}
                         price={proPrice}
                         originalPrice={originalProPrice}
                         billingSubtext={billingText}
                         badgeLabel={isIDR ? "Penawaran Founder Early Bird" : "Early Bird Founder Offer"}
                         socialProof={isIDR ? "Jadilah Founding Member" : "Become a Founding Member"}
-                        description={isIDR ? "Buka permata tersembunyi, edit AI tanpa batas, dan rahasia lokal." : "Unlock hidden gems, unlimited AI edits, and local secrets."}
+                        description={isIDR ? "Akses seumur hidup untuk 100 visioner pertama." : "Lifetime access for the first 100 visionaries."}
                         features={isIDR ? [
                             "AI Planning & Edits Tanpa Batas",
                             "Permata Tersembunyi & Rahasia Lokal [PRO]",
@@ -134,7 +134,7 @@ export default function PricingPage() {
                         isCurrent={isPro}
                         isIDR={isIDR}
                         isLoading={isCheckoutLoading}
-                        proCount={92}
+                        proCount={13}
                         onButtonClick={() => {
                             if (isIDR) {
                                 setIsManualPaymentOpen(true);

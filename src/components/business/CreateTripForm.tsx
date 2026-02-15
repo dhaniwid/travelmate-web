@@ -120,9 +120,14 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
         return styleDesc.join(", ");
     };
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     // --- SUBMISSION LOGIC ---
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (isSubmitting) return; // Guard
+        setIsSubmitting(true);
 
         // 🛡️ SECURITY: Guest Quota (1 Trip Limit)
         if (!user) {
@@ -131,6 +136,7 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
                 setQuotaMessage("Guest trip limit reached! Discovering more destinations requires a free account.");
                 setQuotaAction({ label: "Create Account", href: "/sign-up" });
                 setShowQuotaBanner(true);
+                setIsSubmitting(false); // Enable again so they can fix account/quota
                 return;
             }
         }
@@ -138,11 +144,13 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
         // Validasi Origin
         if (!formData.origin.trim()) {
             toast.error("Please enter a starting point (Origin)");
+            setIsSubmitting(false);
             return;
         }
 
         if (!isAutoDest && !formData.destination) {
             toast.error("Where are we going? Or choose 'Surprise Me'!");
+            setIsSubmitting(false);
             return;
         }
 
@@ -218,6 +226,7 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
 
             console.error("Trip Creator Error:", error);
             setIsStreaming(false);
+            setIsSubmitting(false); // Enable button again on error
             toast.error("Something went wrong", {
                 description: error.message || "Please try again later."
             });
@@ -310,10 +319,10 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
                         setSocialVal={setSocialVal}
                     />
 
-                    <Button type="submit" disabled={isStreaming}
+                    <Button type="submit" disabled={isSubmitting || isStreaming}
                         className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-lg py-6 rounded-xl shadow-lg transition-all hover:scale-[1.01]"
                     >
-                        {isStreaming ? <Loader2 className="animate-spin" /> : "Plan My Trip ✨"}
+                        {isSubmitting || isStreaming ? <Loader2 className="animate-spin" /> : "Plan My Trip ✨"}
                     </Button>
                 </form>
             </CardContent>

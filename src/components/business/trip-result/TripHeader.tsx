@@ -65,6 +65,7 @@ export default function TripHeader({
     const [isSaved, setIsSaved] = useState(data.is_saved || isHistoryView || false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [heroImage, setHeroImage] = useState<string>("");
+    const [showPremiumInfo, setShowPremiumInfo] = useState(false);
 
     useEffect(() => {
         setIsSaved(data.is_saved || isHistoryView || false);
@@ -293,6 +294,40 @@ export default function TripHeader({
                 </div>
             </div>
 
+            {/* PREMIUM INFO BANNER (MODAL OVERLAP FIX) */}
+            {showPremiumInfo && !isPro && (
+                <div className="absolute top-20 left-6 right-6 z-30 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="bg-white/95 backdrop-blur-xl border border-amber-200 shadow-2xl rounded-2xl p-4 flex items-start gap-4 ring-1 ring-amber-500/20">
+                        <div className="bg-amber-100/50 p-2 rounded-xl">
+                            <SparklesIcon className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <div className="flex-1 space-y-1">
+                            <p className="text-sm font-black text-slate-900 leading-tight">Premium Feature 💎</p>
+                            <p className="text-[10px] text-slate-600 font-medium leading-relaxed">
+                                Customize itinerary with AI is a Miru PRO feature.
+                            </p>
+                            <div className="flex items-center gap-2 mt-2 pt-1">
+                                <Button
+                                    size="sm"
+                                    onClick={() => router.push('/pricing')}
+                                    className="h-8 bg-slate-900 hover:bg-slate-800 text-white rounded-full px-4 text-[10px] font-bold"
+                                >
+                                    Upgrade Now
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setShowPremiumInfo(false)}
+                                    className="h-8 text-slate-400 hover:text-slate-600 text-[10px] font-bold"
+                                >
+                                    Maybe Later
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="absolute inset-x-0 bottom-0 p-8 md:p-10 z-10 flex flex-col justify-end gap-1">
                 <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight drop-shadow-md">
                     {trip.destination || 'Trip to Unknown'}
@@ -325,13 +360,7 @@ export default function TripHeader({
                             if (isPro) {
                                 onOpenCustomize?.();
                             } else {
-                                toast.error("Premium Feature 💎", {
-                                    description: "Customize itinerary with AI is a Miru PRO feature.",
-                                    action: {
-                                        label: "Upgrade",
-                                        onClick: () => router.push('/pricing')
-                                    }
-                                });
+                                setShowPremiumInfo(!showPremiumInfo);
                                 trackEventAction('paywall_shown', { trigger: 'customize_button' });
                             }
                         }}

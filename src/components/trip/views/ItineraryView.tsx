@@ -137,20 +137,16 @@ export default function ItineraryView({
                     </div>
 
                     {/* Mobile Map Toggle FAB */}
-                    <div className="lg:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-50">
+                    <div className="lg:hidden fixed bottom-24 right-4 z-50">
                         <Button
                             onClick={() => setShowMap(!showMap)}
-                            className="bg-slate-900 text-white rounded-full px-6 py-4 h-auto shadow-2xl flex items-center gap-2 border border-white/20 backdrop-blur-md active:scale-95 transition-transform"
+                            className="bg-slate-900 text-white rounded-full w-14 h-14 shadow-2xl flex items-center justify-center border border-white/20 backdrop-blur-md active:scale-95 transition-all p-0"
+                            title={showMap ? "Show List" : "Show Map"}
                         >
                             {showMap ? (
-                                <>
-                                    <span className="text-sm font-bold">Show Timeline</span>
-                                </>
+                                <span className="text-[10px] font-black uppercase">List</span>
                             ) : (
-                                <>
-                                    <MapIcon className="w-4 h-4" />
-                                    <span className="text-sm font-bold">Show Map</span>
-                                </>
+                                <MapIcon className="w-6 h-6" />
                             )}
                         </Button>
                     </div>

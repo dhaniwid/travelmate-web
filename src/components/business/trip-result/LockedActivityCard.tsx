@@ -48,7 +48,7 @@ export default function LockedActivityCard({ onClick, className }: LockedActivit
                         <Button
                             variant="outline"
                             size="sm"
-                            className="bg-white border-teal-200 text-teal-600 hover:bg-teal-600 hover:text-white rounded-full px-4 text-xs font-bold transition-all shadow-sm"
+                            className="relative z-20 bg-white border-teal-200 text-teal-600 hover:bg-teal-600 hover:text-white rounded-full px-4 text-xs font-bold transition-all shadow-sm"
                         >
                             <Sparkles className="w-3 h-3 mr-2" />
                             Upgrade to Reveal

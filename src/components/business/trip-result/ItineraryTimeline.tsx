@@ -155,7 +155,7 @@ export default function ItineraryTimeline({
     }, [activeDay]);
 
     return (
-        <div className="lg:col-span-2 space-y-8 pb-20">
+        <div className="lg:col-span-2 space-y-8 pb-20 px-4 md:px-0">
             {/* Header for Day Context */}
             <div className="mb-8 animate-in fade-in delay-75">
                 <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">

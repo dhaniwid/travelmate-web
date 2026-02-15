@@ -28,8 +28,13 @@ export const tripService = {
 
     // 3. Get Detail
     getTripById: async (id: string): Promise<TripResponse> => {
-        const response = await api.get(`/trips/${id}`);
-        return response.data;
+        try {
+            const response = await api.get(`/trips/${id}`);
+            return response.data;
+        } catch (error: any) {
+            console.error(`Error fetching trip ${id}:`, error.response?.status);
+            throw error; // Rethrow to be caught by the component
+        }
     },
 
     // 4. Save Trip

@@ -135,8 +135,16 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                         }
                     }
                 }
-            } catch (e) {
+            } catch (e: any) {
                 console.error("Polling error:", e);
+                // 🛡️ STOP THE SPAM: If we get a Forbidden (403), skip retries
+                if (e.response?.status === 403) {
+                    console.error("⛔ ACCESS DENIED: Stopping polling.");
+                    clearInterval(interval);
+                    toast.error("Access Denied", {
+                        description: "You do not have permission to view or sync this trip."
+                    });
+                }
             }
         }, pollInterval);
 

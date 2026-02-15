@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Calendar, ChevronDown, ChevronUp, Coffee, Sun, Sunset, Moon, RefreshCw, Trash2, Plus } from 'lucide-react';
+import { MapPin, Calendar, ChevronDown, ChevronUp, Coffee, Sun, Sunset, Moon, RefreshCw, Trash2, Plus, Sparkles as SparklesIcon, Lock } from 'lucide-react';
 import { cn, formatDate } from '@/lib/utils';
 import { TripResponse, ItineraryItem, Activity } from '@/types';
 import ActivityCard from './ActivityCard';
+import LockedActivityCard from './LockedActivityCard';
+import EnrichmentLoadingState from './EnrichmentLoadingState';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useRouter } from 'next/navigation';
 
 // Helper Vibe Waktu
 const getTimeBasedStyle = (timeStr: string) => {
@@ -32,6 +36,8 @@ interface ItineraryTimelineProps {
     totalDays?: number;
     startDate?: string; // NEW PROP
     isEnriching?: boolean; // NEW: Progressive Loading State
+    onUpgrade?: () => void;
+    aiEditsUsed?: number; // NEW
 }
 
 export default function ItineraryTimeline({
@@ -46,7 +52,9 @@ export default function ItineraryTimeline({
     onDayChange,
     totalDays,
     startDate,
-    isEnriching = false
+    isEnriching = false,
+    onUpgrade,
+    aiEditsUsed = 0
 }: ItineraryTimelineProps) {
     // 🛡️ Safe Access: Pastikan itinerary selalu array
     const itinerary = plan?.itinerary || [];
@@ -64,20 +72,26 @@ export default function ItineraryTimeline({
         }
     }
 
-    // Jika data kosong atau hari tidak ditemukan, tampilkan placeholder
-    if (!dayPlan || !dayPlan.activities || dayPlan.activities.length === 0) {
-        return (
-            <div className="lg:col-span-2 p-12 text-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200 animate-in fade-in">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Calendar className="w-8 h-8 text-slate-300" />
-                </div>
-                <h4 className="text-lg font-bold text-slate-700 mb-1">No activities for Day {activeDay}</h4>
-                <p className="text-slate-400 text-sm italic">Planning is still in progress...</p>
-            </div>
-        );
-    }
+    const { subscription } = useSubscription();
+    const router = useRouter();
+    const isPro = subscription?.subscription_tier === 'PRO';
 
-    const activities = dayPlan.activities;
+    const activities = React.useMemo(() => {
+        let list = [...(dayPlan?.activities || [])].sort((a, b) => {
+            return (a.time || "").localeCompare(b.time || "");
+        });
+
+        // HIDDEN GEMS LOGIC
+        if (!isPro) {
+            // 1. Hide actual hidden gems from FREE users
+            list = list.filter(act => !act.is_hidden_gem);
+        }
+
+        return list;
+    }, [dayPlan?.activities, isPro]);
+
+    // TEASER LOGIC: Inject locked card if FREE user on Day 1 or 2
+    const showTeaser = !isPro && (activeDay === 1 || activeDay === 2) && activities.length > 0;
 
     // Render Single Activity Item
     const renderActivity = (act: Activity, idx: number, total: number, dayNum: number) => {
@@ -88,7 +102,7 @@ export default function ItineraryTimeline({
 
         return (
             <div
-                key={idx}
+                key={activityId} // Use stable activityId instead of idx
                 id={`activity-${activityId}`}
                 className="relative pl-10 pb-12 last:pb-0 group/act animate-in fade-in slide-in-from-top-2 duration-300"
             >
@@ -111,13 +125,19 @@ export default function ItineraryTimeline({
                 {/* Activity Card */}
                 <ActivityCard
                     activity={act}
+                    tripId={plan.trip_id}
+                    dayIndex={dayNum - 1} // 0-indexed for backend
+                    activityIndex={idx}
                     onReplace={() => onReplace?.(dayNum, idx)}
                     onDelete={() => onDelete?.(dayNum, idx)}
                     onAddBelow={() => onAddBelow?.(dayNum, idx)}
                     destinationName={destinationName}
                     isSelected={isSelected}
+                    isExpanded={isSelected}
                     onClick={() => onActivitySelect(isSelected ? null : activityId)}
                     isLoading={isEnriching}
+                    isPro={isPro}
+                    aiEditsUsed={aiEditsUsed}
                 />
             </div>
         );
@@ -128,8 +148,6 @@ export default function ItineraryTimeline({
         const firstActivityId = `activity-${activeDay}-0`;
         const element = document.getElementById(firstActivityId);
         if (element) {
-            // Offset to ensure the activity is not hidden behind sticky headers
-            // 150px roughly accounts for Navbar + DayNavigator + Day Header
             const yOffset = -150;
             const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
             window.scrollTo({ top: y, behavior: 'smooth' });
@@ -141,7 +159,7 @@ export default function ItineraryTimeline({
             {/* Header for Day Context */}
             <div className="mb-8 animate-in fade-in delay-75">
                 <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
-                    {dayPlan.title}
+                    {dayPlan?.title || `Day ${activeDay}`}
                 </h3>
                 <p className="text-slate-500 font-medium">
                     Day {activeDay}{dateDisplay} • {activities.length} planned activities
@@ -149,7 +167,52 @@ export default function ItineraryTimeline({
             </div>
 
             <div className="ml-2 md:ml-4 border-l-0 space-y-2">
-                {(activities || []).map((act, idx) => renderActivity(act, idx, activities.length, activeDay))}
+                {isEnriching && activities.length > 0 && (
+                    <div className="mb-6 bg-teal-50/50 border border-teal-100/50 rounded-2xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
+                        <RefreshCw className="w-4 h-4 text-teal-600 animate-spin" />
+                        <p className="text-xs font-medium text-teal-800">
+                            Refining descriptions & finding hidden gems for your activities...
+                        </p>
+                    </div>
+                )}
+                {!dayPlan || !dayPlan.activities || dayPlan.activities.length === 0 ? (
+                    isEnriching ? (
+                        <EnrichmentLoadingState />
+                    ) : (
+                        <div key="empty-day" className="p-12 text-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200 animate-in fade-in">
+                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Calendar className="w-8 h-8 text-slate-300" />
+                            </div>
+                            <h4 className="text-lg font-bold text-slate-700 mb-1">No activities for Day {activeDay}</h4>
+                            <p className="text-slate-400 text-sm italic">Planning is still in progress...</p>
+                        </div>
+                    )
+                ) : (
+                    <>
+                        {activities.map((act, idx) => {
+                            // Inject teaser at second position (index 1) or last if only 1 activity
+                            const injectOffset = activities.length > 1 ? 1 : 0;
+                            const isTeaserTime = showTeaser && idx === injectOffset;
+
+                            return (
+                                <React.Fragment key={`group-${idx}`}>
+                                    {renderActivity(act, idx, activities.length, activeDay)}
+                                    {isTeaserTime && (
+                                        <div className="relative pl-10 pb-12 group/teaser">
+                                            <div className="absolute left-[16.5px] top-8 bottom-0 w-[3px] bg-slate-200 border-r border-slate-300/50 rounded-full" />
+                                            <div className="absolute left-0 top-1 w-9 h-9 rounded-full flex items-center justify-center border-4 border-slate-200 bg-white shadow-sm z-10 transition-all duration-300">
+                                                <Lock className="w-4 h-4 text-slate-400" />
+                                            </div>
+                                            <LockedActivityCard
+                                                onClick={onUpgrade}
+                                            />
+                                        </div>
+                                    )}
+                                </React.Fragment>
+                            );
+                        })}
+                    </>
+                )}
             </div>
 
             {/* Day Navigation Footer */}

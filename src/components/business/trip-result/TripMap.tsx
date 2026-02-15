@@ -173,6 +173,8 @@ export default function TripMap({
                     const activityId = `${activeDay}-${originalIndex}`;
                     const isSelected = selectedActivityId === activityId;
 
+                    // TODO: Google Maps 'Marker' is deprecated. Migrate to 'AdvancedMarkerElement' (requires Map ID). 
+                    // See: https://developers.google.com/maps/documentation/javascript/advanced-markers/migration
                     return (
                         <Marker
                             key={index}
@@ -221,7 +223,9 @@ export default function TripMap({
 
                             <div className="p-3">
                                 <h5 className="font-bold text-sm mb-1 text-slate-800 line-clamp-1">{selectedActivity.activity}</h5>
-                                <p className="text-xs text-slate-500 line-clamp-2">{selectedActivity.description}</p>
+                                <p className="text-xs text-slate-500 line-clamp-2">
+                                    {selectedActivity.description || selectedActivity.description_short}
+                                </p>
                                 <span className="text-[10px] font-bold text-teal-600 uppercase mt-2 block">{selectedActivity.time}</span>
                             </div>
                         </div>

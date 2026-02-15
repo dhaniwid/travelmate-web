@@ -140,10 +140,12 @@ export async function confirmActivitySwap(
     newActivityData: ActivityAlternative
 ) {
     try {
-        const trips = await sql`SELECT plan_data FROM trips WHERE id = ${tripId}`;
+        const trips = await sql`SELECT plan_data, ai_edits_used FROM trips WHERE id = ${tripId}`;
         if (trips.length === 0) throw new Error("Trip not found");
 
         const plan = parsePlanData(trips[0].plan_data);
+        const ai_edits_used = (trips[0].ai_edits_used || 0) + 1; // Increment
+
         const dayPlan = plan.itinerary.find((d: any) => d.day === day);
         if (!dayPlan) throw new Error(`Day ${day} not found`);
 
@@ -158,9 +160,6 @@ export async function confirmActivitySwap(
             place_name: newActivityData.place_name,
             latitude: null,
             longitude: null,
-            // Keep the alternatives cache or clear it? 
-            // Usually if we swap, the new activity should probably have its own potential alternatives.
-            // Let's clear it to be safe or keep it empty.
             alternatives: []
         };
 
@@ -168,7 +167,8 @@ export async function confirmActivitySwap(
 
         await sql`
             UPDATE trips 
-            SET plan_data = ${JSON.stringify(plan)} 
+            SET plan_data = ${JSON.stringify(plan)},
+                ai_edits_used = ${ai_edits_used}
             WHERE id = ${tripId}
         `;
 
@@ -189,7 +189,7 @@ export async function confirmActivitySwap(
  */
 export async function deleteActivity(tripId: string, day: number, activityIndex: number) {
     try {
-        const trips = await sql`SELECT plan_data FROM trips WHERE id = ${tripId}`;
+        const trips = await sql`SELECT plan_data, ai_edits_used FROM trips WHERE id = ${tripId}`;
         if (trips.length === 0) throw new Error("Trip not found");
 
         const plan = parsePlanData(trips[0].plan_data);

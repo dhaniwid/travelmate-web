@@ -31,14 +31,24 @@ export default function StyleTags({ selected, onToggle }: StyleTagsProps) {
                             key={style.label}
                             onClick={() => onToggle(style.label)}
                             className={cn(
-                                "flex items-center gap-2 px-5 py-2.5 rounded-full text-[1rem] font-bold transition-all border shadow-sm active:scale-95",
+                                "flex items-center gap-2 px-5 py-2.5 rounded-full text-[0.95rem] font-bold transition-all border shadow-sm active:scale-95 group",
                                 isSelected
-                                    ? "bg-[#546E7A] text-white border-[#546E7A] shadow-md ring-1 ring-[#546E7A]/20"
-                                    : "bg-[#F3F5F7] text-[#455A64] border-slate-200 hover:border-slate-300"
+                                    ? "bg-teal-600 text-white border-teal-600 shadow-teal-100 shadow-lg"
+                                    : "bg-slate-100 text-slate-600 border-slate-200 hover:border-slate-300"
                             )}
                         >
-                            <Icon className="w-5 h-5 opacity-70" />
-                            {style.label}
+                            <Icon className={cn("w-4 h-4", isSelected ? "text-white" : "text-slate-500")} />
+                            <span>{style.label}</span>
+                            <div className={cn(
+                                "flex items-center justify-center w-5 h-5 rounded-full transition-colors",
+                                isSelected ? "bg-white/20" : "bg-slate-200 group-hover:bg-slate-300"
+                            )}>
+                                {isSelected ? (
+                                    <Check className="w-3 h-3 text-white" />
+                                ) : (
+                                    <span className="text-sm leading-none mb-0.5 text-slate-500">+</span>
+                                )}
+                            </div>
                         </button>
                     );
                 })}

@@ -1,8 +1,9 @@
 'use client';
 
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save, X, Utensils, Heart, Compass, Wallet, Gauge } from 'lucide-react';
+import { Loader2, Save, X, Utensils, Heart, Compass, Wallet, Gauge, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@clerk/nextjs';
 import {
@@ -132,12 +133,19 @@ export default function TravelDNAEditor({ isOpen, onClose, onUpdate }: TravelDNA
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto sm:max-w-xl">
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto sm:max-w-xl bg-white/80 backdrop-blur-xl border-white/20 shadow-2xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-2xl font-black text-slate-900">
-                        <span className="text-3xl">🧬</span> Edit Travel DNA
+                        <motion.span
+                            initial={{ scale: 0.5, rotate: -20 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            className="text-3xl"
+                        >
+                            🧬
+                        </motion.span>
+                        Edit Travel DNA
                     </DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription className="text-slate-500 font-medium">
                         Set your global preferences. Miru will verify these settings for every trip generation.
                     </DialogDescription>
                 </DialogHeader>
@@ -147,29 +155,41 @@ export default function TravelDNAEditor({ isOpen, onClose, onUpdate }: TravelDNA
                         <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
                     </div>
                 ) : (
-                    <div className="space-y-8 py-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="space-y-8 py-4"
+                    >
                         {/* PACE */}
                         <section className="space-y-3">
                             <label className="text-sm font-bold text-slate-900 flex items-center gap-2">
                                 <Gauge className="w-4 h-4 text-teal-600" /> Prefered Pace
                             </label>
                             <div className="grid grid-cols-3 gap-3">
-                                {PACE_OPTIONS.map((opt) => (
-                                    <div
+                                {PACE_OPTIONS.map((opt, idx) => (
+                                    <motion.div
                                         key={opt.value}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.2 + (idx * 0.05) }}
                                         onClick={() => setPrefs(p => ({ ...p, pace: opt.value }))}
                                         className={cn(
-                                            "cursor-pointer rounded-xl border-2 p-3 flex flex-col items-center gap-2 transition-all hover:scale-105",
+                                            "cursor-pointer rounded-2xl border-2 p-4 flex flex-col items-center gap-2 transition-all duration-300",
                                             prefs.pace === opt.value
-                                                ? "border-teal-500 bg-teal-50"
-                                                : "border-slate-100 hover:border-teal-200"
+                                                ? "border-teal-500 bg-teal-500/10 shadow-lg shadow-teal-500/20"
+                                                : "border-slate-100 bg-white/50 hover:border-teal-200"
                                         )}
                                     >
-                                        <span className="text-2xl">{opt.icon}</span>
+                                        <span className="text-3xl filter drop-shadow-sm">{opt.icon}</span>
                                         <div className="text-center">
-                                            <p className={cn("text-xs font-bold", prefs.pace === opt.value ? "text-teal-700" : "text-slate-600")}>{opt.label}</p>
+                                            <p className={cn("text-xs font-black uppercase tracking-wider", prefs.pace === opt.value ? "text-teal-700" : "text-slate-600")}>
+                                                {opt.label}
+                                            </p>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
                         </section>
@@ -180,22 +200,29 @@ export default function TravelDNAEditor({ isOpen, onClose, onUpdate }: TravelDNA
                                 <Wallet className="w-4 h-4 text-emerald-600" /> Budget Style
                             </label>
                             <div className="grid grid-cols-3 gap-3">
-                                {BUDGET_OPTIONS.map((opt) => (
-                                    <div
+                                {BUDGET_OPTIONS.map((opt, idx) => (
+                                    <motion.div
                                         key={opt.value}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.4 + (idx * 0.05) }}
                                         onClick={() => setPrefs(p => ({ ...p, budget_tier: opt.value }))}
                                         className={cn(
-                                            "cursor-pointer rounded-xl border-2 p-3 flex flex-col items-center gap-2 transition-all hover:scale-105",
+                                            "cursor-pointer rounded-2xl border-2 p-4 flex flex-col items-center gap-2 transition-all duration-300",
                                             prefs.budget_tier === opt.value
-                                                ? "border-emerald-500 bg-emerald-50"
-                                                : "border-slate-100 hover:border-emerald-200"
+                                                ? "border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/20"
+                                                : "border-slate-100 bg-white/50 hover:border-emerald-200"
                                         )}
                                     >
-                                        <span className="text-2xl">{opt.icon}</span>
+                                        <span className="text-3xl filter drop-shadow-sm">{opt.icon}</span>
                                         <div className="text-center">
-                                            <p className={cn("text-xs font-bold", prefs.budget_tier === opt.value ? "text-emerald-700" : "text-slate-600")}>{opt.label}</p>
+                                            <p className={cn("text-xs font-black uppercase tracking-wider", prefs.budget_tier === opt.value ? "text-emerald-700" : "text-slate-600")}>
+                                                {opt.label}
+                                            </p>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
                         </section>
@@ -206,20 +233,26 @@ export default function TravelDNAEditor({ isOpen, onClose, onUpdate }: TravelDNA
                                 <Utensils className="w-4 h-4 text-orange-600" /> Dietary Restrictions
                             </label>
                             <div className="flex flex-wrap gap-2">
-                                {DIETARY_OPTIONS.map((opt) => (
-                                    <Badge
+                                {DIETARY_OPTIONS.map((opt, idx) => (
+                                    <motion.div
                                         key={opt}
-                                        variant="outline"
-                                        onClick={() => toggleSelection('dietary', opt)}
-                                        className={cn(
-                                            "cursor-pointer py-1.5 px-3 rounded-full transition-all text-xs",
-                                            prefs.dietary.includes(opt)
-                                                ? "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200"
-                                                : "bg-white text-slate-600 border-slate-200 hover:border-orange-300"
-                                        )}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.5 + (idx * 0.03) }}
                                     >
-                                        {opt}
-                                    </Badge>
+                                        <Badge
+                                            variant="outline"
+                                            onClick={() => toggleSelection('dietary', opt)}
+                                            className={cn(
+                                                "cursor-pointer py-1.5 px-4 rounded-full transition-all text-xs font-semibold",
+                                                prefs.dietary.includes(opt)
+                                                    ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20"
+                                                    : "bg-white/50 text-slate-600 border-slate-200 hover:border-orange-300"
+                                            )}
+                                        >
+                                            {opt}
+                                        </Badge>
+                                    </motion.div>
                                 ))}
                             </div>
                         </section>
@@ -230,20 +263,26 @@ export default function TravelDNAEditor({ isOpen, onClose, onUpdate }: TravelDNA
                                 <Heart className="w-4 h-4 text-rose-600" /> Key Interests
                             </label>
                             <div className="flex flex-wrap gap-2">
-                                {INTEREST_OPTIONS.map((opt) => (
-                                    <Badge
+                                {INTEREST_OPTIONS.map((opt, idx) => (
+                                    <motion.div
                                         key={opt}
-                                        variant="outline"
-                                        onClick={() => toggleSelection('interests', opt)}
-                                        className={cn(
-                                            "cursor-pointer py-1.5 px-3 rounded-full transition-all text-xs",
-                                            prefs.interests.includes(opt)
-                                                ? "bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200"
-                                                : "bg-white text-slate-600 border-slate-200 hover:border-rose-300"
-                                        )}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.6 + (idx * 0.03) }}
                                     >
-                                        {opt}
-                                    </Badge>
+                                        <Badge
+                                            variant="outline"
+                                            onClick={() => toggleSelection('interests', opt)}
+                                            className={cn(
+                                                "cursor-pointer py-1.5 px-4 rounded-full transition-all text-xs font-semibold",
+                                                prefs.interests.includes(opt)
+                                                    ? "bg-rose-500 text-white border-rose-500 shadow-md shadow-rose-500/20"
+                                                    : "bg-white/50 text-slate-600 border-slate-200 hover:border-rose-300"
+                                            )}
+                                        >
+                                            {opt}
+                                        </Badge>
+                                    </motion.div>
                                 ))}
                             </div>
                         </section>
@@ -254,25 +293,31 @@ export default function TravelDNAEditor({ isOpen, onClose, onUpdate }: TravelDNA
                                 <Compass className="w-4 h-4 text-indigo-600" /> Travel Companions
                             </label>
                             <div className="flex flex-wrap gap-2">
-                                {STYLE_OPTIONS.map((opt) => (
-                                    <Badge
+                                {STYLE_OPTIONS.map((opt, idx) => (
+                                    <motion.div
                                         key={opt}
-                                        variant="outline"
-                                        onClick={() => toggleSelection('travel_style', opt)}
-                                        className={cn(
-                                            "cursor-pointer py-1.5 px-3 rounded-full transition-all text-xs",
-                                            prefs.travel_style.includes(opt)
-                                                ? "bg-indigo-100 text-indigo-700 border-indigo-200 hover:bg-indigo-200"
-                                                : "bg-white text-slate-600 border-slate-200 hover:border-indigo-300"
-                                        )}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.7 + (idx * 0.03) }}
                                     >
-                                        {opt}
-                                    </Badge>
+                                        <Badge
+                                            variant="outline"
+                                            onClick={() => toggleSelection('travel_style', opt)}
+                                            className={cn(
+                                                "cursor-pointer py-1.5 px-4 rounded-full transition-all text-xs font-semibold",
+                                                prefs.travel_style.includes(opt)
+                                                    ? "bg-indigo-500 text-white border-indigo-500 shadow-md shadow-indigo-500/20"
+                                                    : "bg-white/50 text-slate-600 border-slate-200 hover:border-indigo-300"
+                                            )}
+                                        >
+                                            {opt}
+                                        </Badge>
+                                    </motion.div>
                                 ))}
                             </div>
                         </section>
 
-                    </div>
+                    </motion.div>
                 )}
 
                 <DialogFooter className="gap-2">

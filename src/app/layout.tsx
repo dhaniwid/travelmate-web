@@ -11,6 +11,8 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
     title: "Miru | AI Travel Planner",
     description: "Discover your perfect journey with AI-powered travel planning. Personalized itineraries, smart recommendations, and magical experiences.",
+    manifest: "/manifest.json",
+    themeColor: "#0d9488",
 };
 
 import BottomNav from "@/components/navigation/BottomNav";

@@ -192,8 +192,8 @@ export async function generateTripAction(request: TripRequest & { user_id: strin
         if (user_id) {
             console.log(`💾 Saving trip for user ${user_id}`);
             await sql`
-                INSERT INTO trips (id, user_id, origin, destination, start_date, trip_days, style, budget, budget_range, plan_data)
-                VALUES (${tripData.id}, ${tripData.user_id}, ${tripData.origin}, ${tripData.destination}, ${tripData.start_date}, ${tripData.trip_days}, ${tripData.style}, ${tripData.budget}, ${tripData.budget_range}, ${tripData.plan_data as any})
+                INSERT INTO trips (id, user_id, origin, destination, start_date, trip_days, style, budget, budget_range, plan_data, itinerary_status, enrichment_status)
+                VALUES (${tripData.id}, ${tripData.user_id}, ${tripData.origin}, ${tripData.destination}, ${tripData.start_date}, ${tripData.trip_days}, ${tripData.style}, ${tripData.budget}, ${tripData.budget_range}, ${tripData.plan_data as any}, 'completed', 'enriching')
             `;
 
             try {
@@ -209,6 +209,8 @@ export async function generateTripAction(request: TripRequest & { user_id: strin
         return {
             trip: {
                 ...tripData,
+                itinerary_status: 'completed',
+                enrichment_status: 'enriching',
                 created_at: new Date().toISOString()
             } as any,
             plan: plan,
@@ -259,7 +261,7 @@ export async function addActivity(
         };
 
         if (data.autoEnhance) {
-            console.log(`✨ AI Enhancing activity: ${data.title} in ${destination}`);
+            console.log(`✨ Miru Magic at work: ${data.title} in ${destination}`);
             try {
                 const prompt = `
                     Context: A traveler is in ${destination}. 
@@ -459,7 +461,10 @@ export async function getTripAction(id: string): Promise<TripResponse | null> {
                 budget: tripData.budget,
                 budget_range: tripData.budget_range,
                 created_at: tripData.created_at,
-                user_preferences: tripData.user_preferences
+                user_preferences: tripData.user_preferences,
+                itinerary_status: tripData.itinerary_status,
+                enrichment_status: tripData.enrichment_status,
+                ai_edits_used: tripData.ai_edits_used
             } as any,
             plan: plan as TripPlan,
             is_saved: true

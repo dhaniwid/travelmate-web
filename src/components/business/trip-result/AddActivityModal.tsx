@@ -12,15 +12,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Sparkles, Clock, MapPin, Loader2, Plus, Utensils, Camera, ShoppingBag, Leaf, Trophy } from "lucide-react";
+import { cn } from '@/lib/utils';
 import { getAddActivitySuggestions } from '@/actions/trip';
 
 interface AddActivityModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAdd: (data: { title: string, time: string, autoEnhance: boolean }) => void;
+    onAdd: (data: { title: string, time: string, miruMagic: boolean }) => void;
     isSaving?: boolean;
     tripId: string;
     dayNum: number;
+    isPro?: boolean;
 }
 
 const CategoryIcon = ({ category }: { category: string }) => {
@@ -41,7 +43,8 @@ export default function AddActivityModal({
     onAdd,
     isSaving = false,
     tripId,
-    dayNum
+    dayNum,
+    isPro = false
 }: AddActivityModalProps) {
     const [title, setTitle] = useState("");
     const [time, setTime] = useState("10:00");
@@ -71,7 +74,7 @@ export default function AddActivityModal({
 
     const handleAdd = () => {
         if (!title.trim()) return;
-        onAdd({ title, time, autoEnhance });
+        onAdd({ title, time, miruMagic: autoEnhance });
     };
 
     const handleSuggestionClick = (suggestedTitle: string) => {
@@ -110,7 +113,7 @@ export default function AddActivityModal({
                         <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-500">
                             <div className="flex items-center gap-2 mb-3 ml-1">
                                 <Sparkles className="w-3 h-3 text-teal-500" />
-                                <span className="text-[0.6rem] font-bold text-teal-600 uppercase tracking-widest">AI Recommendations for this time</span>
+                                <span className="text-[0.6rem] font-bold text-teal-600 uppercase tracking-widest">Miru's Suggestions for this time</span>
                             </div>
 
                             <div className="flex flex-wrap gap-2">
@@ -121,19 +124,29 @@ export default function AddActivityModal({
                                         ))}
                                     </>
                                 ) : suggestions.length > 0 ? (
-                                    suggestions.map((s, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => handleSuggestionClick(s.title)}
-                                            className="group flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 hover:bg-teal-50 border border-slate-100 hover:border-teal-200 transition-all active:scale-95 text-left"
-                                        >
-                                            <CategoryIcon category={s.category} />
-                                            <span className="text-xs font-bold text-slate-600 group-hover:text-teal-700 whitespace-nowrap">
-                                                {s.title}
-                                            </span>
-                                            <Plus className="w-3 h-3 text-slate-300 group-hover:text-teal-400" />
-                                        </button>
-                                    ))
+                                    suggestions.map((s, idx) => {
+                                        const isLocked = !isPro && idx >= 3;
+                                        return (
+                                            <button
+                                                key={idx}
+                                                disabled={isLocked}
+                                                onClick={() => handleSuggestionClick(s.title)}
+                                                className={cn(
+                                                    "group flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 transition-all active:scale-95 text-left",
+                                                    isLocked ? "opacity-50 blur-[1px] cursor-not-allowed grayscale" : "hover:bg-teal-50 hover:border-teal-200"
+                                                )}
+                                            >
+                                                <CategoryIcon category={s.category} />
+                                                <span className={cn(
+                                                    "text-xs font-bold text-slate-600 whitespace-nowrap",
+                                                    !isLocked && "group-hover:text-teal-700"
+                                                )}>
+                                                    {s.title}
+                                                </span>
+                                                {!isLocked && <Plus className="w-3 h-3 text-slate-300 group-hover:text-teal-400" />}
+                                            </button>
+                                        );
+                                    })
                                 ) : (
                                     <p className="text-[0.65rem] text-slate-400 ml-1 italic font-medium">Type a time to see suggestions...</p>
                                 )}
@@ -164,7 +177,7 @@ export default function AddActivityModal({
                             <div className="flex items-center justify-between p-4 rounded-3xl bg-teal-50/50 border border-teal-100/50 h-[3.8rem]">
                                 <div className="flex items-center gap-3">
                                     <Sparkles className="w-4 h-4 text-teal-600" />
-                                    <span className="text-[0.7rem] font-black text-teal-700 uppercase tracking-wider">AI Enhance</span>
+                                    <span className="text-[0.7rem] font-black text-teal-700 uppercase tracking-wider">Miru Magic</span>
                                 </div>
                                 <Switch
                                     checked={autoEnhance}
@@ -185,7 +198,7 @@ export default function AddActivityModal({
                         {isSaving ? (
                             <div className="flex items-center gap-3">
                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                <span>Generating Details...</span>
+                                <span>Invoking Miru Magic...</span>
                             </div>
                         ) : (
                             <div className="flex items-center gap-2">

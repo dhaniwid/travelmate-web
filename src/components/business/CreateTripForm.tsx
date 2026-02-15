@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { TripRequest } from '@/types';
+import { tripService } from '@/services/trip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,7 @@ import { Loader2, Sparkles, Gauge } from 'lucide-react';
 import { toast } from "sonner";
 import { ProgressStep } from './GenerationProgress';
 import { useUser, useAuth } from "@clerk/nextjs";
+import PremiumBadge from '@/components/ui/PremiumBadge';
 
 // Import Modular Components
 import DestinationSection from './create-trip/DestinationSection';
@@ -17,6 +19,8 @@ import DateDurationSection from './create-trip/DateDurationSection';
 import VibeSection from './create-trip/VibeSection';
 import LoadingOverlay from './create-trip/LoadingOverlay';
 import { generateTripAction } from '@/actions/trip';
+import { trackEventAction } from '@/actions/analytics';
+import QuotaBanner from '@/components/ui/QuotaBanner';
 
 interface CreateTripFormProps {
     onSuccess: (data: any) => void;
@@ -36,6 +40,9 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
     const [isFlexibleDate, setIsFlexibleDate] = useState(false);
     const [isStreaming, setIsStreaming] = useState(false);
     const [isDone, setIsDone] = useState(false);
+    const [showQuotaBanner, setShowQuotaBanner] = useState(false);
+    const [quotaMessage, setQuotaMessage] = useState<string | undefined>();
+    const [quotaAction, setQuotaAction] = useState({ label: "Upgrade to PRO", href: "/pricing" });
 
     // Slider (social vibe only - pace comes from Travel DNA)
     const [socialVal, setSocialVal] = useState([50]);
@@ -79,19 +86,17 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
         const fetchPreferences = async () => {
             try {
                 const token = await getToken();
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/preferences`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setUserPace(data.pace || 'BALANCED');
-                }
+                if (!token) return;
+
+                // Use tripService to avoid duplicate /api/v1 or base URL issues
+                const data = await tripService.getUserPreferences(token);
+                setUserPace(data.pace || 'BALANCED');
             } catch (error) {
                 console.log('Travel DNA not set, using default pace');
             }
         };
         if (user?.id) fetchPreferences();
-    }, [user?.id]);
+    }, [user?.id, getToken]);
 
     // Helper: Generate Vibe String for AI (uses Travel DNA pace)
     const generateStyleString = () => {
@@ -119,6 +124,17 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // 🛡️ SECURITY: Guest Quota (1 Trip Limit)
+        if (!user) {
+            const guestUsage = localStorage.getItem('miru_guest_usage');
+            if (guestUsage && parseInt(guestUsage) >= 1) {
+                setQuotaMessage("Guest trip limit reached! Discovering more destinations requires a free account.");
+                setQuotaAction({ label: "Create Account", href: "/sign-up" });
+                setShowQuotaBanner(true);
+                return;
+            }
+        }
+
         // Validasi Origin
         if (!formData.origin.trim()) {
             toast.error("Please enter a starting point (Origin)");
@@ -145,29 +161,24 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
             user_id: user?.id || "",
         };
 
+        // Track trip start
+        trackEventAction('trip_started', {
+            destination: payload.destination,
+            is_guest: !user,
+            days: payload.trip_days
+        });
+
         try {
             // STEP 1: ASYNC GENERATION REQUEST
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8889/api/v1'}/trips`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            // Use tripService.createTrip instead of manual fetch
+            const data = await tripService.createTrip(payload);
+
+            // Track successful trip generation
+            trackEventAction('trip_success', {
+                trip_id: data.trip_id,
+                destination: payload.destination,
+                is_guest: !user
             });
-
-            if (!response.ok) {
-                // Try to parse error message
-                const errData = await response.json().catch(() => ({}));
-                // Check for quota error
-                if (response.status === 403 && errData.error === 'quota_exceeded') {
-                    toast.error("Trip limit reached! 🚫", {
-                        description: errData.message || "Upgrade to Pro for unlimited trips!"
-                    });
-                    setIsStreaming(false);
-                    return;
-                }
-                throw new Error(errData.message || "Failed to start trip generation");
-            }
-
-            const data = await response.json();
 
             setIsDone(true);
 
@@ -176,12 +187,35 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
                 description: "Taking you to your trip page now."
             });
 
+            // Store ID if anonymous (Preview-First Flow)
+            if (!user) {
+                localStorage.setItem('pending_trip_id', data.trip_id);
+                localStorage.setItem('pending_claim_trip_id', data.trip_id); // For transfer logic
+                localStorage.setItem('miru_guest_usage', '1'); // Set guest limit
+            }
+
             // Redirect after allowing completion animation to breathe
             setTimeout(() => {
                 router.push(`/trips/${data.trip_id}`);
             }, 1000);
 
         } catch (error: any) {
+            // Check for quota error (Axios style)
+            if (error.response?.status === 403 && error.response?.data?.error === 'quota_exceeded') {
+                setQuotaMessage(error.response.data.message || "Monthly trip generation limit reached. Upgrade to PRO for unlimited planning.");
+                setQuotaAction({ label: "Upgrade to PRO", href: "/pricing" });
+                setShowQuotaBanner(true);
+                setIsStreaming(false);
+                return;
+            }
+
+            // Track trip generation error
+            trackEventAction('trip_error', {
+                error: (error as Error).message || "Unknown error",
+                destination: payload.destination,
+                is_guest: !user
+            });
+
             console.error("Trip Creator Error:", error);
             setIsStreaming(false);
             toast.error("Something went wrong", {
@@ -206,16 +240,20 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
 
                 {/* TRAVEL DNA BADGE */}
                 {userPace && (
-                    <div className="flex items-center gap-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-500">
-                        <Badge variant="outline" className="text-xs bg-teal-50 text-teal-700 border-teal-200 gap-1.5 py-1 px-2">
-                            <Gauge className="w-3 h-3" />
-                            Travel DNA Active: <span className="font-bold">{userPace} Pace</span>
-                        </Badge>
+                    <div className="flex items-center gap-2 mt-2">
+                        <PremiumBadge text={`Travel DNA Active: ${userPace} Pace`} />
                     </div>
                 )}
             </CardHeader>
 
             <CardContent>
+                <QuotaBanner
+                    isVisible={showQuotaBanner}
+                    onClose={() => setShowQuotaBanner(false)}
+                    message={quotaMessage}
+                    actionLabel={quotaAction.label}
+                    actionHref={quotaAction.href}
+                />
                 <form onSubmit={handleSubmit} className="space-y-8">
 
                     <DestinationSection

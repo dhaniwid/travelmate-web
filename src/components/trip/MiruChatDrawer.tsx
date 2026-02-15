@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea'; // Assuming reusable component
 import { toast } from 'sonner';
 import { TripPlan } from '@/types';
+import { tripService } from '@/services/trip';
 
 interface MiruChatDrawerProps {
     isOpen: boolean;
@@ -48,24 +49,8 @@ export default function MiruChatDrawer({ isOpen, onClose, tripId, onPlanUpdate }
         setIsLoading(true);
 
         try {
-            // 1. Call API
-            // TODO: Use a server action or direct fetch. Direct fetch for now as it's a client interaction.
-            // But wait, the previous implementation used fetch for client side calls usually, or server actions.
-            // Let's use fetch to the new endpoint we created.
-            // Protected route, so we trust the session cookie is handled by middleware.
-
-            const response = await fetch(`/api/v1/trips/${tripId}/refine`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ instruction: userMsg.content }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to refine trip');
-            }
-
-            const { data } = await response.json(); // data is TripPlan (partial or full)
+            // Use tripService to avoid duplicate /api/v1 issues
+            const data = await tripService.refineTrip(tripId, userMsg.content);
 
             // 2. Update Plan
             // The API returns the FULL plan (including updated itinerary)

@@ -111,10 +111,10 @@ export default function DestinationSection({
                             size="icon"
                             variant="ghost"
                             onClick={handleCurrentLocation}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 hover:text-blue-600 hover:bg-blue-50 rounded-lg h-8 w-8"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 hover:text-blue-600 hover:bg-blue-50 rounded-lg h-10 w-10 flex items-center justify-center"
                             title="Use Current Location"
                         >
-                            <LocateFixed className="w-4 h-4" />
+                            <LocateFixed className="w-5 h-5 text-slate-400" />
                         </Button>
                     </div>
                 </div>

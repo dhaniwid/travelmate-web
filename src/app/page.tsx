@@ -66,6 +66,10 @@ export default function HomePage() {
         // ALWAYS redirect to /trips/:id (fetch from DB, no stale sessionStorage)
         // The backend saves the trip via FinalizeAndSaveToDB
         if (data.trip?.id) {
+            // Store ID if anonymous (Preview-First Flow)
+            if (!isSignedIn) {
+                localStorage.setItem('pending_trip_id', data.trip.id);
+            }
             router.push(`/trips/${data.trip.id}`);
         } else {
             // Fallback: if no trip ID, go home

@@ -39,7 +39,7 @@ export default function Navbar() {
                             <UserButton afterSignOutUrl="/" />
                         </>
                     ) : (
-                        <SignInButton mode="modal">
+                        <SignInButton mode="modal" forceRedirectUrl="/dashboard">
                             <Button className="bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-200">
                                 Sign In
                             </Button>

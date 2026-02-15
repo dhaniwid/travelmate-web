@@ -14,6 +14,9 @@ import { fetchUnsplashImage } from '@/services/imageService';
 import { cn, formatDate } from '@/lib/utils';
 import { useSubscription } from "@/hooks/useSubscription";
 import QuotaIndicator from "@/components/dashboard/QuotaIndicator";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import TrendingDestinations from "@/components/dashboard/TrendingDestinations";
+import EmptyState from "@/components/ui/EmptyState";
 
 export default function DashboardPage() {
     const { getToken, isLoaded, isSignedIn } = useAuth();
@@ -57,6 +60,39 @@ export default function DashboardPage() {
 
         fetchTrips();
     }, [isLoaded, isSignedIn, getToken]);
+
+    // Handle post-signup redirect for pending trips & claiming
+    useEffect(() => {
+        if (!isLoaded || !isSignedIn || !user) return;
+
+        const handlePendingActions = async () => {
+            const claimTripId = localStorage.getItem('pending_claim_trip_id');
+            const pendingTripId = localStorage.getItem('pending_trip_id');
+
+            // 1. Claim Trip if needed
+            if (claimTripId) {
+                try {
+                    const { claimTripAction } = await import('@/actions/trip-claim');
+                    const res = await claimTripAction(claimTripId, user.id);
+                    if (res.success) {
+                        localStorage.removeItem('pending_claim_trip_id');
+                        toast.success("Trip successfully claimed to your account! ✨");
+                    }
+                } catch (err) {
+                    console.error("Failed to claim trip:", err);
+                }
+            }
+
+            // 2. Redirect back if needed
+            if (pendingTripId) {
+                localStorage.removeItem('pending_trip_id');
+                toast.success("Welcome back! Loading your saved trip...");
+                router.push(`/trips/${pendingTripId}`);
+            }
+        };
+
+        handlePendingActions();
+    }, [isLoaded, isSignedIn, user, router]);
 
     // Filter and sort trips
     const today = new Date();
@@ -173,30 +209,7 @@ export default function DashboardPage() {
             />
 
             {/* HEADER */}
-            <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-xl font-bold text-slate-800 hidden sm:block">
-                            Hello, {user?.firstName || 'Traveler'} 👋
-                        </h1>
-                        <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
-
-                        {/* QUOTA INDICATOR */}
-                        <QuotaIndicator quota={quota ?? undefined} subscription={subscription ?? undefined} isLoading={isSubLoading} />
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        {!isSubLoading && subscription?.subscription_tier === 'FREE' && (
-                            <Button asChild size="sm" variant="ghost" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 sm:hidden">
-                                <Link href="/pricing"><Zap className="w-4 h-4 mr-1" /> Upgrade</Link>
-                            </Button>
-                        )}
-                        <div className="hidden sm:block">
-                            <UserButton afterSignOutUrl="/" />
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <DashboardHeader quota={quota ?? undefined} subscription={subscription ?? undefined} isSubLoading={isSubLoading} />
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
 
@@ -208,16 +221,23 @@ export default function DashboardPage() {
                         <div className="absolute -top-40 -right-40 w-96 h-96 bg-teal-500/30 rounded-full blur-[128px]" />
                         <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-600/20 rounded-full blur-[128px]" />
                         {/* Subtle Grid Pattern */}
-                        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03]" />
+                        <div
+                            className="absolute inset-0 opacity-[0.05]"
+                            style={{
+                                backgroundImage: `linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px), 
+                                                linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+                                backgroundSize: '40px 40px'
+                            }}
+                        />
                     </div>
 
                     <div className="relative z-10 max-w-3xl mx-auto space-y-10 animate-in fade-in zoom-in-95 duration-700">
                         <div className="space-y-4">
                             <h2 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-none drop-shadow-xl">
-                                Hi, <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-teal-400">{user?.firstName || 'Traveler'}</span> 👋
+                                Plan your dream trip, <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-teal-400">{user?.firstName || 'Traveler'}</span>
                             </h2>
-                            <p className="text-xl md:text-2xl text-slate-300 font-medium">
-                                Ready to write your next story?
+                            <p className="text-xl md:text-2xl text-slate-300 font-medium max-w-2xl mx-auto">
+                                Let's craft a personalized day-by-day itinerary in seconds.
                             </p>
                         </div>
 
@@ -226,7 +246,7 @@ export default function DashboardPage() {
                             <Button
                                 onClick={() => handleCreateTrip()}
                                 size="lg"
-                                className="h-14 px-8 rounded-full text-lg font-bold bg-teal-500 hover:bg-teal-400 text-white shadow-[0_0_20px_rgba(20,184,166,0.5)] transition-all hover:scale-105 active:scale-95"
+                                className="h-14 px-8 rounded-full text-lg font-bold bg-teal-600 hover:bg-teal-700 text-white shadow-[0_0_20px_rgba(13,148,136,0.3)] transition-all hover:scale-105 active:scale-95"
                             >
                                 <Sparkles className="w-5 h-5 mr-2" />
                                 Start Planning
@@ -245,9 +265,8 @@ export default function DashboardPage() {
                     </div>
                 </section>
 
-                {/* NEXT ADVENTURE (If Exists) */}
-                {nextTrip && (
-                    <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {nextTrip ? (
+                    <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 mt-12">
                         <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-6 flex items-center gap-2">
                             <Plane className="w-6 h-6 text-teal-600" />
                             Your Upcoming Trip
@@ -315,67 +334,51 @@ export default function DashboardPage() {
                             </div>
                         </Link>
                     </section>
+                ) : (
+                    /* EMPTY STATE: Replaced TrendingDestinations with the new EmptyState component */
+                    <div className="mt-12">
+                        <EmptyState
+                            icon={Plane}
+                            title="No adventures yet! 🌍"
+                            description="Your future trips will appear here. Ready to plan your first miracle journey?"
+                            actionLabel="Create My First Trip"
+                            onAction={() => handleCreateTrip()}
+                        />
+                        <div className="mt-20">
+                            <h3 className="text-xl font-bold text-slate-800 mb-8 px-2">Or get inspired by these spots:</h3>
+                            <TrendingDestinations onCreateTrip={() => handleCreateTrip()} />
+                        </div>
+                    </div>
                 )}
 
-                {/* SECTION 2: TRENDING THIS SEASON */}
-                <section>
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                            Trending This Season <span className="text-lg">🔥</span>
-                        </h2>
-                    </div>
-                    {/* Horizontal Scroll Container */}
-                    <div className="flex gap-6 overflow-x-auto pb-8 -mx-4 px-4 scrollbar-hide snap-x">
-                        {[
-                            { name: 'Kyoto, Japan', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80', description: 'Cherry blossoms & ancient temples.' },
-                            { name: 'Interlaken, Switzerland', image: 'https://images.unsplash.com/photo-1506547671804-d4b998a46960?auto=format&fit=crop&w=600&q=80', description: 'Alpine vibes & crystal lakes.' },
-                            { name: 'Queenstown, New Zealand', image: 'https://images.unsplash.com/photo-1507699622177-488570115b95?auto=format&fit=crop&w=600&q=80', description: 'Adventure capital of the world.' },
-                            { name: 'Santorini, Greece', image: 'https://images.unsplash.com/photo-1613395877344-13d4c79e4284?auto=format&fit=crop&w=600&q=80', description: 'Sunsets & white domes.' },
-                        ].map((place, idx) => (
-                            <div
-                                key={idx}
-                                onClick={() => handleCreateTrip()}
-                                className="snap-center min-w-[280px] h-[360px] relative rounded-3xl overflow-hidden cursor-pointer group shadow-lg hover:shadow-2xl transition-all duration-500"
-                            >
-                                <img
-                                    src={place.image}
-                                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                    alt={place.name}
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                                <div className="absolute bottom-0 left-0 p-6">
-                                    <h3 className="text-white text-2xl font-bold leading-tight mb-1">{place.name}</h3>
-                                    <p className="text-white/80 text-sm font-medium">{place.description}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* SECTION 3: CURATED COLLECTIONS */}
-                <section>
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-6">Curated Collections</h2>
+                {/* SECTION 3: QUICK START TEMPLATES (HIDDEN FOR NOW) */}
+                {/* <section>
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-6">Start with a Theme</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[
-                            { title: 'Visa Free Stops', count: '12 Destinations', color: 'bg-emerald-100 text-emerald-800' },
-                            { title: 'Hidden Gems', count: '8 Spots', color: 'bg-indigo-100 text-indigo-800' },
-                            { title: 'Culinary Heavens', count: '15 Cities', color: 'bg-orange-100 text-orange-800' },
+                            { title: 'Foodie Paradise', count: 'Culinary Focus', color: 'bg-orange-100 text-orange-800' },
+                            { title: 'Hidden Gems', count: 'Off-path Spots', color: 'bg-indigo-100 text-indigo-800' },
+                            { title: 'Nature Retreat', count: 'Relaxed Pace', color: 'bg-emerald-100 text-emerald-800' },
                         ].map((col, idx) => (
-                            <div key={idx} className="p-6 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group">
+                            <div
+                                key={idx}
+                                onClick={() => handleCreateTrip()} // TODO: Pass specific theme props in future
+                                className="p-6 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:bg-slate-50"
+                            >
                                 <div className={cn("w-12 h-12 rounded-full mb-4 flex items-center justify-center font-bold text-xl group-hover:scale-110 transition-transform", col.color)}>
                                     {col.title[0]}
                                 </div>
                                 <h3 className="font-bold text-lg text-slate-800 mb-1">{col.title}</h3>
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-slate-500 font-medium">{col.count}</span>
-                                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-teal-500 group-hover:text-white transition-colors">
                                         <ArrowRight className="w-4 h-4" />
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
-                </section>
+                </section> */}
             </main>
 
             {/* FLOATING ACTION BUTTON */}

@@ -9,6 +9,7 @@ import TripGalleryCard from '@/components/business/TripGalleryCard';
 import { Button } from '@/components/ui/button';
 import { Plus, Map, ArrowLeft, Loader2, Plane, Calendar } from 'lucide-react';
 import { toast } from "sonner";
+import PageHeader from "@/components/layout/PageHeader";
 // Import Modal Planner
 import TripPlannerModal from '@/components/business/create-trip/TripPlannerModal';
 
@@ -128,21 +129,11 @@ export default function HistoryPage() {
             />
 
             {/* HEADER NAV */}
-            <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
-                            <ArrowLeft className="w-5 h-5" />
-                        </Link>
-                        <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            <Map className="w-5 h-5 text-teal-600" /> My Adventures
-                        </h1>
-                    </div>
-                    <div className="hidden sm:block">
-                        <UserButton afterSignOutUrl="/" />
-                    </div>
-                </div>
-            </header>
+            <PageHeader
+                title="My Adventures"
+                subtitle="Your travel history and upcoming plans"
+                className="sticky top-0 z-30 rounded-b-[2rem]"
+            />
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
@@ -187,17 +178,8 @@ export default function HistoryPage() {
                                     </Button>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {/* Plan New Card */}
-                                    <div
-                                        onClick={() => setIsPlannerOpen(true)}
-                                        className="group relative aspect-[4/3] md:aspect-[16/10] border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center p-6 hover:border-teal-400 hover:bg-teal-50/30 transition-all cursor-pointer overflow-hidden"
-                                    >
-                                        <div className="w-16 h-16 rounded-full bg-slate-100 group-hover:bg-teal-100 flex items-center justify-center mb-4 transition-colors relative z-10">
-                                            <Plus className="w-8 h-8 text-slate-400 group-hover:text-teal-600" />
-                                        </div>
-                                        <h3 className="font-bold text-xl text-slate-700 group-hover:text-teal-700 relative z-10">Plan New Trip</h3>
-                                        <p className="text-sm text-slate-400 mt-1 relative z-10">Where to next?</p>
-                                    </div>
+                                    {/* Plan New Card REMOVED - Using Header Button / FAB instead */}
+
                                     {upcomingTrips.map((trip) => (
                                         <TripGalleryCard key={trip.id} trip={trip} onDelete={handleDelete} />
                                     ))}

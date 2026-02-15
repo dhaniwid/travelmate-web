@@ -4,7 +4,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { LayoutDashboard, Calendar, BarChart3, Backpack, Map, Stamp } from 'lucide-react';
 
-export type TabType = 'overview' | 'itinerary' | 'logistics' | 'essentials' | 'passport' | 'map';
+export type TabType = 'overview' | 'itinerary' | 'essentials';
 
 interface StickyTabNavProps {
     activeTab: TabType;
@@ -14,10 +14,7 @@ interface StickyTabNavProps {
 const TABS: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
     { id: 'itinerary', label: 'Itinerary', icon: <Calendar className="w-4 h-4" /> },
-    { id: 'logistics', label: 'Logistics', icon: <BarChart3 className="w-4 h-4" /> },
     { id: 'essentials', label: 'Essentials', icon: <Backpack className="w-4 h-4" /> },
-    { id: 'passport', label: 'Passport', icon: <Stamp className="w-4 h-4" /> },
-    { id: 'map', label: 'Map', icon: <Map className="w-4 h-4" /> },
 ];
 
 export default function StickyTabNav({ activeTab, onTabChange }: StickyTabNavProps) {

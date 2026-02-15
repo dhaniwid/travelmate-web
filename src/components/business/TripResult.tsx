@@ -2,14 +2,17 @@
 
 import React, { useTransition } from 'react';
 import { TripResponse, Activity, ActivityAlternative } from '@/types';
+import { tripService } from '@/services/trip';
 import ScrollAwareNavbar from './trip-result/ScrollAwareNavbar';
 import TripHeader from './trip-result/TripHeader';
 import TripCustomizationModal from './trip-result/TripCustomizationModal';
 import ActivityReplacementDrawer from './trip-result/ActivityReplacementDrawer';
 import AddActivityModal from './trip-result/AddActivityModal';
 import { toast } from 'sonner';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -21,9 +24,10 @@ import LogisticsView from '@/components/trip/views/LogisticsView';
 import EssentialsView from '@/components/trip/views/EssentialsView';
 import MapView from '@/components/trip/views/MapView';
 
-import { PassportView } from '@/components/passport/PassportView';
+import { SumiView } from '@/components/passport/SumiView';
 import MiruChatDrawer from '@/components/trip/MiruChatDrawer'; // NEW
 import ItinerarySkeleton from './ItinerarySkeleton';
+import UpgradeModal from '@/components/ui/UpgradeModal';
 
 import { confirmActivitySwap, deleteActivity } from '@/actions/ai-swap';
 import { updateTripPreferences } from '@/actions/preferences';
@@ -40,7 +44,9 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     const { trip, plan, is_saved } = data;
     const [isPending, startTransition] = useTransition();
     const [currentPlan, setCurrentPlan] = React.useState(plan);
+    const [currentTrip, setCurrentTrip] = React.useState(trip);
     const { userId } = useAuth();
+    const { subscription } = useSubscription();
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -49,51 +55,93 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     // Sync state with props when data changes (e.g. after stream completes or trip switches)
     useEffect(() => {
         setCurrentPlan(data.plan);
+        setCurrentTrip(data.trip);
         setIsSaved(data.is_saved || isSavedView || (data.trip?.user_id === userId && !!userId));
     }, [data, isSavedView, userId]);
 
     const [isCustomizeOpen, setIsCustomizeOpen] = React.useState(false);
     const [isReplaceOpen, setIsReplaceOpen] = React.useState(false);
     const [isAddOpen, setIsAddOpen] = React.useState(false);
+    const [isUpgradeOpen, setIsUpgradeOpen] = React.useState(false);
+    const [upgradeContent, setUpgradeContent] = React.useState({ title: "", message: "" });
     const [activeActivity, setActiveActivity] = React.useState<{ day: number, index: number, data: Activity } | null>(null);
     const [addTarget, setAddTarget] = React.useState<{ day: number, index: number } | null>(null);
     const [activeDay, setActiveDay] = React.useState(1);
     const [selectedActivityId, setSelectedActivityId] = React.useState<string | null>(null);
 
     // --- PROGRESSIVE GENERATION (Polling) ---
-    const [enrichmentStatus, setEnrichmentStatus] = React.useState(trip.enrichment_status || 'completed');
+    // Track start time for persistent progress bar across tab switches
+    const [generationStartTime] = React.useState(() => Date.now());
+
+    // Default to 'generating' if no status provided AND no activities exist yet
+    const hasActivities = plan.itinerary && plan.itinerary.some(d => d.activities && d.activities.length > 0);
+    const initialStatus = hasActivities ? 'completed' : 'generating';
+
+    const [itineraryStatus, setItineraryStatus] = React.useState(trip.itinerary_status || initialStatus);
+    const [enrichmentStatus, setEnrichmentStatus] = React.useState(trip.enrichment_status || initialStatus);
 
     useEffect(() => {
-        if (enrichmentStatus !== 'enriching') return;
+        const isComplete = itineraryStatus === 'completed' && enrichmentStatus === 'completed';
+        if (isComplete) return;
 
-        console.log("🔄 Polling for enrichment updates...");
+        // Poll more frequently during active generation
+        // Poll more frequently during active generation (reduced from 3000ms for snappier UI)
+        const pollInterval = 2000;
+
+        console.log("🔄 Polling active...", { itinerary: itineraryStatus, enrichment: enrichmentStatus });
+        console.log("Trip Data:", trip);
+
         const interval = setInterval(async () => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8889/api/v1'}/trips/${trip.id}`);
-                if (res.ok) {
-                    const freshData: TripResponse = await res.json();
+                // Use tripService to avoid duplicate /api/v1 issues
+                const freshData = await tripService.getTripById(trip.id);
+                if (freshData) {
+                    const freshTrip = freshData.trip;
 
-                    // Update Status
-                    if (freshData.trip.enrichment_status === 'completed') {
-                        console.log("✅ Enrichment Complete!");
-                        setEnrichmentStatus('completed');
-                        setCurrentPlan(freshData.plan); // Update Plan with new details
-                        toast.success("Trip Details Enriched!", {
-                            description: "Descriptions, logistics, and hidden gems added."
-                        });
-                        clearInterval(interval);
-                    } else {
-                        // Optional: Update partial plan if API returns partial updates?
-                        // For now, we prefer to update all at once on completion to avoid jank
+                    // ALWAYS update plan if we get fresh data during generation/enrichment
+                    // This allows "streaming" partial results to the UI
+                    if (freshData.plan) {
+                        setCurrentPlan(freshData.plan);
+                    }
+
+                    // 1. Update Trip State (Crucial for status checks)
+                    setCurrentTrip(freshTrip);
+
+                    // 2. Update Status states for local banners
+                    if (freshTrip.itinerary_status !== itineraryStatus) {
+                        setItineraryStatus(freshTrip.itinerary_status || 'completed');
+                        if (freshTrip.itinerary_status === 'completed') {
+                            toast.success("Itinerary Generated!", { description: "Your daily schedule is ready." });
+                        }
+                    }
+
+                    if (freshTrip.enrichment_status !== enrichmentStatus) {
+                        setEnrichmentStatus(freshTrip.enrichment_status || 'completed');
+                        if (freshTrip.enrichment_status === 'completed') {
+                            toast.success("Enrichment Complete!", { description: "Details and hidden gems added." });
+                        }
+                    }
+
+                    // Stop polling ONLY if itinerary is done AND we have data
+                    // We don't wait for enrichment anymore because it's lazy-loaded on-demand (M-126)
+                    if (freshTrip.itinerary_status === 'completed') {
+                        const hasActivities = freshData.plan?.itinerary &&
+                            freshData.plan.itinerary.some(d => d.activities && d.activities.length > 0);
+
+                        if (hasActivities) {
+                            clearInterval(interval);
+                        } else {
+                            console.log("⏳ Itinerary status says completed, but no activities found. Polling one last time...");
+                        }
                     }
                 }
             } catch (e) {
                 console.error("Polling error:", e);
             }
-        }, 3000); // Poll every 3s
+        }, pollInterval);
 
         return () => clearInterval(interval);
-    }, [enrichmentStatus, trip.id]);
+    }, [itineraryStatus, enrichmentStatus, trip.id]);
 
     const [isUpdating, startUpdateTransition] = useTransition();
     const [isChatOpen, setIsChatOpen] = React.useState(false); // NEW
@@ -120,6 +168,29 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
         }
     }, [activeTab, router, searchParams]);
 
+    // --- AUTO-EXPAND FIRST ACTIVITY ON DAY CHANGE (Fixed Guard Clauses) ---
+    useEffect(() => {
+        // Guard: Ensure plan exists
+        if (!currentPlan?.itinerary) return;
+
+        const dayPlan = currentPlan.itinerary.find(d => d.day === activeDay);
+
+        // Guard: Ensure day has activities
+        if (dayPlan?.activities && dayPlan.activities.length > 0) {
+            const firstActivity = dayPlan.activities[0];
+            // Guard: Ensure activity has an ID
+            // TS Fix: Cast to any as Activity type might not have 'id' in frontend definition yet
+            const activityId = (firstActivity as any).id;
+
+            if (activityId) {
+                setSelectedActivityId(activityId);
+            } else {
+                // Fallback if ID invalid
+                setSelectedActivityId(`${activeDay}-0`);
+            }
+        }
+    }, [activeDay, currentPlan.itinerary]);
+
     const handleApplyPreferences = async (newPrefs: any) => {
         // 1. Optimistic Update
         const oldPrefs = preferences;
@@ -144,10 +215,22 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     };
 
     const handleReplace = (day: number, index: number) => {
-        const dayPlan = currentPlan.itinerary?.find(d => d.day === day);
-        const activity = dayPlan?.activities[index];
-        if (activity) {
-            setActiveActivity({ day, index, data: activity });
+        const aiEditsUsed = currentTrip.ai_edits_used || 0;
+        const isPro = subscription?.subscription_tier === 'PRO';
+
+        if (!isPro && aiEditsUsed >= 3) {
+            setUpgradeContent({
+                title: "Quota Reached! ✨",
+                message: "You've used all free AI edits. Upgrade to swap unlimited activities instantly!"
+            });
+            setIsUpgradeOpen(true);
+            toast.error("You've used all free AI edits. Upgrade for unlimited swaps.");
+            return;
+        }
+
+        const dayPlan = currentPlan.itinerary.find(d => d.day === day);
+        if (dayPlan && dayPlan.activities[index]) {
+            setActiveActivity({ day, index, data: dayPlan.activities[index] });
             setIsReplaceOpen(true);
         }
     };
@@ -191,14 +274,18 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
         setIsAddOpen(true);
     };
 
-    const handleAddActivity = async (formData: { title: string, time: string, autoEnhance: boolean }) => {
+    const handleAddActivity = async (formData: { title: string, time: string, miruMagic: boolean }) => {
         if (!addTarget) return;
 
         // 2. Persistent Update (DB)
         startUpdateTransition(async () => {
             try {
                 if (isSavedView) {
-                    const result = await addActivity(trip.id, addTarget.day, addTarget.index, formData);
+                    const result = await addActivity(trip.id, addTarget.day, addTarget.index, {
+                        title: formData.title,
+                        time: formData.time,
+                        autoEnhance: formData.miruMagic
+                    });
 
                     if (result.success && result.plan) {
                         setCurrentPlan(result.plan);
@@ -218,9 +305,9 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
 
                     setCurrentPlan(prev => {
                         const newItinerary = (prev?.itinerary || []).map(d => {
-                            if (d.day === addTarget.day) {
+                            if (d.day === addTarget!.day) {
                                 const newActivities = [...d.activities];
-                                newActivities.splice(addTarget.index + 1, 0, newActivity);
+                                newActivities.splice(addTarget!.index + 1, 0, newActivity);
                                 newActivities.sort((a, b) => a.time.localeCompare(b.time));
                                 return { ...d, activities: newActivities };
                             }
@@ -275,7 +362,22 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                         activeActivity.index,
                         alt
                     );
+
                     toast.success(`Switched to ${alt.activity}!`);
+
+                    // Quota Notification for FREE users
+                    const isPro = subscription?.subscription_tier === 'PRO';
+                    const nextQuota = (currentTrip.ai_edits_used || 0) + 1;
+                    if (!isPro) {
+                        if (nextQuota < 3) {
+                            toast.info(`${3 - nextQuota} Free AI Edits left`, { icon: '✨' });
+                        } else if (nextQuota === 3) {
+                            toast.success("Last free AI edit used! Upgrade for unlimited swaps.", { icon: '✨' });
+                        }
+                    }
+
+                    // Update local trip state to reflect new quota
+                    setCurrentTrip(prev => ({ ...prev, ai_edits_used: nextQuota }));
                 } else {
                     toast.success(`Switched to ${alt.activity}! (Local only for draft)`);
                 }
@@ -322,7 +424,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     }, [currentPlan.itinerary]);
 
     return (
-        <div className="animate-in fade-in duration-700 pb-20 bg-white min-h-screen">
+        <div id="trip-content" className="animate-in fade-in duration-700 pb-20 bg-white min-h-screen">
             {/* 0. Scroll-Aware Navbar */}
             <ScrollAwareNavbar
                 title={`Trip to ${trip.destination || 'Unknown'}`}
@@ -350,8 +452,8 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
             {/* 3. Dynamic Content Area */}
             <main className="max-w-7xl mx-auto py-8 px-4 md:px-8">
 
-                {/* ENRICHMENT PROGRESS BANNER */}
-                {enrichmentStatus === 'enriching' && (
+                {/* ENRICHMENT PROGRESS BANNER - Only show if it's REALLY enriching in background (e.g. legacy or pro) */}
+                {itineraryStatus === 'completed' && enrichmentStatus === 'enriching' && (
                     <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between gap-4 animate-pulse">
                         <div className="flex items-center gap-3">
                             <div className="bg-white p-2 rounded-full shadow-sm">
@@ -359,7 +461,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                             </div>
                             <div>
                                 <h4 className="text-sm font-bold text-blue-900">Enriching your trip details...</h4>
-                                <p className="text-xs text-blue-700">AI is adding specific descriptions, logistics, and hidden gems.</p>
+                                <p className="text-xs text-blue-700">Miru is adding specific descriptions, logistics, and hidden gems.</p>
                             </div>
                         </div>
                         <Badge variant="secondary" className="bg-white text-blue-700 shadow-sm">
@@ -375,75 +477,69 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                         <div className="bg-gradient-to-r from-teal-600 to-teal-800 p-1 rounded-2xl shadow-[0_20px_50px_rgba(13,148,136,0.3)]">
                             <div className="bg-slate-900/40 backdrop-blur-xl rounded-[14px] px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 border border-white/10">
                                 <div className="flex items-center gap-4">
-                                    <div className="bg-teal-500/20 p-2.5 rounded-xl border border-teal-500/30">
-                                        <Sparkles className="w-5 h-5 text-teal-400 animate-pulse" />
+                                    <div className="bg-rose-500/20 p-2.5 rounded-xl border border-rose-500/30">
+                                        <Sparkles className="w-5 h-5 text-rose-400 animate-pulse" />
                                     </div>
                                     <div className="text-center md:text-left">
-                                        <h4 className="text-white font-bold text-sm">Love this itinerary? ✨</h4>
-                                        <p className="text-teal-100/70 text-xs">Sign in now to save it to your history and unlock full edits!</p>
+                                        <h4 className="text-white font-bold text-sm">⚠️ This trip is temporary and will be lost.</h4>
+                                        <p className="text-teal-100/70 text-xs">Save this trip to your profile now to unlock full editing and access later.</p>
                                     </div>
                                 </div>
                                 <Button
-                                    onClick={handleSaveTrigger}
-                                    className="bg-teal-500 hover:bg-teal-400 text-white font-black px-6 rounded-full shadow-lg hover:scale-105 transition-all text-xs border-b-2 border-teal-700"
+                                    onClick={() => {
+                                        localStorage.setItem('pending_claim_trip_id', trip.id);
+                                        router.push('/sign-up');
+                                    }}
+                                    className="bg-teal-500 hover:bg-teal-400 text-white font-black px-6 rounded-full shadow-lg hover:scale-105 transition-all text-xs border-b-2 border-teal-700 whitespace-nowrap"
                                 >
-                                    Claim This Trip
+                                    Save to Profile
                                 </Button>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {activeTab === 'overview' && (
-                    <OverviewView
-                        trip={trip}
-                        plan={currentPlan}
-                    />
-                )}
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="w-full"
+                    >
+                        {activeTab === 'overview' && (
+                            <OverviewView
+                                trip={currentTrip}
+                                plan={currentPlan}
+                            />
+                        )}
 
-                {activeTab === 'itinerary' && (
-                    <ItineraryView
-                        trip={trip}
-                        plan={currentPlan}
-                        activeDay={activeDay}
-                        onDayChange={handleDayClick}
-                        onReplace={handleReplace}
-                        onDelete={handleDelete}
-                        onAddBelow={handleAddBelow}
-                        selectedActivityId={selectedActivityId}
-                        onActivitySelect={setSelectedActivityId}
-                        isEnriching={enrichmentStatus === 'enriching'}
-                    />
-                )}
+                        {activeTab === 'itinerary' && (
+                            <ItineraryView
+                                trip={currentTrip}
+                                plan={currentPlan}
+                                activeDay={activeDay}
+                                onDayChange={handleDayClick}
+                                onReplace={handleReplace}
+                                onDelete={handleDelete}
+                                onAddBelow={handleAddBelow}
+                                selectedActivityId={selectedActivityId}
+                                onActivitySelect={setSelectedActivityId}
+                                isEnriching={enrichmentStatus === 'enriching'}
+                                startTime={generationStartTime}
+                                onUpgrade={() => setIsUpgradeOpen(true)}
+                            />
+                        )}
 
-                {activeTab === 'logistics' && (
-                    <LogisticsView
-                        trip={trip}
-                        plan={currentPlan}
-                    />
-                )}
-
-                {activeTab === 'essentials' && (
-                    <EssentialsView
-                        trip={trip}
-                        plan={currentPlan}
-                    />
-                )}
-
-                {activeTab === 'passport' && (
-                    <div className="animate-in fade-in zoom-in-95 duration-300">
-                        <PassportView />
-                    </div>
-                )}
-
-                {activeTab === 'map' && (
-                    <MapView
-                        trip={trip}
-                        activities={allActivities}
-                        selectedActivityId={selectedActivityId}
-                        onActivitySelect={setSelectedActivityId}
-                    />
-                )}
+                        {activeTab === 'essentials' && (
+                            <EssentialsView
+                                trip={currentTrip}
+                                plan={currentPlan}
+                            />
+                        )}
+                    </motion.div>
+                </AnimatePresence>
             </main>
 
             <TripCustomizationModal
@@ -454,13 +550,20 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                 isSaving={isUpdating}
             />
 
+            <UpgradeModal
+                isOpen={isUpgradeOpen}
+                onClose={() => setIsUpgradeOpen(false)}
+                title={upgradeContent.title}
+                message={upgradeContent.message}
+            />
+
             <AddActivityModal
                 isOpen={isAddOpen}
                 onClose={() => setIsAddOpen(false)}
                 onAdd={handleAddActivity}
-                isSaving={isUpdating}
                 tripId={trip.id}
                 dayNum={addTarget?.day || 1}
+                isPro={subscription?.subscription_tier === 'PRO'}
             />
 
             <ActivityReplacementDrawer

@@ -6,12 +6,12 @@ const isPublicRoute = createRouteMatcher([
     '/sign-in(.*)',
     '/sign-up(.*)',
     '/pricing(.*)',
+    '/trips(.*)',
     '/api/webhooks(.*)'
 ]);
 
 const isProtectedRoute = createRouteMatcher([
     '/dashboard(.*)',
-    '/trips(.*)',
     '/history(.*)'
 ]);
 

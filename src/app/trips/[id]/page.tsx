@@ -11,6 +11,9 @@ interface TripPageProps {
     }>;
 }
 
+import { Suspense } from 'react';
+import ItinerarySkeleton from '@/components/business/ItinerarySkeleton';
+
 export const dynamic = 'force-dynamic';
 
 export default async function TripPage({ params }: TripPageProps) {
@@ -36,7 +39,9 @@ export default async function TripPage({ params }: TripPageProps) {
                 </Link>
             </nav>
 
-            <TripResult data={data} isSavedView={true} />
+            <Suspense fallback={<ItinerarySkeleton />}>
+                <TripResult data={data} isSavedView={true} />
+            </Suspense>
         </main>
     );
 }

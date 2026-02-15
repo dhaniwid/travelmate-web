@@ -21,7 +21,9 @@ export interface Trip {
     budget_range?: string;
     created_at: string;
     enrichment_status?: 'pending' | 'enriching' | 'completed';
+    itinerary_status?: 'pending' | 'generating' | 'completed';
     user_preferences?: UserPreferences;
+    ai_edits_used?: number;
 }
 
 export interface MorningBriefing {
@@ -50,6 +52,9 @@ export interface Activity {
     transit_method?: string;
     transit_price?: number;
     location_type?: 'specific' | 'generic'; // specific = real landmark, generic = neighborhood center
+    is_skeleton?: boolean;
+    is_hidden_gem?: boolean; // NEW: PRO Feature
+    description_short?: string;
     image_url?: string; // Enriched photo
     alternative?: ActivityAlternative | null;
     alternatives?: ActivityAlternative[];

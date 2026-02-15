@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Check } from 'lucide-react';
+import { Leaf, WheatOff, Moon, Check, Carrot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DietaryTagsProps {
@@ -11,41 +10,34 @@ interface DietaryTagsProps {
 }
 
 const DIETARY_OPTIONS = [
-    'Vegan',
-    'Halal',
-    'No Seafood',
-    'Vegetarian',
-    'Gluten-Free',
-    'Dairy-Free',
-    'Nut-Free'
+    { id: 'Vegan', label: 'Vegan', icon: Leaf },
+    { id: 'Vegetarian', label: 'Vegetarian', icon: Carrot },
+    { id: 'Gluten-Free', label: 'Gluten-Free', icon: WheatOff },
+    { id: 'Halal', label: 'Halal', icon: Moon },
 ];
 
 export default function DietaryTags({ selected, onToggle }: DietaryTagsProps) {
     return (
-        <div className="space-y-6">
-            <h4 className="text-xl font-bold text-slate-800">Dietary Preferences</h4>
-            <div className="flex flex-wrap gap-x-3 gap-y-4">
-                {DIETARY_OPTIONS.map((tag) => {
-                    const isSelected = selected.includes(tag);
+        <div className="space-y-4">
+            <h4 className="text-xl font-bold text-slate-800 px-1">Dietary Preferences</h4>
+            <div className="flex overflow-x-auto space-x-3 pb-4 px-1 scrollbar-hide snap-x">
+                {DIETARY_OPTIONS.map((opt) => {
+                    const isSelected = selected.includes(opt.id);
+                    const Icon = opt.icon;
                     return (
                         <button
-                            key={tag}
-                            onClick={() => onToggle(tag)}
+                            key={opt.id}
+                            onClick={() => onToggle(opt.id)}
                             className={cn(
-                                "flex items-center gap-2 px-5 py-2.5 rounded-full text-[1rem] font-bold transition-all border shadow-sm active:scale-95",
+                                "flex items-center gap-2.5 px-6 py-3 rounded-full text-sm font-bold transition-all border whitespace-nowrap snap-center active:scale-95 group",
                                 isSelected
-                                    ? "bg-[#546E7A] text-white border-[#546E7A] shadow-md ring-1 ring-[#546E7A]/20"
-                                    : "bg-[#F3F5F7] text-[#455A64] border-slate-200 hover:border-slate-300"
+                                    ? "bg-teal-600 text-white border-teal-600 shadow-lg shadow-teal-900/20"
+                                    : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
                             )}
                         >
-                            {/* Dummy icon for dietary as per mockup */}
-                            <span className="opacity-70">
-                                {tag === 'Vegan' ? '🌱' : tag === 'Halal' ? '🌙' : tag === 'No Seafood' ? '🐠' : '🍽️'}
-                            </span>
-                            {tag}
-                            <span className="ml-1 opacity-40">
-                                {isSelected ? '✓' : '+'}
-                            </span>
+                            <Icon className={cn("w-4 h-4", isSelected ? "text-white" : "text-slate-400 group-hover:text-slate-600")} />
+                            <span>{opt.label}</span>
+                            {isSelected && <Check className="w-3.5 h-3.5 ml-0.5 animate-in fade-in zoom-in duration-300" />}
                         </button>
                     );
                 })}

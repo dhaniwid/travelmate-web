@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PackingItem } from '@/types/trip';
 import { CheckCircle2, Circle, Luggage } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import EmptyState from '@/components/ui/EmptyState';
 
 interface PackingListWidgetProps {
     packingList: PackingItem[];
@@ -21,7 +22,16 @@ const PackingListWidget: React.FC<PackingListWidgetProps> = ({ packingList, clas
         }));
     };
 
-    if (!packingList || packingList.length === 0) return null;
+    if (!packingList || packingList.length === 0) {
+        return (
+            <EmptyState
+                icon={Luggage}
+                title="Packing list pending"
+                description="We'll generate a tailored packing list once your destination and weather data is locked in."
+                className="bg-transparent border-none p-0"
+            />
+        );
+    }
 
     return (
         <div className={cn("bg-slate-50 rounded-xl p-6 border border-slate-100", className)}>

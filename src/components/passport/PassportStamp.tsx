@@ -80,19 +80,19 @@ export function PassportStamp({
             >
                 <Image
                     src={imageSrc}
-                    alt={`Passport stamp for ${city}`}
+                    alt={`Sumi stamp for ${city}`}
                     fill
-                    className="object-contain p-4 mix-blend-multiply"
+                    className="object-contain p-4 mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
                     draggable={false}
                 />
             </div>
 
             {/* Metadata Tooltip (On Hover) */}
             <div
-                className="absolute -bottom-2 left-1/2 -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-slate-900 text-white text-[10px] px-2 py-1 rounded shadow-lg whitespace-nowrap z-50 pointer-events-none"
+                className="absolute -bottom-2 left-1/2 -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-all duration-300 bg-stone-900 border border-stone-800 text-white text-[10px] px-2 py-1 rounded shadow-lg whitespace-nowrap z-50 pointer-events-none"
                 style={{ transform: "translateZ(40px) translateX(-50%)" }}
             >
-                <span className="font-mono text-teal-200">{serialCode}</span> • {date}
+                <span className="font-mono text-stone-400 font-bold">{serialCode}</span> • <span className="text-stone-300">{date}</span>
             </div>
         </motion.div>
     );

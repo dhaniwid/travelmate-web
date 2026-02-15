@@ -33,11 +33,24 @@ export function useSubscription() {
         enabled: isLoaded && isSignedIn,
     });
 
+    const upgradeToPro = async () => {
+        const checkoutUrl = process.env.NEXT_PUBLIC_MAYAR_CHECKOUT_URL;
+        if (checkoutUrl) {
+            window.location.href = checkoutUrl;
+        } else {
+            toast.error("Checkout link not configured yet.");
+        }
+    };
+
+    /**
+     * @deprecated Stripe integration is being replaced by Mayar.id
+     */
     const createCheckoutSession = useMutation({
         mutationFn: async (priceId?: string) => {
-            const token = await getToken();
-            if (!token) throw new Error("No token");
-            return SubscriptionService.createCheckoutSession(token, priceId);
+            // const token = await getToken();
+            // if (!token) throw new Error("No token");
+            // return SubscriptionService.createCheckoutSession(token, priceId);
+            return { url: process.env.NEXT_PUBLIC_MAYAR_CHECKOUT_URL };
         },
         onSuccess: (data) => {
             if (data.url) {
@@ -55,7 +68,7 @@ export function useSubscription() {
         quota,
         isLoading: isSubLoading || isQuotaLoading,
         isError: !!subError,
-        upgradeToPro: (priceId?: string) => createCheckoutSession.mutateAsync(priceId),
+        upgradeToPro,
         isCheckoutLoading: createCheckoutSession.isPending
     };
 }

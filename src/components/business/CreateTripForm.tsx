@@ -238,7 +238,7 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
     }
 
     return (
-        <Card className="w-full max-w-xl mx-auto border-none shadow-2xl bg-white/90 backdrop-blur-sm ring-1 ring-slate-200/50">
+        <Card className="w-full max-w-xl mx-auto border-none shadow-2xl bg-white/90 backdrop-blur-sm ring-1 ring-slate-200/50 overflow-x-hidden">
             <CardHeader>
                 <CardTitle className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent flex items-center gap-2">
                     Design Your Trip 🎨
@@ -251,6 +251,23 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
                 {userPace && (
                     <div className="flex items-center gap-2 mt-2">
                         <PremiumBadge text={`Travel DNA Active: ${userPace} Pace`} />
+                    </div>
+                )}
+
+                {/* GUEST MODE BANNER */}
+                {!user && (
+                    <div className="mt-4 p-4 rounded-2xl bg-teal-50 border border-teal-100 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
+                        <div className="mt-0.5">
+                            <Sparkles className="w-4 h-4 text-teal-600" />
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-xs font-black text-teal-900 leading-tight">
+                                Try Miru for free! ✨
+                            </p>
+                            <p className="text-[10px] text-teal-800/70 font-medium leading-relaxed">
+                                You're generating a preview. Sign in later to save your trip!
+                            </p>
+                        </div>
                     </div>
                 )}
             </CardHeader>

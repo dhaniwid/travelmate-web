@@ -34,9 +34,8 @@ export default function HomePage() {
         // We no longer block here. Instead, we let them generate.
         // We show a conversion toast to encourage sign-in
         if (!isSignedIn) {
-            toast.info("Try Miru for free! ✨", {
-                description: "You're generating a preview. Sign in later to save your trip!"
-            });
+            // No longer using toast.info here to avoid overlap with modal header.
+            // Information will be displayed inside CreateTripForm.
         }
         setPlannerDestination(destination);
         setIsPlannerOpen(true);

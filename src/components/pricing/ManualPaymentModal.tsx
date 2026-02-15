@@ -29,8 +29,9 @@ interface ManualPaymentModalProps {
 
 export default function ManualPaymentModal({ isOpen, onClose }: ManualPaymentModalProps) {
     const { user } = useUser();
+    const [qrSrc, setQrSrc] = useState('/images/payment-qr.png');
     const [qrError, setQrError] = useState(false);
-    const [activeTab, setActiveTab] = useState('bank');
+    const [activeTab, setActiveTab] = useState('qris');
 
     const bankDetails = {
         name: process.env.NEXT_PUBLIC_BANK_NAME || "Bank Mandiri",
@@ -78,15 +79,14 @@ export default function ManualPaymentModal({ isOpen, onClose }: ManualPaymentMod
 
                 {/* Scrollable Body */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-[300px]">
-                    <Tabs defaultValue="bank" onValueChange={setActiveTab} className="w-full">
+                    <Tabs defaultValue="qris" onValueChange={setActiveTab} className="w-full">
                         <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-slate-100 p-1 h-12">
                             <TabsTrigger
                                 value="qris"
-                                disabled
-                                className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-[10px] gap-1 opacity-50"
+                                className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs gap-2"
                             >
-                                <QrCode className="w-3.5 h-3.5" />
-                                QRIS (Soon)
+                                <QrCode className="w-4 h-4" />
+                                Scan QRIS
                             </TabsTrigger>
                             <TabsTrigger
                                 value="bank"
@@ -102,23 +102,34 @@ export default function ManualPaymentModal({ isOpen, onClose }: ManualPaymentMod
                                 <div className="w-52 h-52 bg-white rounded-2xl border border-slate-100 flex items-center justify-center shadow-lg relative overflow-hidden">
                                     {!qrError ? (
                                         <img
-                                            src="/assets/payment-qr.png"
-                                            alt="Payment QR"
-                                            className="w-full h-full object-contain p-2"
-                                            onError={() => setQrError(true)}
+                                            src={qrSrc}
+                                            alt="Scan QRIS Miru Travel App"
+                                            className="w-full max-w-[250px] mx-auto rounded-lg shadow-sm border border-gray-200 object-contain p-2"
+                                            onError={() => {
+                                                if (qrSrc.endsWith('.png')) {
+                                                    setQrSrc('/images/payment-qr.jpg');
+                                                } else {
+                                                    setQrError(true);
+                                                }
+                                            }}
                                         />
                                     ) : (
                                         <div className="flex flex-col items-center gap-2 text-slate-300">
                                             <QrCode className="w-16 h-16" />
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">QR Code Placeholder</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">QR Code Error</span>
                                         </div>
                                     )}
                                 </div>
-                                <div className="text-center space-y-1">
+                                <div className="text-center space-y-2">
                                     <p className="text-xs font-black text-slate-700">QRIS MERCHANT: MIRU VOYAGER</p>
-                                    <p className="text-[10px] text-slate-400 font-medium">
-                                        Compatible with ShopeePay, GoPay, OVO, Dana & M-Banking
-                                    </p>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] text-teal-600 font-bold uppercase tracking-tight">
+                                            Scan using GoPay / OVO / Dana / BCA
+                                        </p>
+                                        <p className="text-[9px] text-slate-400 font-medium italic">
+                                            Tip: Tap and hold to save image
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </TabsContent>

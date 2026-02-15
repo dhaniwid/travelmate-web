@@ -32,7 +32,7 @@ export default function TripPlannerModal({ isOpen, onClose, initialDestination, 
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto p-0 bg-transparent border-none shadow-none">
+            <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 bg-transparent border-none shadow-none">
                 <VisuallyHidden.Root>
                     <DialogTitle>Create Trip</DialogTitle>
                 </VisuallyHidden.Root>

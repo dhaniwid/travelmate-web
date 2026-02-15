@@ -12,6 +12,9 @@ export const metadata: Metadata = {
     title: "Miru | AI Travel Planner",
     description: "Discover your perfect journey with AI-powered travel planning. Personalized itineraries, smart recommendations, and magical experiences.",
     manifest: "/manifest.json",
+};
+
+export const viewport = {
     themeColor: "#0d9488",
 };
 

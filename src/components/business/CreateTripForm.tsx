@@ -210,6 +210,7 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
         } catch (error: any) {
             // Check for quota error (Axios style)
             if (error.response?.status === 403 && error.response?.data?.error === 'quota_exceeded') {
+                trackEventAction('paywall_shown', { trigger: 'quota_limit' });
                 setQuotaMessage(error.response.data.message || "Monthly trip generation limit reached. Upgrade to PRO for unlimited planning.");
                 setQuotaAction({ label: "Upgrade to PRO", href: "/pricing" });
                 setShowQuotaBanner(true);

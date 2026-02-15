@@ -148,12 +148,19 @@ export default function ProfilePage() {
                             {[1, 2, 3].map(i => <div key={i} className="h-24 bg-slate-100 rounded-2xl" />)}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-2 gap-3">
                             <StatBox
                                 label="Trips"
                                 value={stats?.totalTrips || 0}
                                 icon={<CalendarCheck className="w-4 h-4 text-blue-500" />}
                                 color="blue"
+                            />
+                            <StatBox
+                                label="Saved"
+                                value={`${stats?.hoursSaved || 0}h`}
+                                icon={<Zap className="w-4 h-4 text-amber-500" />}
+                                color="amber"
+                                tooltip="Planning hours saved by AI"
                             />
                             <StatBox
                                 label="Cities"
@@ -162,11 +169,11 @@ export default function ProfilePage() {
                                 color="teal"
                             />
                             <StatBox
-                                label="Saved"
-                                value={`${stats?.hoursSaved || 0}h`}
-                                icon={<Zap className="w-4 h-4 text-amber-500" />}
-                                color="amber"
-                                tooltip="Planning hours saved by AI"
+                                label="CO2 Saved"
+                                value={`${(stats as any)?.co2Saved || 0}kg`}
+                                icon={<Globe className="w-4 h-4 text-emerald-500" />}
+                                color="emerald"
+                                tooltip="Carbon footprint saved via efficient route planning"
                             />
                         </div>
                     )}
@@ -332,7 +339,8 @@ function StatBox({ label, value, icon, color, tooltip }: { label: string, value:
     const colorClasses: Record<string, string> = {
         blue: "bg-blue-50 text-blue-600 border-blue-100",
         teal: "bg-teal-50 text-teal-600 border-teal-100",
-        amber: "bg-amber-50 text-amber-600 border-amber-100"
+        amber: "bg-amber-50 text-amber-600 border-amber-100",
+        emerald: "bg-emerald-50 text-emerald-600 border-emerald-100"
     };
 
     return (

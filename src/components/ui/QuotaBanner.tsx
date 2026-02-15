@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, Sparkles, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { trackEventAction } from '@/actions/analytics';
 import { cn } from '@/lib/utils';
 
 interface QuotaBannerProps {
@@ -60,7 +61,10 @@ export default function QuotaBanner({
                             {/* Action */}
                             <div className="flex items-center gap-2">
                                 <Button
-                                    onClick={() => router.push(actionHref)}
+                                    onClick={() => {
+                                        trackEventAction('upgrade_clicked', { source: 'quota_banner' });
+                                        router.push(actionHref);
+                                    }}
                                     size="sm"
                                     className="bg-rose-600 hover:bg-rose-700 text-white rounded-full px-5 font-bold shadow-lg shadow-rose-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
                                 >

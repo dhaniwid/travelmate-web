@@ -5,6 +5,7 @@ import { Lock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { trackEventAction } from '@/actions/analytics';
 
 interface LockedActivityCardProps {
     onClick?: () => void;
@@ -44,10 +45,15 @@ export default function LockedActivityCard({ onClick, className }: LockedActivit
                         "Unlock this hidden gem to experience the city like a local..."
                     </p>
 
-                    <div className="mt-2">
+                    <div className="mt-2 text-left">
                         <Button
                             variant="outline"
                             size="sm"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                trackEventAction('upgrade_clicked', { source: 'hidden_gem_locked' });
+                                window.location.href = '/pricing';
+                            }}
                             className="relative z-20 bg-white border-teal-200 text-teal-600 hover:bg-teal-600 hover:text-white rounded-full px-4 text-xs font-bold transition-all shadow-sm"
                         >
                             <Sparkles className="w-3 h-3 mr-2" />

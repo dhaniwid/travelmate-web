@@ -16,6 +16,18 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'miru.travel',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'accounts.miru.travel',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };

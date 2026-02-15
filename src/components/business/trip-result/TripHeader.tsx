@@ -155,6 +155,7 @@ export default function TripHeader({
 
             await tripService.verifyProStatus(trip.id, token);
 
+            trackEventAction('pdf_downloaded', { trip_id: trip.id, destination: trip.destination });
             toast.loading("Generating High-Fidelity Magazine...", { id: toastId });
             await generateTripPDF('trip-content', trip.destination || 'Trip');
 
@@ -165,11 +166,15 @@ export default function TripHeader({
             toast.dismiss(toastId);
 
             if (error.response?.status === 403) {
+                trackEventAction('paywall_shown', { trigger: 'pdf_export' });
                 toast.error("Premium Feature 💎", {
                     description: "Upgrade to Miru PRO to export magazine-style PDFs!",
                     action: {
                         label: "Upgrade",
-                        onClick: () => router.push('/pricing')
+                        onClick: () => {
+                            trackEventAction('upgrade_clicked', { source: 'pdf_paywall' });
+                            router.push('/pricing');
+                        }
                     }
                 });
                 return;
@@ -309,7 +314,10 @@ export default function TripHeader({
                             <div className="flex items-center gap-2 mt-2 pt-1">
                                 <Button
                                     size="sm"
-                                    onClick={() => router.push('/pricing')}
+                                    onClick={() => {
+                                        trackEventAction('upgrade_clicked', { source: 'customize_paywall' });
+                                        router.push('/pricing');
+                                    }}
                                     className="h-8 bg-slate-900 hover:bg-slate-800 text-white rounded-full px-4 text-[10px] font-bold"
                                 >
                                     Upgrade Now

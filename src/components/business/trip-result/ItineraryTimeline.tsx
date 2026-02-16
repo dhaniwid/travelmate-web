@@ -27,7 +27,7 @@ interface ItineraryTimelineProps {
     plan: TripResponse['plan'];
     onReplace?: (day: number, index: number) => void;
     onDelete?: (day: number, index: number) => void;
-    onAddBelow?: (day: number, index: number) => void;
+    onAddBelow?: (day: number, index: number, time: string) => void;
     destinationName: string;
     activeDay: number;
     selectedActivityId: string | null;
@@ -130,7 +130,7 @@ export default function ItineraryTimeline({
                     activityIndex={idx}
                     onReplace={() => onReplace?.(dayNum, idx)}
                     onDelete={() => onDelete?.(dayNum, idx)}
-                    onAddBelow={() => onAddBelow?.(dayNum, idx)}
+                    onAddBelow={(time: string) => onAddBelow?.(dayNum, idx, time)}
                     destinationName={destinationName}
                     isSelected={isSelected}
                     isExpanded={isSelected}

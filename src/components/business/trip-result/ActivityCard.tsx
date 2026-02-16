@@ -16,7 +16,7 @@ interface ActivityCardProps {
     activityIndex?: number; // NEW: For lazy loading
     onReplace?: () => void;
     onDelete?: () => void;
-    onAddBelow?: () => void;
+    onAddBelow?: (time: string) => void;
     onEnrich?: (enriched: Activity) => void; // Optional: Bubble up enrichment
     className?: string;
     destinationName: string;
@@ -253,7 +253,7 @@ export default function ActivityCard({
 
                                         <Button
                                             variant="ghost" size="sm"
-                                            onClick={(e) => { e.stopPropagation(); onAddBelow?.(); }}
+                                            onClick={(e) => { e.stopPropagation(); onAddBelow?.(activity.time); }}
                                             className="h-8 px-2 text-xs text-slate-400 hover:text-blue-600 hover:bg-slate-50 rounded-full"
                                             title="Add Activity Below"
                                         >

@@ -111,6 +111,20 @@ export const tripService = {
         return response.data;
     },
 
+    getAddActivitySuggestions: async (tripId: string, dayIndex: number, time: string, token: string | null = null): Promise<any> => {
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        const response = await api.get(`/trips/${tripId}/suggestions/${dayIndex}?time=${encodeURIComponent(time)}`, config);
+        const data = response.data.data;
+
+        // Map backend ActivityAlternative format to frontend expectation if needed
+        // Backend: { activity: string, type: string }
+        // Frontend expects: { title: string, category: string } in some places
+        return data.map((s: any) => ({
+            title: s.activity,
+            category: s.type
+        }));
+    },
+
     deleteActivity: async (tripId: string, dayIndex: number, activityIndex: number, token: string | null = null): Promise<any> => {
         const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
         const response = await api.delete(`/trips/${tripId}/activities/${dayIndex}/${activityIndex}`, config);

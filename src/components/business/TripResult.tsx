@@ -29,9 +29,7 @@ import MiruChatDrawer from '@/components/trip/MiruChatDrawer'; // NEW
 import ItinerarySkeleton from './ItinerarySkeleton';
 import UpgradeModal from '@/components/ui/UpgradeModal';
 
-import { confirmActivitySwap, deleteActivity } from '@/actions/ai-swap';
 import { updateTripPreferences } from '@/actions/preferences';
-import { addActivity } from '@/actions/trip';
 import { Loader2, Stamp, Sparkles } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 
@@ -65,7 +63,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     const [isUpgradeOpen, setIsUpgradeOpen] = React.useState(false);
     const [upgradeContent, setUpgradeContent] = React.useState({ title: "", message: "" });
     const [activeActivity, setActiveActivity] = React.useState<{ day: number, index: number, data: Activity } | null>(null);
-    const [addTarget, setAddTarget] = React.useState<{ day: number, index: number } | null>(null);
+    const [addTarget, setAddTarget] = React.useState<{ day: number, index: number, initialTime?: string } | null>(null);
     const [activeDay, setActiveDay] = React.useState(1);
     const [selectedActivityId, setSelectedActivityId] = React.useState<string | null>(null);
 
@@ -289,8 +287,8 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
         });
     };
 
-    const handleAddBelow = (day: number, index: number) => {
-        setAddTarget({ day, index });
+    const handleAddBelow = (day: number, index: number, time: string) => {
+        setAddTarget({ day, index, initialTime: time });
         setIsAddOpen(true);
     };
 
@@ -591,6 +589,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                 onAdd={handleAddActivity}
                 tripId={trip.id}
                 dayNum={addTarget?.day || 1}
+                initialTime={addTarget?.initialTime}
                 isPro={subscription?.subscription_tier === 'PRO'}
             />
 

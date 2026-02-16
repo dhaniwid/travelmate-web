@@ -184,9 +184,11 @@ export default function ActivityReplacementDrawer({
                                 </div>
                             </div>
 
-                            <p className="text-slate-500 text-sm leading-relaxed font-medium">
-                                "{selectedOption?.description}"
-                            </p>
+                            {selectedOption?.description && (
+                                <p className="text-slate-500 text-sm leading-relaxed font-medium">
+                                    "{selectedOption.description}"
+                                </p>
+                            )}
                         </div>
 
                         <div className="h-px w-full bg-slate-100" />

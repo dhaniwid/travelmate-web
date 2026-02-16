@@ -18,7 +18,7 @@ interface ItineraryViewProps {
     onDayChange: (day: number) => void;
     onReplace: (day: number, index: number) => void;
     onDelete: (day: number, index: number) => void;
-    onAddBelow: (day: number, index: number) => void;
+    onAddBelow: (day: number, index: number, time: string) => void;
     selectedActivityId: string | null;
     onActivitySelect: (id: string | null) => void;
     isEnriching?: boolean;

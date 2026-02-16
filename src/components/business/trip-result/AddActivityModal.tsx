@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Dialog,
     DialogContent,
@@ -13,7 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Sparkles, Clock, MapPin, Loader2, Plus, Utensils, Camera, ShoppingBag, Leaf, Trophy } from "lucide-react";
 import { cn } from '@/lib/utils';
-import { getAddActivitySuggestions } from '@/actions/trip';
+import { tripService } from '@/services/trip';
+import { useAuth } from '@clerk/nextjs';
 
 interface AddActivityModalProps {
     isOpen: boolean;
@@ -22,6 +24,7 @@ interface AddActivityModalProps {
     isSaving?: boolean;
     tripId: string;
     dayNum: number;
+    initialTime?: string;
     isPro?: boolean;
 }
 
@@ -44,13 +47,25 @@ export default function AddActivityModal({
     isSaving = false,
     tripId,
     dayNum,
+    initialTime,
     isPro = false
 }: AddActivityModalProps) {
+    const { getToken } = useAuth();
     const [title, setTitle] = useState("");
     const [time, setTime] = useState("10:00");
     const [autoEnhance, setAutoEnhance] = useState(true);
     const [suggestions, setSuggestions] = useState<{ title: string, category: string }[]>([]);
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+
+    // Reset state when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            setTitle("");
+            if (initialTime) {
+                setTime(initialTime);
+            }
+        }
+    }, [isOpen, initialTime]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -58,7 +73,9 @@ export default function AddActivityModal({
         const fetchSuggestions = async () => {
             setIsLoadingSuggestions(true);
             try {
-                const results = await getAddActivitySuggestions(tripId, dayNum, time);
+                const token = await getToken();
+                // Pass dayNum - 1 to match backend 0-based index
+                const results = await tripService.getAddActivitySuggestions(tripId, dayNum - 1, time, token);
                 setSuggestions(results || []);
             } catch (err) {
                 console.error(err);
@@ -118,11 +135,19 @@ export default function AddActivityModal({
 
                             <div className="flex flex-wrap gap-2">
                                 {isLoadingSuggestions ? (
-                                    <>
-                                        {[1, 2, 3].map((i) => (
-                                            <div key={i} className="h-8 w-24 rounded-full bg-slate-50 animate-pulse border border-slate-100" />
-                                        ))}
-                                    </>
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        className="flex items-center gap-3 px-4 py-2 bg-teal-50/50 rounded-2xl border border-teal-100/50"
+                                    >
+                                        <div className="relative">
+                                            <Sparkles className="w-4 h-4 text-teal-600 animate-pulse" />
+                                            <div className="absolute inset-0 bg-teal-400/20 blur-lg rounded-full animate-ping" />
+                                        </div>
+                                        <p className="text-[0.7rem] font-black text-teal-800 uppercase tracking-[0.15em] animate-pulse">
+                                            Miru is thinking...
+                                        </p>
+                                    </motion.div>
                                 ) : suggestions.length > 0 ? (
                                     suggestions.map((s, idx) => {
                                         const isLocked = !isPro && idx >= 3;

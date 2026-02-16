@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { tripService } from '@/services/trip';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@clerk/nextjs';
 
 interface ActivityCardProps {
     activity: Activity;
@@ -47,6 +48,7 @@ export default function ActivityCard({
     isPro = false,
     aiEditsUsed = 0
 }: ActivityCardProps) {
+    const { getToken } = useAuth();
     const [activity, setActivity] = React.useState<Activity>(initialActivity);
     const [isInternalLoading, setIsInternalLoading] = React.useState(false);
     const [hasAttemptedEnrichment, setHasAttemptedEnrichment] = React.useState(false);
@@ -81,7 +83,8 @@ export default function ActivityCard({
             setHasAttemptedEnrichment(true);
 
             // Use the centralized tripService to avoid duplicate /api/v1 issues
-            const enrichedData = await tripService.enrichActivity(tripId, dayIndex!, activityIndex!);
+            const token = await getToken();
+            const enrichedData = await tripService.enrichActivity(tripId, dayIndex!, activityIndex!, token);
 
             if (enrichedData) {
                 setActivity(enrichedData);

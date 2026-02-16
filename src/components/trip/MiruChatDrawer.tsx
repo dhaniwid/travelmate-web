@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'; // Assuming reusable compon
 import { toast } from 'sonner';
 import { TripPlan } from '@/types';
 import { tripService } from '@/services/trip';
+import { useAuth } from '@clerk/nextjs';
 
 interface MiruChatDrawerProps {
     isOpen: boolean;
@@ -22,6 +23,7 @@ interface Message {
 }
 
 export default function MiruChatDrawer({ isOpen, onClose, tripId, onPlanUpdate }: MiruChatDrawerProps) {
+    const { getToken } = useAuth();
     const [messages, setMessages] = useState<Message[]>([
         {
             id: 'welcome',
@@ -50,7 +52,8 @@ export default function MiruChatDrawer({ isOpen, onClose, tripId, onPlanUpdate }
 
         try {
             // Use tripService to avoid duplicate /api/v1 issues
-            const data = await tripService.refineTrip(tripId, userMsg.content);
+            const token = await getToken();
+            const data = await tripService.refineTrip(tripId, input, token);
 
             // 2. Update Plan
             // The API returns the FULL plan (including updated itinerary)

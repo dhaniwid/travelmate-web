@@ -179,7 +179,8 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
         try {
             // STEP 1: ASYNC GENERATION REQUEST
             // Use tripService.createTrip instead of manual fetch
-            const data = await tripService.createTrip(payload);
+            const token = await getToken();
+            const data = await tripService.createTrip(payload, token);
 
             // Track successful trip generation
             trackEventAction('trip_success', {

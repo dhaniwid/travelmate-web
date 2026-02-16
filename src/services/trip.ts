@@ -15,42 +15,40 @@ export interface SaveTripPayload {
 
 export const tripService = {
     // 1. Generate Trip (Legacy/Blocking)
-    createTrip: async (data: TripRequest): Promise<{ trip_id: string; message: string }> => {
-        const response = await api.post('/trips', data);
+    createTrip: async (data: TripRequest, token: string | null = null): Promise<{ trip_id: string; message: string }> => {
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        const response = await api.post('/trips', data, config);
         return response.data;
     },
 
-    // 2. Get History
-    getHistory: async (): Promise<{ data: Trip[] }> => {
-        const response = await api.get('/trips');
+    // 2. Get History (Requires Auth)
+    getHistory: async (token: string | null = null): Promise<{ data: Trip[] }> => {
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        const response = await api.get('/trips', config);
         return response.data;
     },
 
     // 3. Get Detail
-    getTripById: async (id: string): Promise<TripResponse> => {
+    getTripById: async (id: string, token: string | null = null): Promise<TripResponse> => {
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
         try {
-            const response = await api.get(`/trips/${id}`);
+            const response = await api.get(`/trips/${id}`, config);
             return response.data;
         } catch (error: any) {
             console.error(`Error fetching trip ${id}:`, error.response?.status);
-            throw error; // Rethrow to be caught by the component
+            throw error;
         }
     },
 
     // 4. Save Trip
     saveTrip: async (data: SaveTripPayload, token: string | null): Promise<{ message: string; trip_id: string }> => {
-        const config = token
-            ? { headers: { Authorization: `Bearer ${token}` } }
-            : {};
-
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
         const response = await api.post('/trips/save', data, config);
         return response.data;
     },
 
     deleteTrip: async (id: string, token: string | null): Promise<void> => {
-        const config = token
-            ? { headers: { Authorization: `Bearer ${token}` } }
-            : {};
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
         await api.delete(`/trips/${id}`, config);
     },
 
@@ -64,13 +62,13 @@ export const tripService = {
     // 5. [NEW] Get City Discovery (Fixed for Axios)
     getCityDiscovery: async (city: string): Promise<DiscoveryResponse> => {
         const response = await api.get(`/discovery?city=${encodeURIComponent(city)}`);
-
         return response.data.data;
     },
 
     // 6. [NEW] Lazy Enrichment (M-126)
-    enrichActivity: async (tripId: string, dayIndex: number, activityIndex: number): Promise<any> => {
-        const response = await api.get(`/trips/${tripId}/enrich/${dayIndex}/${activityIndex}`);
+    enrichActivity: async (tripId: string, dayIndex: number, activityIndex: number, token: string | null = null): Promise<any> => {
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        const response = await api.get(`/trips/${tripId}/enrich/${dayIndex}/${activityIndex}`, config);
         return response.data.data;
     },
 
@@ -83,8 +81,39 @@ export const tripService = {
     },
 
     // 8. [NEW] Refine Trip (Miru Chat)
-    refineTrip: async (tripId: string, instruction: string): Promise<any> => {
-        const response = await api.post(`/trips/${tripId}/refine`, { instruction });
+    refineTrip: async (tripId: string, instruction: string, token: string | null = null): Promise<any> => {
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        const response = await api.post(`/trips/${tripId}/refine`, { instruction }, config);
+        return response.data;
+    },
+
+    // 9. [NEW] Activity Replacement (M-128)
+    getActivityAlternativesByIndex: async (tripId: string, dayIndex: number, activityIndex: number, token: string | null = null): Promise<any> => {
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        const response = await api.get(`/trips/${tripId}/alternatives/${dayIndex}/${activityIndex}`, config);
+        return response.data.data;
+    },
+
+    swapActivity: async (tripId: string, dayIndex: number, activityIndex: number, alternative: any, token: string | null = null): Promise<any> => {
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        const response = await api.post(`/trips/${tripId}/swap/${dayIndex}/${activityIndex}`, { alternative }, config);
+        return response.data;
+    },
+
+    addActivity: async (tripId: string, dayIndex: number, title: string, time: string, autoEnhance: boolean, token: string | null = null): Promise<any> => {
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        const response = await api.post(`/trips/${tripId}/activities`, {
+            day_index: dayIndex,
+            title,
+            time,
+            auto_enhance: autoEnhance
+        }, config);
+        return response.data;
+    },
+
+    deleteActivity: async (tripId: string, dayIndex: number, activityIndex: number, token: string | null = null): Promise<any> => {
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        const response = await api.delete(`/trips/${tripId}/activities/${dayIndex}/${activityIndex}`, config);
         return response.data;
     },
 };

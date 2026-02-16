@@ -17,15 +17,16 @@ const DrawerHeaderImage = ({ activity }: { activity: Activity }) => {
 }
 
 import React, { useState, useEffect, useTransition, useMemo } from 'react';
+import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Activity, ActivityAlternative } from "@/types";
 import { MapPin, Star, Plus, Loader2, Sparkles, Clock, DollarSign } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { getActivityAlternatives } from "@/actions/ai-swap";
+import { tripService } from "@/services/trip";
 import { MapActivityThumbnail } from "@/components/business/MapActivityThumbnail";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+import { useAuth } from "@clerk/nextjs";
 
 interface ActivityReplacementDrawerProps {
     isOpen: boolean;
@@ -46,19 +47,24 @@ export default function ActivityReplacementDrawer({
     originalActivity,
     onSelect
 }: ActivityReplacementDrawerProps) {
+    const { getToken } = useAuth();
     const [alternatives, setAlternatives] = useState<ActivityAlternative[]>([]);
     const [selectedOption, setSelectedOption] = useState<ActivityAlternative | null>(null);
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
 
-    // Load alternatives (from cache or AI)
+    // Load alternatives (M-128: Using Go Backend)
     const fetchAlternatives = (force: boolean = false) => {
         if (!tripId || !originalActivity) return;
 
         startTransition(async () => {
             setError(null);
             try {
-                const data = await getActivityAlternatives(tripId, day, activityIndex, force);
+                // We use the new Go backend endpoint
+                // Note: force is currently not used in the Go backend implementation 
+                // but we can add it later if needed for cache busting
+                const token = await getToken();
+                const data = await tripService.getActivityAlternativesByIndex(tripId, day - 1, activityIndex, token);
                 setAlternatives(data);
             } catch (err) {
                 setError("Failed to load alternatives.");

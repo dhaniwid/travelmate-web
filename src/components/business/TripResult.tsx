@@ -45,7 +45,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     const [isPending, startTransition] = useTransition();
     const [currentPlan, setCurrentPlan] = React.useState(plan);
     const [currentTrip, setCurrentTrip] = React.useState(trip);
-    const { userId } = useAuth();
+    const { userId, getToken } = useAuth();
     const { subscription } = useSubscription();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -93,8 +93,9 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
 
         const interval = setInterval(async () => {
             try {
+                const token = await getToken();
                 // Use tripService to avoid duplicate /api/v1 issues
-                const freshData = await tripService.getTripById(trip.id);
+                const freshData = await tripService.getTripById(trip.id, token);
                 if (freshData) {
                     const freshTrip = freshData.trip;
 
@@ -264,7 +265,18 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
         startUpdateTransition(async () => {
             try {
                 if (isSavedView) {
-                    await deleteActivity(trip.id, day, index);
+                    const token = await getToken();
+                    // M-128: Shift from Next.js Server Action to Go Backend
+                    const result = await tripService.deleteActivity(
+                        trip.id,
+                        day - 1, // Go uses 0-based index
+                        index,
+                        token
+                    );
+
+                    if (result.data) {
+                        setCurrentPlan(result.data);
+                    }
                     toast.success("Activity removed");
                 } else {
                     toast.success("Activity removed (Draft only)");
@@ -289,14 +301,19 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
         startUpdateTransition(async () => {
             try {
                 if (isSavedView) {
-                    const result = await addActivity(trip.id, addTarget.day, addTarget.index, {
-                        title: formData.title,
-                        time: formData.time,
-                        autoEnhance: formData.miruMagic
-                    });
+                    const token = await getToken();
+                    // M-128: Shift from Next.js Server Action to Go Backend
+                    const result = await tripService.addActivity(
+                        trip.id,
+                        addTarget.day - 1, // Go uses 0-based index
+                        formData.title,
+                        formData.time,
+                        formData.miruMagic,
+                        token
+                    );
 
-                    if (result.success && result.plan) {
-                        setCurrentPlan(result.plan);
+                    if (result.data) {
+                        setCurrentPlan(result.data);
                     }
                     toast.success(`"${formData.title}" added to journey!`);
                     setIsAddOpen(false); // Only close on success
@@ -364,11 +381,14 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
         startUpdateTransition(async () => {
             try {
                 if (isSavedView) {
-                    await confirmActivitySwap(
+                    const token = await getToken();
+                    // M-128: Shift from Next.js Server Action to Go Backend
+                    await tripService.swapActivity(
                         trip.id,
-                        activeActivity.day,
+                        activeActivity.day - 1, // Go uses 0-based
                         activeActivity.index,
-                        alt
+                        alt,
+                        token
                     );
 
                     toast.success(`Switched to ${alt.activity}!`);

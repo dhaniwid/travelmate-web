@@ -139,42 +139,63 @@ export default function ProfilePage() {
 
                 {/* --- TRAVEL IMPACT CARD (New) --- */}
                 <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 p-6 border border-white/50 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <h2 className="text-lg font-black text-slate-800 flex items-center gap-2 mb-6">
-                        ✨ Your Impact
-                    </h2>
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                            ✨ Your Impact
+                        </h2>
+                        {stats?.userLevel && (
+                            <div className="px-3 py-1 rounded-full bg-gradient-to-r from-teal-500 to-blue-500 text-white text-xs font-bold uppercase tracking-wider shadow-md">
+                                {stats.userLevel}
+                            </div>
+                        )}
+                    </div>
 
                     {isLoadingStats ? (
-                        <div className="grid grid-cols-3 gap-3 animate-pulse">
-                            {[1, 2, 3].map(i => <div key={i} className="h-24 bg-slate-100 rounded-2xl" />)}
+                        <div className="grid grid-cols-2 gap-3 animate-pulse">
+                            {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-slate-100 rounded-2xl" />)}
                         </div>
-                    ) : (
+                    ) : stats && stats.totalTrips > 0 ? (
                         <div className="grid grid-cols-2 gap-3">
                             <StatBox
                                 label="Trips"
-                                value={stats?.totalTrips || 0}
+                                value={stats.totalTrips || 0}
                                 icon={<CalendarCheck className="w-4 h-4 text-blue-500" />}
                                 color="blue"
                             />
                             <StatBox
                                 label="Saved"
-                                value={`${stats?.hoursSaved || 0}h`}
+                                value={`${stats.hoursSaved || 0}h`}
                                 icon={<Zap className="w-4 h-4 text-amber-500" />}
                                 color="amber"
                                 tooltip="Planning hours saved by AI"
                             />
                             <StatBox
                                 label="Cities"
-                                value={stats?.uniqueDestinations || 0}
+                                value={stats.uniqueDestinations || 0}
                                 icon={<Globe className="w-4 h-4 text-teal-500" />}
                                 color="teal"
                             />
                             <StatBox
                                 label="CO2 Saved"
-                                value={`${(stats as any)?.co2Saved || 0}kg`}
+                                value={`${Math.round(stats.co2Saved || 0)}kg`}
                                 icon={<Globe className="w-4 h-4 text-emerald-500" />}
                                 color="emerald"
                                 tooltip="Carbon footprint saved via efficient route planning"
                             />
+                        </div>
+                    ) : (
+                        <div className="text-center py-8">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-teal-100 to-blue-100 flex items-center justify-center">
+                                <MapPin className="w-8 h-8 text-teal-600" />
+                            </div>
+                            <h3 className="text-sm font-bold text-slate-700 mb-1">Start Your Journey</h3>
+                            <p className="text-xs text-slate-500 mb-4">Create your first trip to see your impact!</p>
+                            <Link href="/create">
+                                <Button size="sm" className="bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white font-bold">
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    Plan a Trip
+                                </Button>
+                            </Link>
                         </div>
                     )}
                 </div>

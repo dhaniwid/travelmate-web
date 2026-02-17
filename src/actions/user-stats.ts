@@ -1,59 +1,51 @@
 'use server';
 
-import postgres from 'postgres';
 import { auth } from '@clerk/nextjs/server';
-
-const sql = postgres(process.env.DATABASE_URL!);
 
 export interface UserImpactStats {
     totalTrips: number;
     totalDays: number;
     uniqueDestinations: number;
     hoursSaved: number;
+    co2Saved: number;
+    userLevel?: string;
 }
 
 /**
- * Calculates travel impact stats for the current user.
- * Now fetches from the Go backend to ensure consistency with analytics events.
+ * Fetches travel impact stats for the current user from the Go backend.
+ * All calculations are performed server-side for consistency.
  */
-export async function getUserImpactStats() {
+export async function getUserImpactStats(): Promise<UserImpactStats | null> {
     try {
         const { userId, getToken } = await auth();
         if (!userId) return null;
 
         const token = await getToken();
 
-        // Fetch from Go Backend Analytics
+        // Fetch from Go Backend Analytics API
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analytics/impact`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            cache: 'no-store' // Always fetch fresh data
         });
 
-        if (!res.ok) throw new Error("Failed to fetch impact stats from backend");
+        if (!res.ok) {
+            console.error(`Backend returned ${res.status}: ${res.statusText}`);
+            throw new Error("Failed to fetch impact stats from backend");
+        }
 
-        const backendStats = await res.json();
+        const data = await res.json();
 
-        // Also get some data from trips table for unique destinations (as events might be transient)
-        const tripData = await sql`
-            SELECT 
-                COALESCE(SUM(trip_days), 0)::int as total_days,
-                COUNT(DISTINCT destination)::int as unique_destinations
-            FROM trips
-            WHERE user_id = ${userId}
-        `;
-
-        const row = tripData[0];
-        const totalTrips = backendStats.total_trips || 0;
-        const totalDays = row.total_days;
-
+        // Map backend response to frontend interface
         return {
-            totalTrips: totalTrips,
-            totalDays: totalDays,
-            uniqueDestinations: row.unique_destinations,
-            hoursSaved: totalDays * 2, // 2 hours saved per trip day
-            co2Saved: (totalTrips * 12.5).toFixed(1) // Mock: 12.5kg CO2 saved per AI optimization
+            totalTrips: data.total_trips || 0,
+            totalDays: data.total_days || 0,
+            uniqueDestinations: data.unique_destinations || 0,
+            hoursSaved: data.hours_saved || 0,
+            co2Saved: data.co2_saved || 0,
+            userLevel: data.user_level || 'Explorer'
         };
     } catch (error) {
         console.error("Get User Impact Stats Error:", error);
-        return null; // Fallback to mocks handled by UI
+        return null; // UI will handle null gracefully
     }
 }

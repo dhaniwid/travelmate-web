@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Save, Loader2, History } from 'lucide-react';
+import { ChevronLeft, Save, Loader2, History, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,7 @@ interface ScrollAwareNavbarProps {
     isSaving: boolean;
     isHistoryView?: boolean;
     onSave?: () => void;
+    onShare?: () => void;
 }
 
 export default function ScrollAwareNavbar({
@@ -19,7 +20,8 @@ export default function ScrollAwareNavbar({
     isSaved,
     isSaving,
     isHistoryView = false,
-    onSave
+    onSave,
+    onShare
 }: ScrollAwareNavbarProps) {
     const [isVisible, setIsVisible] = useState(false);
     const router = useRouter();
@@ -56,6 +58,15 @@ export default function ScrollAwareNavbar({
             </div>
 
             <div className="flex items-center gap-3">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onShare}
+                    className="rounded-full h-10 w-10 text-slate-600 hover:bg-slate-100"
+                >
+                    <Share2 className="w-4 h-4" />
+                </Button>
+
                 {!isSaved && (
                     <Button
                         onClick={onSave}

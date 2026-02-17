@@ -40,7 +40,12 @@ export default function RootLayout({
                                 {children}
                             </div>
                             <BottomNav />
-                            <Toaster position="top-center" />
+                            <Toaster
+                                position="top-center"
+                                richColors
+                                expand={true}
+                                duration={4000}
+                            />
                         </ThemeProvider>
                     </Providers>
                 </body>

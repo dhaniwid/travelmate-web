@@ -1,3 +1,5 @@
+@import './toast-styles.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,13 +15,16 @@
         --popover: 0 0% 100%;
         --popover-foreground: 222.2 84% 4.9%;
 
-        --primary: 173 80% 40%; /* Miru Teal */
+        --primary: 173 80% 40%;
+        /* Miru Teal */
         --primary-foreground: 0 0% 100%;
 
-        --secondary: 271 91% 65%; /* Miru Purple */
+        --secondary: 271 91% 65%;
+        /* Miru Purple */
         --secondary-foreground: 0 0% 100%;
 
-        --accent: 0 91% 71%; /* Miru Coral */
+        --accent: 0 91% 71%;
+        /* Miru Coral */
         --accent-foreground: 0 0% 100%;
 
         --muted: 210 40% 96.1%;
@@ -39,43 +44,53 @@
 
     /* --- THEME 2: MODERN EXPLORER (TEAL/ORANGE) --- */
     [data-theme="teal"] {
-        --background: 0 0% 100%; /* Pure White */
-        --foreground: 180 50% 10%; /* Dark Teal Text */
+        --background: 0 0% 100%;
+        /* Pure White */
+        --foreground: 180 50% 10%;
+        /* Dark Teal Text */
 
         --card: 0 0% 100%;
         --card-foreground: 180 50% 10%;
 
-        --primary: 173 80% 40%; /* Miru Teal */
+        --primary: 173 80% 40%;
+        /* Miru Teal */
         --primary-foreground: 0 0% 100%;
 
-        --secondary: 271 91% 96%; /* Very Light Purple */
-        --secondary-foreground: 271 91% 65%; /* Miru Purple */
+        --secondary: 271 91% 96%;
+        /* Very Light Purple */
+        --secondary-foreground: 271 91% 65%;
+        /* Miru Purple */
 
         --muted: 180 20% 96%;
         --muted-foreground: 180 10% 40%;
 
-        --accent: 0 91% 96%; /* Very Light Coral */
-        --accent-foreground: 0 91% 71%; /* Miru Coral */
+        --accent: 0 91% 96%;
+        /* Very Light Coral */
+        --accent-foreground: 0 91% 71%;
+        /* Miru Coral */
 
         --border: 180 20% 90%;
         --input: 180 20% 90%;
         --ring: 173 80% 40%;
 
-        --radius: 0.75rem; 
+        --radius: 0.75rem;
     }
 
     /* --- THEME 3: TECH FUTURE (VIOLET/FUCHSIA) --- */
     [data-theme="violet"] {
-        --background: 260 20% 98%; /* Very light purple tint */
+        --background: 260 20% 98%;
+        /* Very light purple tint */
         --foreground: 260 25% 10%;
 
         --card: 0 0% 100%;
         --card-foreground: 260 25% 10%;
 
-        --primary: 262 83% 58%; /* Violet-600 */
+        --primary: 262 83% 58%;
+        /* Violet-600 */
         --primary-foreground: 210 40% 98%;
 
-        --secondary: 290 30% 96%; /* Fuchsia tint */
+        --secondary: 290 30% 96%;
+        /* Fuchsia tint */
         --secondary-foreground: 262 83% 58%;
 
         --muted: 260 20% 96%;
@@ -88,7 +103,8 @@
         --input: 260 20% 90%;
         --ring: 262 83% 58%;
 
-        --radius: 0.3rem; /* Lebih kotak (techy/sharp) */
+        --radius: 0.3rem;
+        /* Lebih kotak (techy/sharp) */
     }
 }
 
@@ -96,6 +112,7 @@
     * {
         @apply border-border;
     }
+
     body {
         @apply bg-background text-foreground;
     }

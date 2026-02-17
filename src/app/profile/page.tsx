@@ -12,6 +12,7 @@ import PremiumBadge from '@/components/ui/PremiumBadge';
 import Link from 'next/link';
 import { getUserImpactStats, UserImpactStats } from '@/actions/user-stats';
 import { cn } from '@/lib/utils';
+import ReferralCard from '@/components/business/profile/ReferralCard';
 
 interface UserPreferences {
     pace: string;
@@ -33,6 +34,7 @@ export default function ProfilePage() {
     const [isLoadingDNA, setIsLoadingDNA] = useState(true);
     const [stats, setStats] = useState<UserImpactStats | null>(null);
     const [isLoadingStats, setIsLoadingStats] = useState(true);
+    const [hasMounted, setHasMounted] = useState(false);
 
     const isPro = subscription?.subscription_tier === 'PRO';
 
@@ -55,6 +57,7 @@ export default function ProfilePage() {
     };
 
     useEffect(() => {
+        setHasMounted(true);
         if (isLoaded) {
             fetchPreferences();
             fetchStats();
@@ -129,13 +132,16 @@ export default function ProfilePage() {
                         )}
                     </div>
                     <p className="text-teal-100 font-medium text-sm flex items-center justify-center gap-1 mt-1">
-                        <MapPin className="w-3 h-3" /> Traveler Since {new Date(user?.createdAt || Date.now()).getFullYear()}
+                        <MapPin className="w-3 h-3" /> Traveler Since {hasMounted ? new Date(user?.createdAt || Date.now()).getFullYear() : '...'}
                     </p>
                 </div>
             </div>
 
             {/* Content Container - Overlapping header */}
             <div className="max-w-md mx-auto px-4 -mt-12 relative z-20 space-y-6">
+
+                {/* --- REFERRAL CARD (Viral Growth) --- */}
+                <ReferralCard />
 
                 {/* --- TRAVEL IMPACT CARD (New) --- */}
                 <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 p-6 border border-white/50 animate-in fade-in slide-in-from-bottom-4 duration-500">

@@ -1,0 +1,30 @@
+/* Toast Notification Styling */
+[data-sonner-toast] {
+  background: white !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-sonner-toast][data-type="success"] {
+  background: hsl(173 80% 97%) !important;
+  border-color: hsl(173 80% 40%) !important;
+  color: hsl(173 80% 20%) !important;
+}
+
+[data-sonner-toast][data-type="error"] {
+  background: hsl(0 84% 97%) !important;
+  border-color: hsl(0 84% 60%) !important;
+  color: hsl(0 84% 30%) !important;
+}
+
+[data-sonner-toast][data-type="info"] {
+  background: hsl(217 91% 97%) !important;
+  border-color: hsl(217 91% 60%) !important;
+  color: hsl(217 91% 30%) !important;
+}
+
+[data-sonner-toast][data-type="warning"] {
+  background: hsl(38 92% 97%) !important;
+  border-color: hsl(38 92% 50%) !important;
+  color: hsl(38 92% 25%) !important;
+}

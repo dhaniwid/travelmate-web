@@ -24,6 +24,26 @@ export interface Trip {
     itinerary_status?: 'pending' | 'generating' | 'completed';
     user_preferences?: UserPreferences;
     ai_edits_used?: number;
+    collaborators?: Collaborator[]; // NEW: M-125
+}
+
+export interface User {
+    id: number;
+    user_id: string; // Clerk ID
+    email: string;
+    name: string;
+    avatar_url?: string;
+}
+
+export interface Collaborator {
+    id: string;
+    trip_id: string;
+    user_id: string;
+    role: 'owner' | 'editor' | 'viewer';
+    status: 'pending' | 'accepted' | 'declined';
+    user?: User; // Enriched user details
+    invited_by?: string;
+    created_at?: string;
 }
 
 export interface MorningBriefing {

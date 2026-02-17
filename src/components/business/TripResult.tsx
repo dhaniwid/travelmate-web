@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useTransition } from 'react';
+import React, { useTransition, useEffect } from 'react';
 import { TripResponse, Activity, ActivityAlternative } from '@/types';
 import { tripService } from '@/services/trip';
 import ScrollAwareNavbar from './trip-result/ScrollAwareNavbar';
@@ -9,12 +9,12 @@ import TripCustomizationModal from './trip-result/TripCustomizationModal';
 import ActivityReplacementDrawer from './trip-result/ActivityReplacementDrawer';
 import AddActivityModal from './trip-result/AddActivityModal';
 import { toast } from 'sonner';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Loader2, Sparkles } from 'lucide-react';
+import { useAuth } from '@clerk/nextjs';
 
 // New Modular Views
 import StickyTabNav, { TabType } from '@/components/trip/StickyTabNav';
@@ -27,11 +27,11 @@ import MapView from '@/components/trip/views/MapView';
 import { SumiView } from '@/components/passport/SumiView';
 import MiruChatDrawer from '@/components/trip/MiruChatDrawer'; // NEW
 import ItinerarySkeleton from './ItinerarySkeleton';
+import ShareModal from '@/components/business/trip/ShareModal';
 import UpgradeModal from '@/components/ui/UpgradeModal';
 
 import { updateTripPreferences } from '@/actions/preferences';
-import { Loader2, Stamp, Sparkles } from 'lucide-react';
-import { useAuth } from '@clerk/nextjs';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface TripResultProps {
     data: TripResponse;
@@ -57,7 +57,13 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
         setIsSaved(data.is_saved || isSavedView || (data.trip?.user_id === userId && !!userId));
     }, [data, isSavedView, userId]);
 
+    // Determine Role
+    const isOwner = currentTrip.user_id === userId;
+    const collaborator = currentTrip.collaborators?.find(c => c.user_id === userId);
+    const currentUserRole = isOwner ? 'owner' : (collaborator?.role || (userId ? 'viewer' : 'guest'));
+
     const [isCustomizeOpen, setIsCustomizeOpen] = React.useState(false);
+    const [isShareOpen, setIsShareOpen] = React.useState(false); // NEW
     const [isReplaceOpen, setIsReplaceOpen] = React.useState(false);
     const [isAddOpen, setIsAddOpen] = React.useState(false);
     const [isUpgradeOpen, setIsUpgradeOpen] = React.useState(false);
@@ -458,6 +464,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                 isSaving={isUpdating}
                 isHistoryView={isSavedView}
                 onSave={handleSaveTrigger}
+                onShare={() => setIsShareOpen(true)}
             />
 
             {/* 1. Dashboard Header (Compact version) */}
@@ -468,6 +475,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                 isHistoryView={isSavedView}
                 onOpenCustomize={() => setIsCustomizeOpen(true)}
                 onSaveSuccess={() => setIsSaved(true)}
+                onShare={() => setIsShareOpen(true)}
                 preferences={preferences}
                 compact={activeTab !== 'overview'}
             />
@@ -601,6 +609,14 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                 activityIndex={activeActivity?.index || 0}
                 originalActivity={activeActivity?.data || null}
                 onSelect={handleSelectAlternative}
+            />
+
+            <ShareModal
+                isOpen={isShareOpen}
+                onClose={() => setIsShareOpen(false)}
+                tripId={trip.id}
+                currentUserRole={currentUserRole}
+                currentUserId={userId || undefined}
             />
 
             {

@@ -42,6 +42,7 @@ interface TripHeaderProps {
     onSaveSuccess?: () => void;
     preferences?: UserPreferences;
     compact?: boolean;
+    onShare?: () => void;
 }
 
 export default function TripHeader({
@@ -52,7 +53,8 @@ export default function TripHeader({
     onOpenCustomize,
     onSaveSuccess,
     preferences,
-    compact = false
+    compact = false,
+    onShare
 }: TripHeaderProps) {
     const { trip, plan } = data;
     const activePlan = planState || plan;
@@ -187,10 +189,14 @@ export default function TripHeader({
     };
 
     const handleShare = () => {
-        if (typeof window === "undefined") return;
-        const url = `${window.location.origin}/trips/${trip.id}`;
-        navigator.clipboard.writeText(url);
-        toast.success("Link copied!");
+        if (onShare) {
+            onShare();
+        } else {
+            if (typeof window === "undefined") return;
+            const url = `${window.location.origin}/trips/${trip.id}`;
+            navigator.clipboard.writeText(url);
+            toast.success("Link copied!");
+        }
     };
 
     const startDateObj = trip.start_date ? new Date(trip.start_date) : null;

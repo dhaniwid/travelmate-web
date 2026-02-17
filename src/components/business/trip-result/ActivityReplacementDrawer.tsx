@@ -64,7 +64,7 @@ export default function ActivityReplacementDrawer({
                 // Note: force is currently not used in the Go backend implementation 
                 // but we can add it later if needed for cache busting
                 const token = await getToken();
-                const data = await tripService.getActivityAlternativesByIndex(tripId, day - 1, activityIndex, token);
+                const data = await tripService.getActivityAlternativesByIndex(tripId, day - 1, activityIndex, token, force);
                 setAlternatives(data);
             } catch (err) {
                 setError("Failed to load alternatives.");

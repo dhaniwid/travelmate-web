@@ -88,9 +88,10 @@ export const tripService = {
     },
 
     // 9. [NEW] Activity Replacement (M-128)
-    getActivityAlternativesByIndex: async (tripId: string, dayIndex: number, activityIndex: number, token: string | null = null): Promise<any> => {
+    getActivityAlternativesByIndex: async (tripId: string, dayIndex: number, activityIndex: number, token: string | null = null, force: boolean = false): Promise<any> => {
         const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-        const response = await api.get(`/trips/${tripId}/alternatives/${dayIndex}/${activityIndex}`, config);
+        const url = `/trips/${tripId}/alternatives/${dayIndex}/${activityIndex}${force ? '?refresh=true' : ''}`;
+        const response = await api.get(url, config);
         return response.data.data;
     },
 

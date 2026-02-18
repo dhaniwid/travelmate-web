@@ -13,6 +13,10 @@ import Link from 'next/link';
 import { getUserImpactStats, UserImpactStats } from '@/actions/user-stats';
 import { cn } from '@/lib/utils';
 import ReferralCard from '@/components/business/profile/ReferralCard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import LeaderboardCard from '@/components/business/profile/LeaderboardCard';
+import { AchievementBadge } from '@/components/common/AchievementBadge';
+import { useReferral } from '@/hooks/useReferral';
 
 interface UserPreferences {
     pace: string;
@@ -35,6 +39,15 @@ export default function ProfilePage() {
     const [stats, setStats] = useState<UserImpactStats | null>(null);
     const [isLoadingStats, setIsLoadingStats] = useState(true);
     const [hasMounted, setHasMounted] = useState(false);
+    const {
+        leaderboard,
+        achievements,
+        userRank,
+        isLoading: isReferralLoading,
+        leaderboardCount
+        // referralStats is used in ReferralCard internally now
+    } = useReferral();
+
 
     const isPro = subscription?.subscription_tier === 'PRO';
 
@@ -142,6 +155,65 @@ export default function ProfilePage() {
 
                 {/* --- REFERRAL CARD (Viral Growth) --- */}
                 <ReferralCard />
+
+                {/* --- COMMUNITY & REWARDS (New Phase 3) --- */}
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-5 duration-700 delay-100">
+                    <h2 className="text-lg font-black text-slate-800 flex items-center gap-2 px-2">
+                        🏆 Community & Rewards
+                    </h2>
+
+                    <Tabs defaultValue="achievements" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2 mb-4 bg-white/50 backdrop-blur-md p-1 rounded-2xl h-12">
+                            <TabsTrigger value="achievements" className="rounded-xl font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                My Badges
+                            </TabsTrigger>
+                            <TabsTrigger value="leaderboard" className="rounded-xl font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                Leaderboard
+                            </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="achievements" className="mt-0">
+                            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-xl shadow-slate-200/50 min-h-[300px]">
+                                {isReferralLoading ? (
+                                    <div className="grid grid-cols-4 gap-4 animate-pulse">
+                                        {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} className="aspect-square bg-slate-100 rounded-full" />)}
+                                    </div>
+                                ) : achievements && achievements.length > 0 ? (
+                                    <div className="grid grid-cols-4 gap-4 justify-items-center">
+                                        {achievements.map(achievement => (
+                                            <AchievementBadge key={achievement.id} achievement={achievement} size="md" />
+                                        ))}
+                                        {/* Placeholders for unearned badges if we want to show what's possible */}
+                                        {/* For now, just showing earned ones as per requirement */}
+                                        <div className="col-span-4 mt-6 text-center">
+                                            <p className="text-xs text-muted-foreground">
+                                                Keep inviting friends to unlock more badges!
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-10">
+                                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 grayscale opacity-50">
+                                            <Award className="w-8 h-8 text-slate-400" />
+                                        </div>
+                                        <h3 className="text-sm font-bold text-slate-600">No Badges Yet</h3>
+                                        <p className="text-xs text-slate-400 mt-1 max-w-[200px] mx-auto">
+                                            Refere friends to earn your first badge and climb the ranks!
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="leaderboard" className="mt-0">
+                            <LeaderboardCard
+                                entries={leaderboard}
+                                userRank={userRank}
+                                isLoading={isReferralLoading}
+                            />
+                        </TabsContent>
+                    </Tabs>
+                </div>
 
                 {/* --- TRAVEL IMPACT CARD (New) --- */}
                 <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 p-6 border border-white/50 animate-in fade-in slide-in-from-bottom-4 duration-500">

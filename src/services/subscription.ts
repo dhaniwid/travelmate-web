@@ -1,6 +1,6 @@
 import { UserSubscription, TripQuota, CheckoutResponse } from '@/types/subscription';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
 
 export const SubscriptionService = {
     getSubscription: async (token: string): Promise<UserSubscription> => {

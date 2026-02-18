@@ -2,10 +2,10 @@
 
 import React from 'react';
 import HighlightsRow from '@/components/business/trip-result/HighlightsRow';
-import LogisticsDashboard from '@/components/business/trip-result/LogisticsDashboard';
 import DiscoverySection from '@/components/business/trip-result/DiscoverySection';
+import FlightWatchCard from '@/components/business/trip/FlightWatchCard';
 import { Trip, TripPlan } from '@/types';
-import { Sparkles, Info } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 interface OverviewViewProps {
     trip: Trip;
@@ -34,9 +34,8 @@ export default function OverviewView({ trip, plan }: OverviewViewProps) {
 
     return (
         <div className="space-y-20 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-            {/* 1. Morning Briefing & Discovery Area */}
+            {/* 1. Morning Briefing */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                {/* Briefing Card */}
                 <div className="lg:col-span-12 relative group">
                     <div className="absolute -inset-1 bg-gradient-to-r from-teal-600 to-teal-400 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
                     <div className="relative bg-white rounded-3xl p-8 md:p-12 border border-slate-100 shadow-xl overflow-hidden">
@@ -94,18 +93,20 @@ export default function OverviewView({ trip, plan }: OverviewViewProps) {
                     />
                 </div>
 
-                {/* 4. Logistics Sidebar */}
+                {/* 4. Flight Guardian Sidebar — real data, replaces fake QuickLogistics */}
                 <div className="lg:col-span-4">
-                    <div className="sticky top-24 space-y-6">
-                        <section className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
-                            <div className="px-8 py-5 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
-                                <h3 className="font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wide text-xs">
-                                    <Info className="w-4 h-4 text-teal-500" />
-                                    Quick Logistics
-                                </h3>
-                            </div>
-                            <LogisticsDashboard trip={trip} plan={plan} />
-                        </section>
+                    <div className="sticky top-24 space-y-4">
+                        <div>
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-500 mb-3">
+                                Flight Guardian
+                            </h3>
+                            <FlightWatchCard
+                                tripId={trip.id}
+                                destinationCity={trip.destination}
+                                destinationAirport={plan.destination_airport}
+                                variant="compact"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

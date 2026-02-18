@@ -1,60 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { Copy, Gift, Share2, Users, Check, Sparkles, Ticket } from 'lucide-react';
+import React, { useState } from 'react';
+import { Copy, Gift, Share2, Users, Sparkles, Ticket, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@clerk/nextjs';
-import { referralService, ReferralStats } from '@/services/referralService';
+import { useReferral } from '@/hooks/useReferral';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MilestoneProgress } from './MilestoneProgress';
 
 export default function ReferralCard() {
-    const [stats, setStats] = useState<ReferralStats | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [hasMounted, setHasMounted] = useState(false);
-    const [inviteCode, setInviteCode] = useState('');
+    const {
+        referralStats,
+        isLoading,
+        claimReferral,
+        isClaiming,
+        leaderboard, // helper to determine rank
+        leaderboardCount
+    } = useReferral();
+
     const [isRedeeming, setIsRedeeming] = useState(false);
     const [redeemCodeInput, setRedeemCodeInput] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const { getToken, isLoaded: isAuthLoaded } = useAuth();
-
-    useEffect(() => {
-        setHasMounted(true);
-        if (isAuthLoaded) {
-            loadStats();
-        }
-    }, [isAuthLoaded]);
-
-    const loadStats = async () => {
-        try {
-            const token = await getToken();
-            console.log('[ReferralCard] Token retrieved:', token ? 'YES (length: ' + token.length + ')' : 'NO');
-            if (!token) {
-                console.warn('[ReferralCard] No token available, skipping API call');
-                return;
-            }
-            console.log('[ReferralCard] Calling getReferralStats with token...');
-            const data = await referralService.getReferralStats(token);
-            console.log('[ReferralCard] Stats received:', data);
-            setStats(data);
-            setInviteCode(data.referral_code);
-        } catch (error) {
-            console.error("[ReferralCard] Failed to load referral stats:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(inviteCode);
-        toast.success("Referral code copied!", {
-            description: "Share it with your friends to earn free trips.",
-            icon: <Copy className="w-4 h-4 text-teal-500" />
-        });
+        if (referralStats?.referral_code) {
+            navigator.clipboard.writeText(referralStats.referral_code);
+            // toast is handled in hook or we can add specific touch here if needed
+            // leaving simple for now
+        }
     };
 
     const handleShare = () => {
-        const text = `Join me on Miru and get an AI-planned trip! Use my code ${inviteCode} to sign up.`;
+        const code = referralStats?.referral_code || '';
+        const text = `Join me on Miru and get an AI-planned trip! Use my code ${code} to sign up.`;
         const url = window.location.origin;
 
         if (navigator.share) {
@@ -68,30 +44,29 @@ export default function ReferralCard() {
         }
     };
 
-    const handleRedeem = async (e: React.FormEvent) => {
+    const handleRedeem = (e: React.FormEvent) => {
         e.preventDefault();
         if (!redeemCodeInput.trim()) return;
-
-        setIsSubmitting(true);
-        try {
-            const token = await getToken();
-            if (!token) throw new Error("Authentication required");
-            await referralService.claimReferralCode(token, redeemCodeInput.trim());
-            toast.success("Referral code redeemed!", {
-                description: "You've earned +1 Invite Bonus Quota!",
-                icon: <Gift className="w-4 h-4 text-pink-500" />
-            });
-            setRedeemCodeInput('');
-            setIsRedeeming(false);
-            loadStats();
-        } catch (error: any) {
-            console.error("Redeem error:", error);
-            const msg = error.response?.data?.message || error.response?.data?.error || "Failed to redeem code";
-            toast.error(msg);
-        } finally {
-            setIsSubmitting(false);
-        }
+        claimReferral(redeemCodeInput.trim(), {
+            onSuccess: () => {
+                setRedeemCodeInput('');
+                setIsRedeeming(false);
+            }
+        });
     };
+
+    // Calculate next milestone (mock logic for now, or derive from stats)
+    // In a real app, this would come from the backend or a shared constant
+    const milestones = [
+        { name: 'Bronze', required: 1, reward: '1 Bonus Trip' },
+        { name: 'Silver', required: 5, reward: '3 Bonus Trips' },
+        { name: 'Gold', required: 10, reward: '5 Bonus Trips + PRO' },
+        { name: 'Platinum', required: 25, reward: '10 Bonus Trips + PRO' },
+        { name: 'Diamond', required: 50, reward: '20 Trips + 3mo PRO' },
+    ];
+
+    const currentReferrals = referralStats?.total_referrals || 0;
+    const nextTier = milestones.find(m => m.required > currentReferrals) || null;
 
     if (isLoading) {
         return (
@@ -113,21 +88,33 @@ export default function ReferralCard() {
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-purple-500/30 rounded-full translate-y-1/2 -translate-x-1/2 blur-xl pointer-events-none" />
 
             {/* Header */}
-            <div className="relative z-10 mb-6">
-                <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
-                    <Gift className="w-6 h-6 text-yellow-300 animate-bounce" />
-                    Give Trips, <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-amber-400">Get Trips</span>
-                </h2>
-                <p className="text-indigo-100 font-medium text-sm mt-1 max-w-sm">
-                    Invite friends to Miru. They get a starter bonus, and you get <span className="font-bold text-white">+1 trip quota</span> for every signup!
-                </p>
+            <div className="relative z-10 mb-6 flex justify-between items-start">
+                <div>
+                    <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
+                        <Gift className="w-6 h-6 text-yellow-300 animate-bounce" />
+                        Give Trips, <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-amber-400">Get Trips</span>
+                    </h2>
+                    <p className="text-indigo-100 font-medium text-sm mt-1 max-w-sm">
+                        Invite friends to Miru. They get a starter bonus, and you get <span className="font-bold text-white">+1 trip quota</span> for every signup!
+                    </p>
+                </div>
+                {/* Rank Badge (if available) */}
+                <div className="hidden md:flex flex-col items-end">
+                    <div className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-yellow-300" />
+                        <span className="text-xs font-bold text-yellow-100">
+                            #{leaderboardCount > 0 ? '???' : 'Unranked'}
+                            {/* Note: User rank specific query might be needed for exact number if not in top 50 */}
+                        </span>
+                    </div>
+                </div>
             </div>
 
             {/* Code Display */}
             <div className="relative z-10 bg-white/10 backdrop-blur-md rounded-2xl p-1 border border-white/20 flex items-center justify-between pl-5 pr-1 mb-6">
                 <div className="flex flex-col">
                     <span className="text-[10px] uppercase font-bold text-indigo-200 tracking-wider">Your Referral Code</span>
-                    <span className="text-2xl font-mono font-black tracking-wider text-white">{inviteCode || '...'}</span>
+                    <span className="text-2xl font-mono font-black tracking-wider text-white">{referralStats?.referral_code || '...'}</span>
                 </div>
                 <div className="flex gap-2">
                     <Button
@@ -153,14 +140,19 @@ export default function ReferralCard() {
             <div className="grid grid-cols-2 gap-3 mb-6 relative z-10">
                 <div className="bg-black/20 backdrop-blur-sm rounded-2xl p-3 border border-white/10 flex flex-col items-center justify-center text-center">
                     <Users className="w-5 h-5 text-indigo-300 mb-1" />
-                    <span className="text-2xl font-black">{stats?.total_referrals || 0}</span>
+                    <span className="text-2xl font-black">{referralStats?.total_referrals || 0}</span>
                     <span className="text-[10px] font-bold uppercase text-indigo-200">Friends Invited</span>
                 </div>
                 <div className="bg-gradient-to-br from-yellow-400/20 to-amber-500/20 backdrop-blur-sm rounded-2xl p-3 border border-yellow-400/30 flex flex-col items-center justify-center text-center">
                     <Ticket className="w-5 h-5 text-yellow-300 mb-1" />
-                    <span className="text-2xl font-black text-yellow-200">+{stats?.bonus_quota || 0}</span>
+                    <span className="text-2xl font-black text-yellow-200">+{referralStats?.bonus_quota || 0}</span>
                     <span className="text-[10px] font-bold uppercase text-yellow-100/80">Bonus Trips</span>
                 </div>
+            </div>
+
+            {/* Milestone Progress Integration */}
+            <div className="relative z-10 mb-6">
+                <MilestoneProgress currentReferrals={currentReferrals} nextTier={nextTier} />
             </div>
 
             {/* Redeem Section Toggle */}
@@ -195,10 +187,10 @@ export default function ReferralCard() {
                             />
                             <Button
                                 type="submit"
-                                disabled={isSubmitting || !redeemCodeInput}
+                                disabled={isClaiming || !redeemCodeInput}
                                 className="bg-white text-indigo-700 hover:bg-indigo-50 font-bold rounded-xl h-10 px-4"
                             >
-                                {isSubmitting ? <Sparkles className="w-4 h-4 animate-spin" /> : "Claim"}
+                                {isClaiming ? <Sparkles className="w-4 h-4 animate-spin" /> : "Claim"}
                             </Button>
                             <Button
                                 type="button"

@@ -1,18 +1,17 @@
 import { getTripAction } from '@/actions/trip';
 import TripResult from '@/components/business/TripResult';
-import Navbar from '@/components/layout/Navbar';
+import ChatFab from '@/components/layout/ChatFab';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { Suspense } from 'react';
+import ItinerarySkeleton from '@/components/business/ItinerarySkeleton';
 
 interface TripPageProps {
     params: Promise<{
         id: string;
     }>;
 }
-
-import { Suspense } from 'react';
-import ItinerarySkeleton from '@/components/business/ItinerarySkeleton';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,9 +25,7 @@ export default async function TripPage({ params }: TripPageProps) {
 
     return (
         <main className="min-h-screen bg-slate-50 relative">
-            {/* <Navbar /> REMOVED for immersive view */}
-
-            {/* Floating Nav for Back - Styled to match your previous premium look */}
+            {/* Floating Nav for Back */}
             <nav className="fixed top-6 left-6 z-40 hidden md:block animate-in fade-in slide-in-from-top-4 duration-700 delay-300">
                 <Link
                     href="/dashboard"
@@ -42,6 +39,9 @@ export default async function TripPage({ params }: TripPageProps) {
             <Suspense fallback={<ItinerarySkeleton />}>
                 <TripResult data={data} isSavedView={true} />
             </Suspense>
+
+            {/* Miru Chat FAB 💬 */}
+            <ChatFab tripId={id} />
         </main>
     );
 }

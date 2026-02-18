@@ -23,6 +23,7 @@ import ItineraryView from '@/components/trip/views/ItineraryView';
 import LogisticsView from '@/components/trip/views/LogisticsView';
 import EssentialsView from '@/components/trip/views/EssentialsView';
 import MapView from '@/components/trip/views/MapView';
+// import FlightsView from '@/components/trip/views/FlightsView'; // Deprecated in favor of LogisticsView
 
 import { SumiView } from '@/components/passport/SumiView';
 import MiruChatDrawer from '@/components/trip/MiruChatDrawer'; // NEW
@@ -563,6 +564,22 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                                 isEnriching={enrichmentStatus === 'enriching'}
                                 startTime={generationStartTime}
                                 onUpgrade={() => setIsUpgradeOpen(true)}
+                            />
+                        )}
+
+                        {activeTab === 'map' && (
+                            <MapView
+                                trip={currentTrip}
+                                activities={allActivities}
+                                selectedActivityId={selectedActivityId}
+                                onActivitySelect={setSelectedActivityId}
+                            />
+                        )}
+
+                        {activeTab === 'flights' && (
+                            <LogisticsView
+                                trip={currentTrip}
+                                plan={currentPlan}
                             />
                         )}
 

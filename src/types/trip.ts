@@ -172,6 +172,9 @@ export interface TripPlan {
     highlights?: TripHighlight[];
     tagline?: string;
     vibes?: string[];
+    destination_airport?: string; // NEW: Flight Guardian
+
+    // --- Discovery Features (Merged from DiscoveryView) ---
     culinary_signature?: CulinarySignature[];
     hidden_gem?: HiddenGem;
     history_snippet?: string;

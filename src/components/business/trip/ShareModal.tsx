@@ -9,7 +9,7 @@ import { Loader2, Trash2, Crown } from 'lucide-react';
 import { collaborationService } from '@/services/collaborationService';
 import { Collaborator } from '@/types';
 import { toast } from 'sonner';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -26,6 +26,8 @@ export default function ShareModal({ isOpen, onClose, tripId, currentUserRole, c
     const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
     const [isFetching, setIsFetching] = useState(true);
     const { getToken } = useAuth();
+    const { user } = useUser();
+    const [isCopied, setIsCopied] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -38,7 +40,7 @@ export default function ShareModal({ isOpen, onClose, tripId, currentUserRole, c
             setIsFetching(true);
             const token = await getToken();
             const data = await collaborationService.getCollaborators(token || '', tripId);
-            setCollaborators(data);
+            setCollaborators(data || []);
         } catch (error) {
             console.error('Failed to fetch collaborators', error);
             // toast.error('Check console for details'); // Silent fail or show toast
@@ -96,6 +98,15 @@ export default function ShareModal({ isOpen, onClose, tripId, currentUserRole, c
     const canInvite = currentUserRole === 'owner' || currentUserRole === 'editor';
     const isOwner = currentUserRole === 'owner';
 
+    const handleCopyLink = () => {
+        if (typeof window === 'undefined') return;
+        const url = `${window.location.origin}/share/${tripId}`;
+        navigator.clipboard.writeText(url);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+        toast.success('Public link copied!');
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-md bg-white">
@@ -132,7 +143,32 @@ export default function ShareModal({ isOpen, onClose, tripId, currentUserRole, c
                         <div className="flex justify-center p-4"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
                     ) : (
                         <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-                            {collaborators.map((collab) => (
+                            {/* Static Owner Row */}
+                            {currentUserRole === 'owner' && user && (
+                                <div className="flex items-center justify-between p-2 rounded-lg bg-amber-50/50 hover:bg-amber-50 transition-colors border border-amber-100/50">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-xs font-bold text-amber-700 border border-amber-200 shadow-sm overflow-hidden">
+                                            {user.imageUrl ? (
+                                                <img src={user.imageUrl} alt={user.fullName || 'Owner'} className="w-full h-full object-cover" />
+                                            ) : (
+                                                (user.firstName?.[0]?.toUpperCase() || 'O')
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-slate-900 leading-tight">
+                                                {user.fullName || 'You'} <span className="text-slate-400 font-normal ml-1">(You)</span>
+                                            </p>
+                                            <p className="text-xs text-slate-500">{user.primaryEmailAddress?.emailAddress}</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs px-2 py-1 rounded-full font-medium capitalize flex items-center gap-1 bg-amber-100 text-amber-700">
+                                        <Crown className="w-3 h-3 text-amber-600" />
+                                        Owner
+                                    </span>
+                                </div>
+                            )}
+
+                            {collaborators?.filter(c => c.user_id !== currentUserId).map((collab) => (
                                 <div key={collab.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600 border border-indigo-200 shadow-sm overflow-hidden">
@@ -168,6 +204,26 @@ export default function ShareModal({ isOpen, onClose, tripId, currentUserRole, c
                             ))}
                         </div>
                     )}
+                </div>
+
+                <hr className="my-4 border-slate-100" />
+
+                <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-slate-700">Public Link (View Only)</h4>
+                    <div className="flex gap-2">
+                        <Input
+                            readOnly
+                            value={typeof window !== 'undefined' ? `${window.location.origin}/share/${tripId}` : ''}
+                            className="flex-1 bg-slate-50 text-slate-500 font-mono text-xs"
+                        />
+                        <Button
+                            onClick={handleCopyLink}
+                            variant="outline"
+                            className="min-w-[80px]"
+                        >
+                            {isCopied ? 'Copied!' : 'Copy'}
+                        </Button>
+                    </div>
                 </div>
 
                 {!isOwner && (

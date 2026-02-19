@@ -5,6 +5,8 @@ import Providers from "./providers";
 import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from "@/components/theme-provider";
+import { PostHogProvider } from "@/components/providers/PostHogProvider";
+import PostHogPageView from "@/components/providers/PostHogPageView";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,25 +31,28 @@ export default function RootLayout({
         <ClerkProvider>
             <html lang="en" suppressHydrationWarning>
                 <body className={inter.className}>
-                    <Providers>
-                        <ThemeProvider
-                            attribute="class"
-                            defaultTheme="light"
-                            enableSystem
-                            disableTransitionOnChange
-                        >
-                            <div className="pb-20 md:pb-0 min-h-screen">
-                                {children}
-                            </div>
-                            <BottomNav />
-                            <Toaster
-                                position="top-center"
-                                richColors
-                                expand={true}
-                                duration={4000}
-                            />
-                        </ThemeProvider>
-                    </Providers>
+                    <PostHogProvider>
+                        <Providers>
+                            <ThemeProvider
+                                attribute="class"
+                                defaultTheme="light"
+                                enableSystem
+                                disableTransitionOnChange
+                            >
+                                <PostHogPageView />
+                                <div className="pb-20 md:pb-0 min-h-screen">
+                                    {children}
+                                </div>
+                                <BottomNav />
+                                <Toaster
+                                    position="top-center"
+                                    richColors
+                                    expand={true}
+                                    duration={4000}
+                                />
+                            </ThemeProvider>
+                        </Providers>
+                    </PostHogProvider>
                 </body>
             </html>
         </ClerkProvider>

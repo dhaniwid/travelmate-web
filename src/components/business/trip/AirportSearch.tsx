@@ -43,7 +43,7 @@ export default function AirportSearch({ value, onChange, placeholder = "Search a
             try {
                 const token = await getToken(); // Get token
                 const data = await searchLocations(debouncedQuery, token); // Pass token
-                setResults(data);
+                setResults(data || []);
                 setOpen(true);
             } catch (error) {
                 console.error("Failed to search locations", error);
@@ -93,7 +93,7 @@ export default function AirportSearch({ value, onChange, placeholder = "Search a
                         setOpen(true);
                     }}
                     onFocus={() => {
-                        if (results.length > 0) setOpen(true);
+                        if ((results?.length ?? 0) > 0) setOpen(true);
                     }}
                     placeholder={placeholder}
                     className="pl-9 pr-8"
@@ -115,7 +115,7 @@ export default function AirportSearch({ value, onChange, placeholder = "Search a
                             <Loader2 className="w-4 h-4 animate-spin mr-2" />
                             Searching...
                         </div>
-                    ) : results.length > 0 ? (
+                    ) : (results?.length ?? 0) > 0 ? (
                         <ul className="py-1">
                             {results.map((loc, i) => (
                                 <li

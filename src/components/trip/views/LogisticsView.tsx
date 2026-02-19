@@ -21,12 +21,13 @@ export default function LogisticsView({ trip, plan }: LogisticsViewProps) {
                 <div>
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight">Logistics Hub</h2>
                     <p className="text-sm text-slate-500 font-medium">
-                        Track live flight prices and manage your journey to <span className="text-teal-600 font-bold">{trip.destination}</span>
+                        View your trip details and route summary to <span className="text-teal-600 font-bold">{trip.destination}</span>
                     </p>
                 </div>
             </div>
 
             {/* Feature Highlights — real features only */}
+            {/* Feature Highlights — temporarily hidden for launch 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                     {
@@ -53,14 +54,17 @@ export default function LogisticsView({ trip, plan }: LogisticsViewProps) {
                     </div>
                 ))}
             </div>
+            */}
 
             {/* Flight Watch Card — full width */}
+            {/* Flight Watch Card — temporarily hidden for launch
             <FlightWatchCard
                 tripId={trip.id}
                 destinationCity={trip.destination}
                 destinationAirport={plan.destination_airport}
                 variant="full"
             />
+            */}
 
             {/* Flight Search / Route Summary */}
             <div className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm relative group">

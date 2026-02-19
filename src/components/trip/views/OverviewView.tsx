@@ -93,7 +93,7 @@ export default function OverviewView({ trip, plan }: OverviewViewProps) {
                     />
                 </div>
 
-                {/* 4. Flight Guardian Sidebar — real data, replaces fake QuickLogistics */}
+                {/* Flight Guardian Sidebar — temporarily hidden for launch 
                 <div className="lg:col-span-4">
                     <div className="sticky top-24 space-y-4">
                         <div>
@@ -109,6 +109,7 @@ export default function OverviewView({ trip, plan }: OverviewViewProps) {
                         </div>
                     </div>
                 </div>
+                */}
             </div>
         </div>
     );

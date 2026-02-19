@@ -6,6 +6,7 @@ const isPublicRoute = createRouteMatcher([
     '/sign-up(.*)',
     '/pricing(.*)',
     '/trips(.*)',
+    '/share(.*)',         // Public read-only trip share page (no auth required)
     '/api/webhooks(.*)'
 ]);
 

@@ -193,9 +193,9 @@ export default function TripHeader({
             onShare();
         } else {
             if (typeof window === "undefined") return;
-            const url = `${window.location.origin}/trips/${trip.id}`;
+            const url = `${window.location.origin}/share/${trip.id}`;
             navigator.clipboard.writeText(url);
-            toast.success("Link copied!");
+            toast.success("Link copied to clipboard! 🔗");
         }
     };
 

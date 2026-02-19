@@ -30,6 +30,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  compiler: {
+    // Remove console.log in production, but keep console.error for critical debugging
+    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
+  },
 };
 
 export default nextConfig;

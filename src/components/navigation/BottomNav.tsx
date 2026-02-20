@@ -57,6 +57,13 @@ export default function BottomNav() {
                     );
                 })}
             </div>
+            {/* Legal footer links — visible on desktop only */}
+            <div className="hidden md:flex items-center justify-center gap-4 py-2 border-t border-slate-100">
+                <Link href="/privacy" className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors">Privacy Policy</Link>
+                <span className="text-slate-200 text-[11px]">·</span>
+                <Link href="/terms" className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors">Terms of Service</Link>
+            </div>
         </nav>
     );
 }
+

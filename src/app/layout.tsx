@@ -11,10 +11,29 @@ import PostHogPageView from "@/components/providers/PostHogPageView";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "Miru | AI Travel Planner",
-    description: "Discover your perfect journey with AI-powered travel planning. Personalized itineraries, smart recommendations, and magical experiences.",
-    manifest: "/manifest.json",
+    title: {
+        default: 'Miru | AI-Powered Travel Planner',
+        template: '%s | Miru',
+    },
+    description: 'Plan your perfect trip in seconds with Miru. AI-generated itineraries, real-time flight tracking, and smart travel recommendations.',
+    keywords: ['AI travel planner', 'trip itinerary generator', 'travel logistics', 'Miru app', 'AI trip planner'],
+    manifest: '/manifest.json',
+    metadataBase: new URL('https://miru.travel'),
+    openGraph: {
+        type: 'website',
+        siteName: 'Miru',
+        title: 'Miru | AI-Powered Travel Planner',
+        description: 'Plan your perfect trip in seconds with Miru. AI-generated itineraries, real-time flight tracking, and smart travel recommendations.',
+        images: [{ url: '/og-default.jpg', width: 1200, height: 630, alt: 'Miru Travel Planner' }],
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Miru | AI-Powered Travel Planner',
+        description: 'Plan your perfect trip in seconds with Miru.',
+        images: ['/og-default.jpg'],
+    },
 };
+
 
 export const viewport = {
     themeColor: "#0d9488",

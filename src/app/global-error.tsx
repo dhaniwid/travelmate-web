@@ -1,10 +1,8 @@
 "use client";
 
 // global-error.tsx
-// Root-level error boundary — catches errors in the RootLayout and sends them to Sentry.
+// Root-level error boundary — catches errors in the RootLayout.
 // This is different from error.tsx which only catches nested segment errors.
-import * as Sentry from "@sentry/nextjs";
-import { useEffect } from "react";
 
 export default function GlobalError({
     error,
@@ -13,9 +11,6 @@ export default function GlobalError({
     error: Error & { digest?: string };
     reset: () => void;
 }) {
-    useEffect(() => {
-        Sentry.captureException(error);
-    }, [error]);
 
     return (
         <html lang="en">

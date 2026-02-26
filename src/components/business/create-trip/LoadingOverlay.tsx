@@ -5,15 +5,12 @@ import { Plane, Map, BedDouble, CheckCircle2, Circle, Sparkles, Shirt, Brain } f
 import { ProgressStep } from '../GenerationProgress';
 import { cn } from '@/lib/utils';
 
-// Kata-kata "bumbu" biar user tidak bosan
+// Teks siklus berbahasa Indonesia — memberi kesan AI agent yang aktif bekerja
 const LOADING_MESSAGES = [
-    "Analyzing your travel style...",
-    "Scanning the map for hidden gems...",
-    "Checking weather patterns...",
-    "Curating the best culinary spots...",
-    "Optimizing travel routes...",
-    "Finding cozy places to stay...",
-    "Packing your virtual bags..."
+    "Menyiapkan koper virtual Anda...",
+    "Mencari rute dan akomodasi terbaik...",
+    "Menemukan permata tersembunyi di destinasi...",
+    "Merangkai jadwal perjalanan yang sempurna...",
 ];
 
 export default function LoadingOverlay({ steps: initialSteps, isDone = false }: { steps: ProgressStep[], isDone?: boolean }) {
@@ -22,11 +19,11 @@ export default function LoadingOverlay({ steps: initialSteps, isDone = false }: 
     const [elapsed, setElapsed] = useState(0);
     const [simulatedSteps, setSimulatedSteps] = useState<ProgressStep[]>(initialSteps);
 
-    // Efek: Mengubah teks loading setiap 3 detik agar terasa "hidup"
+    // Efek: Mengubah teks loading setiap 2.5 detik agar terasa hidup seperti AI agent
     useEffect(() => {
         const interval = setInterval(() => {
             setMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
-        }, 3000);
+        }, 2500);
         return () => clearInterval(interval);
     }, []);
 

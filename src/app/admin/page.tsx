@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Users, Map, TrendingUp, Activity, Lock, UserPlus, BarChart2 } from "lucide-react";
+import KnowledgeFeedPanel from "./KnowledgeFeedPanel";
 
 // FORCE DYNAMIC: Always fetch fresh stats
 export const dynamic = "force-dynamic";
@@ -50,7 +51,7 @@ async function getAdminStats(): Promise<AdminStats | null> {
 export default async function AdminDashboard() {
     const user = await currentUser();
 
-    const adminEmails = ["dhaniwid@gmail.com", "admin@miru.travel"];
+    const adminEmails = ["dhaniwid@gmail.com", "admin@miru.travel", "widodo.apple@gmail.com"];
     const userEmail = user?.emailAddresses[0]?.emailAddress;
 
     if (!user || !userEmail || !adminEmails.includes(userEmail)) {
@@ -142,6 +143,9 @@ export default async function AdminDashboard() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* 🧠 RAG Knowledge Feed */}
+                <KnowledgeFeedPanel />
 
                 <div className="grid gap-6 lg:grid-cols-3">
                     {/* Event Breakdown */}

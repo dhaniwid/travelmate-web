@@ -90,6 +90,14 @@ export default function ItineraryView({
                                 aiEditsUsed={trip.ai_edits_used || 0}
                             />
                         )}
+
+                        {/* 💡 Booking urgency tip — shown after itinerary loads */}
+                        {!isCurating && activeDayActivities.length > 0 && (
+                            <div className="mt-10 mx-auto max-w-lg text-center px-4 py-4 rounded-2xl bg-amber-50 border border-amber-100 text-amber-800 text-sm font-medium animate-in fade-in duration-700">
+                                💡 <span className="font-bold">Tip:</span> Segera amankan hotel dan tiket pesawat Anda sebelum harga naik!
+                            </div>
+                        )}
+
                     </div>
                 </>
             )}

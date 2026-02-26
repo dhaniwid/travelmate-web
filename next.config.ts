@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
 
 const securityHeaders = [
   // Prevent clickjacking
@@ -17,14 +16,18 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.miru.travel https://us.i.posthog.com https://js.stripe.com https://browser.sentry-cdn.com",
+      // script-src: allow Clerk (prod + dev), PostHog (both subdomains), Stripe
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.miru.travel https://*.clerk.accounts.dev https://us.i.posthog.com https://us-assets.i.posthog.com https://js.stripe.com",
+
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://image.pollinations.ai https://images.unsplash.com https://img.clerk.com",
-      "connect-src 'self' https://clerk.miru.travel https://us.i.posthog.com https://api.amadeus.com https://o4510917712543744.ingest.de.sentry.io",
+      "connect-src 'self' http://localhost:8889 http://localhost:8080 https://clerk.miru.travel https://*.clerk.accounts.dev https://clerk-telemetry.com https://us.i.posthog.com https://us-assets.i.posthog.com https://api.amadeus.com https://api.unsplash.com",
+
       "frame-src https://js.stripe.com",
     ].join('; '),
   },
+
 ];
 
 const nextConfig: NextConfig = {
@@ -77,21 +80,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
-  // Sentry project organization/project slugs
-  org: "miru-travel",
-  project: "miru-frontend",
-
-  // Suppress verbose output during builds
-  silent: !process.env.CI,
-
-  // Upload source maps to Sentry so stack traces are readable
-  widenClientFileUpload: true,
-
-  // Automatically tree-shake Sentry logger statements from the browser bundle
-  disableLogger: true,
-
-  // Prevents Sentry from auto-instrumenting Next.js data fetching methods to avoid
-  // slowdowns on the free tier
-  automaticVercelMonitors: false,
-});
+export default nextConfig;

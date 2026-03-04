@@ -21,6 +21,7 @@ import LoadingOverlay from './create-trip/LoadingOverlay';
 import { generateTripAction } from '@/actions/trip';
 import { trackEventAction } from '@/actions/analytics';
 import QuotaBanner from '@/components/ui/QuotaBanner';
+import DiscoveryTeaser from './create-trip/DiscoveryTeaser';
 
 interface CreateTripFormProps {
     onSuccess: (data: any) => void;
@@ -295,6 +296,11 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
                         isAuto={isAutoDest}
                         setAuto={setIsAutoDest}
                     />
+
+                    {/* Discovery Teaser — shows RAG local whispers as user types ✨ */}
+                    {!isAutoDest && (
+                        <DiscoveryTeaser destination={formData.destination} />
+                    )}
 
                     <DateDurationSection
                         startDate={formData.start_date}

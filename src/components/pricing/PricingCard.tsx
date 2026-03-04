@@ -20,6 +20,7 @@ interface PricingCardProps {
     badgeLabel?: string;
     socialProof?: string;
     isIDR?: boolean;
+    hideIdrBadge?: boolean;
     proCount?: number;
 }
 
@@ -38,6 +39,7 @@ export function PricingCard({
     badgeLabel,
     socialProof,
     isIDR = false,
+    hideIdrBadge = false,
     proCount = 5
 }: PricingCardProps) {
     return (
@@ -83,7 +85,7 @@ export function PricingCard({
                         </span>
                     )}
 
-                    {!isIDR && isPopular && (
+                    {!isIDR && isPopular && !hideIdrBadge && (
                         <p className="text-[10px] font-medium text-amber-600 mt-2 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 flex items-center gap-1 w-fit">
                             <span>💡 processed in IDR (approx. Rp 29k)</span>
                         </p>

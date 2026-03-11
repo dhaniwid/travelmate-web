@@ -469,8 +469,11 @@ export async function getTripAction(id: string): Promise<TripResponse | null> {
             plan: plan as TripPlan,
             is_saved: true
         };
-    } catch (error) {
-        console.error("Error fetching trip:", error);
+    } catch (error: any) {
+        console.error(`❌ [getTripAction FAIL] Error fetching trip (ID: ${id}):`, error?.message || error);
+        if (error?.stack) {
+            console.error("Stack trace:", error.stack);
+        }
         return null;
     }
 }

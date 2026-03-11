@@ -8,7 +8,7 @@ const isPublicRoute = createRouteMatcher([
     '/trips(.*)',
     '/share(.*)',         // Public read-only trip share page (no auth required)
     '/api/webhooks(.*)',
-    '/api/v1/trips(.*)'   // Allow public access to view trip APIs so anonymous/external users can view shared trips
+    '/api/v1/(.*)'        // Allow all public access to API to ensure server-actions aren't blocked by Clerk context proxying
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

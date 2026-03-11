@@ -6,9 +6,7 @@ import { TripRequest, TripResponse, TripPlan, Activity, ItineraryItem } from '@/
 import { revalidatePath } from 'next/cache';
 import crypto from 'crypto';
 
-const isProduction = process.env.NODE_ENV === 'production';
 const sql = postgres(process.env.DATABASE_URL!, {
-    ssl: isProduction ? 'require' : false,
     max: 10,
     idle_timeout: 20
 });

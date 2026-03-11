@@ -12,9 +12,7 @@ export async function GET() {
             return NextResponse.json({ status: 'error', message: 'DATABASE_URL is missing in environment variables' }, { status: 500 });
         }
 
-        const isProduction = process.env.NODE_ENV === 'production';
         const sql = postgres(dbUrl, {
-            ssl: isProduction ? 'require' : false,
             max: 2,
             idle_timeout: 5
         });
@@ -26,7 +24,7 @@ export async function GET() {
             masked_url: maskedUrl,
             connection: result[0].connected === 1 ? 'OK' : 'FAILED',
             environment: process.env.NODE_ENV,
-            ssl: isProduction ? 'require' : 'false'
+            ssl: 'false'
         });
 
     } catch (error: any) {

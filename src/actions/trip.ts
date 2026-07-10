@@ -27,54 +27,6 @@ export async function generateTripAction(request: TripRequest & { user_id: strin
 
     console.log(`🚀 Generating trip for ${destination} (${trip_days} days) for user ${user_id}`);
 
-    // === QUOTA CHECK & SYNC FOR SIGNED-IN USERS ===
-    if (user_id) {
-        try {
-            // 1. Check subscription tier
-            const userRecords = await sql`SELECT subscription_tier FROM users WHERE id = ${user_id}`;
-            const tier = userRecords.length > 0 ? (userRecords[0].subscription_tier || 'FREE') : 'FREE';
-
-            console.log(`📊 User ${user_id} has tier: ${tier}`);
-
-            // 2. Determine Month (YYYY-MM format as used in Go backend)
-            const currentMonth = new Date().toISOString().slice(0, 7);
-
-            // 3. For FREE users, enforce quota
-            if (tier === 'FREE') {
-                const quotaRecord = await sql`
-                    SELECT trips_created FROM trip_quotas 
-                    WHERE user_id = ${user_id} AND month = ${currentMonth}
-                `;
-                const count = quotaRecord.length > 0 ? quotaRecord[0].trips_created : 0;
-
-                console.log(`📊 User ${user_id} has ${count} trips in ${currentMonth}`);
-
-                if (count >= 3) {
-                    throw new Error('QUOTA_EXCEEDED:You have reached your free tier limit (3 trips). Upgrade to Pro for unlimited planning!');
-                }
-            }
-
-            // 4. PRE-LOG QUOTA SYNC (Ensures sync even if save fails later, matches Go service behavior)
-            await sql`
-                INSERT INTO trip_quotas (user_id, month, trips_created)
-                VALUES (${user_id}, ${currentMonth}, 1)
-                ON CONFLICT (user_id, month) 
-                DO UPDATE SET trips_created = trip_quotas.trips_created + 1
-            `;
-            console.log(`✅ Quota incremented for user ${user_id}`);
-
-        } catch (error: any) {
-            // Re-throw quota errors
-            if (error.message?.includes('QUOTA_EXCEEDED')) {
-                throw error;
-            }
-            // Log other DB errors but don't block generation
-            console.error('Error checking/syncing quota:', error);
-        }
-    } else {
-        console.log("👻 Anonymous generation: Simulation mode (Preview-First)");
-    }
-
     const prompt = `
         Create a detailed ${trip_days}-day trip itinerary for ${destination}.
         Origin: ${origin}

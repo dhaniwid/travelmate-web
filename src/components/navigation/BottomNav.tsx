@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Map, User } from 'lucide-react';
+import { Home, Map, User, Radio } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@clerk/nextjs';
 
@@ -10,16 +10,15 @@ export default function BottomNav() {
     const pathname = usePathname();
     const { isSignedIn } = useAuth();
 
-    // Don't show if not signed in or on auth pages
-    // Also hide on specific trip details page for immersive mode (e.g. /trips/123)
-    const isTripDetails = /^\/trips\/[^/]+$/.test(pathname || '');
-
-    if (!isSignedIn || isTripDetails) return null;
+    // Only show on top-level screens — Dashboard and Profile
+    const ALLOWED_PATHS = ['/dashboard', '/profile'];
+    if (!isSignedIn || !ALLOWED_PATHS.includes(pathname || '')) return null;
 
     const navItems = [
-        { href: '/dashboard', icon: Home, label: 'Home' },
-        { href: '/history', icon: Map, label: 'My Trips' },
-        { href: '/profile', icon: User, label: 'Profile' },
+        { href: '/dashboard', icon: Home, label: 'Beranda', pulse: false },
+        { href: '/dashboard', icon: Map, label: 'Trip Saya', pulse: false },
+        { href: '/radar', icon: Radio, label: 'Radar', pulse: true },
+        { href: '/profile', icon: User, label: 'Profil', pulse: false },
     ];
 
     return (
@@ -31,7 +30,7 @@ export default function BottomNav() {
 
                     return (
                         <Link
-                            key={item.href}
+                            key={item.label}
                             href={item.href}
                             className={cn(
                                 "flex flex-col items-center justify-center gap-1 transition-all duration-300 w-full h-full",
@@ -39,9 +38,12 @@ export default function BottomNav() {
                             )}
                         >
                             <div className={cn(
-                                "p-1.5 rounded-full transition-all duration-300",
+                                "relative p-1.5 rounded-full transition-all duration-300",
                                 isActive ? "bg-teal-50" : "bg-transparent"
                             )}>
+                                {item.pulse && !isActive && (
+                                    <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-teal-500 animate-ping opacity-75" />
+                                )}
                                 <Icon className={cn(
                                     "w-6 h-6 transition-all duration-300",
                                     isActive && "fill-current"

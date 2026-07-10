@@ -164,7 +164,7 @@ export default function LogisticsCard({ plan }: { plan: TripResponse['plan'] }) 
                             <div className="flex gap-2 items-start mb-2">
                                 <Quote className="w-3 h-3 text-slate-600 shrink-0 mt-0.5 rotate-180"/>
                                 <p className="text-xs text-slate-300 font-medium">
-                                    {opt.recommendation_reason} {/* Updated Field */}
+                                    {opt.reason}
                                 </p>
                             </div>
 

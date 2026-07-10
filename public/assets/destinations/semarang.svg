@@ -1,0 +1,185 @@
+<svg id="landmark-semarang" viewBox="0 0 390 650" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Layer 1: Sky — dusk gradient -->
+  <g id="layer-sky">
+    <defs>
+      <linearGradient id="semarang-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#060F1E"/>
+        <stop offset="40%"  stop-color="#0D5463"/>
+        <stop offset="75%"  stop-color="#C2500A"/>
+        <stop offset="100%" stop-color="#7A2E0A"/>
+      </linearGradient>
+    </defs>
+    <rect width="390" height="650" fill="url(#semarang-sky)"/>
+    <!-- Stars -->
+    <circle cx="38"  cy="42"  r="1.2" fill="#FFFFFF" opacity="0.82"/>
+    <circle cx="88"  cy="28"  r="1"   fill="#FFFFFF" opacity="0.70"/>
+    <circle cx="148" cy="54"  r="1.5" fill="#FFFFFF" opacity="0.60"/>
+    <circle cx="208" cy="24"  r="1"   fill="#FFFFFF" opacity="0.90"/>
+    <circle cx="268" cy="48"  r="1.2" fill="#FFFFFF" opacity="0.72"/>
+    <circle cx="328" cy="34"  r="1"   fill="#FFFFFF" opacity="0.80"/>
+    <circle cx="352" cy="72"  r="1.5" fill="#FFFFFF" opacity="0.58"/>
+    <circle cx="62"  cy="78"  r="1"   fill="#FFFFFF" opacity="0.68"/>
+    <circle cx="180" cy="36"  r="1"   fill="#FFFFFF" opacity="0.65"/>
+    <circle cx="310" cy="70"  r="1.2" fill="#FFFFFF" opacity="0.62"/>
+    <!-- Crescent moon -->
+    <path d="M305 55 Q318 42 332 55 Q318 50 305 55Z" fill="#F5E6C8" opacity="0.92"/>
+  </g>
+
+  <!-- Layer 2: Background — Java Sea + harbour horizon -->
+  <g id="layer-background">
+    <!-- Sea band -->
+    <rect x="0" y="355" width="390" height="50" fill="#2D6A8A" opacity="0.55"/>
+    <!-- Harbour mole left -->
+    <rect x="0"   y="338" width="72" height="32" fill="#2D6A8A"/>
+    <rect x="32"  y="322" width="10" height="20" fill="#2D6A8A"/>
+    <!-- Harbour crane hint left -->
+    <rect x="22" y="308" width="4"  height="34" fill="#2D6A8A"/>
+    <polygon points="22,308 26,295 40,310" fill="#2D6A8A"/>
+    <!-- Harbour mole right -->
+    <rect x="315" y="342" width="75" height="28" fill="#2D6A8A"/>
+    <rect x="342" y="328" width="10" height="18" fill="#2D6A8A"/>
+    <!-- Distant ship hint -->
+    <rect x="155" y="362" width="55" height="8"  fill="#2D6A8A"/>
+    <polygon points="175,362 185,352 195,362" fill="#2D6A8A"/>
+    <!-- Horizon reflection line -->
+    <rect x="0" y="400" width="390" height="4" fill="#2D6A8A" opacity="0.3"/>
+  </g>
+
+  <!-- Layer 3: Mid-ground — colonial buildings + Sam Poo Kong -->
+  <g id="layer-midground">
+    <!-- Colonial building far-left -->
+    <rect x="0"  y="395" width="52" height="110" fill="#1A3A5C"/>
+    <rect x="5"  y="380" width="42" height="18"  fill="#1A3A5C"/>
+    <polygon points="5,380 26,362 47,380"        fill="#1A3A5C"/>
+    <!-- Windows warm glow far-left -->
+    <rect x="10" y="400" width="9" height="11"  fill="#F97316" opacity="0.55"/>
+    <rect x="28" y="400" width="9" height="11"  fill="#F97316" opacity="0.45"/>
+    <rect x="10" y="422" width="9" height="11"  fill="#F97316" opacity="0.40"/>
+    <rect x="28" y="422" width="9" height="11"  fill="#F97316" opacity="0.50"/>
+
+    <!-- Colonial building left-mid -->
+    <rect x="54"  y="410" width="62" height="95"  fill="#1A3A5C"/>
+    <rect x="58"  y="396" width="54" height="18"  fill="#1A3A5C"/>
+    <polygon points="58,396 85,376 112,396"        fill="#1A3A5C"/>
+    <rect x="64"  y="415" width="10" height="13"  fill="#F97316" opacity="0.55"/>
+    <rect x="84"  y="415" width="10" height="13"  fill="#F97316" opacity="0.48"/>
+    <rect x="64"  y="440" width="10" height="13"  fill="#F97316" opacity="0.42"/>
+
+    <!-- Colonial building right -->
+    <rect x="278" y="405" width="68" height="100" fill="#1A3A5C"/>
+    <rect x="282" y="390" width="60" height="18"  fill="#1A3A5C"/>
+    <polygon points="282,390 312,368 342,390"      fill="#1A3A5C"/>
+    <rect x="288" y="412" width="10" height="12"  fill="#F97316" opacity="0.55"/>
+    <rect x="308" y="412" width="10" height="12"  fill="#F97316" opacity="0.45"/>
+    <rect x="288" y="435" width="10" height="12"  fill="#F97316" opacity="0.42"/>
+    <rect x="308" y="435" width="10" height="12"  fill="#F97316" opacity="0.50"/>
+
+    <!-- Sam Poo Kong (Chinese temple) far right — curved roof, layered -->
+    <!-- Base platform -->
+    <rect x="338" y="435" width="52" height="70" fill="#1A3A5C"/>
+    <!-- Temple body -->
+    <rect x="344" y="415" width="40" height="25" fill="#1A3A5C"/>
+    <!-- Curved roof layer 1 (main) — upturned eaves -->
+    <path d="M336 415 Q364 396 392 415 L392 420 Q364 403 336 420Z" fill="#1A3A5C"/>
+    <!-- Curved roof layer 2 (upper tier) -->
+    <rect x="350" y="398" width="28" height="18" fill="#1A3A5C"/>
+    <path d="M344 398 Q364 382 384 398 L384 402 Q364 386 344 402Z" fill="#1A3A5C"/>
+    <!-- Small finial on top -->
+    <rect x="361" y="378" width="6"  height="22" fill="#1A3A5C"/>
+    <circle cx="364" cy="376" r="4" fill="#1A3A5C"/>
+    <!-- Sam Poo Kong window glow -->
+    <rect x="352" y="422" width="8" height="10" fill="#F97316" opacity="0.5"/>
+    <rect x="368" y="422" width="8" height="10" fill="#F97316" opacity="0.4"/>
+
+    <!-- Ground fill mid -->
+    <rect x="0" y="500" width="390" height="150" fill="#1A3A5C" opacity="0.6"/>
+  </g>
+
+  <!-- Layer 4: Foreground — Lawang Sewu twin gothic towers -->
+  <g id="layer-foreground">
+    <!-- Ground -->
+    <rect x="0" y="615" width="390" height="35" fill="#0A1628"/>
+
+    <!-- Steps -->
+    <rect x="82"  y="626" width="226" height="12" fill="#0A1628"/>
+    <rect x="94"  y="618" width="202" height="10" fill="#0A1628"/>
+    <rect x="108" y="610" width="174" height="10" fill="#0A1628"/>
+
+    <!-- Main connecting body (colonnade base) -->
+    <rect x="108" y="450" width="174" height="168" fill="#0A1628"/>
+
+    <!-- Central entrance arch -->
+    <path d="M162 610 Q195 560 228 610Z" fill="#0D5463" opacity="0.18"/>
+
+    <!-- Colonnade arches (3 visible openings in connecting section) -->
+    <path d="M128 590 Q143 568 158 590" fill="#0D5463" opacity="0.15"/>
+    <path d="M178 590 Q195 566 212 590" fill="#0D5463" opacity="0.15"/>
+    <path d="M232 590 Q247 568 262 590" fill="#0D5463" opacity="0.15"/>
+
+    <!-- Horizontal detail band top of colonnade -->
+    <rect x="106" y="448" width="178" height="6" fill="#0A1628"/>
+    <rect x="106" y="442" width="178" height="4" fill="#0D9488" opacity="0.25"/>
+
+    <!-- ─── LEFT TOWER ─── -->
+    <!-- Tower shaft -->
+    <rect x="110" y="300" width="56" height="158" fill="#0A1628"/>
+
+    <!-- Gothic apex -->
+    <polygon points="110,300 138,228 166,300" fill="#0A1628"/>
+    <!-- Upper finial -->
+    <polygon points="133,228 138,210 143,228" fill="#0A1628"/>
+    <circle cx="138" cy="208" r="4" fill="#0A1628"/>
+
+    <!-- Left tower: gothic arch windows (3 tiers) -->
+    <!-- Tier A (high) -->
+    <rect  x="122" y="315" width="14" height="22" fill="#0D5463" opacity="0.22"/>
+    <path  d="M122,315 Q129,306 136,315" fill="#0D5463" opacity="0.22"/>
+    <rect  x="142" y="315" width="14" height="22" fill="#0D5463" opacity="0.22"/>
+    <path  d="M142,315 Q149,306 156,315" fill="#0D5463" opacity="0.22"/>
+    <!-- Tier B (mid) -->
+    <rect  x="122" y="356" width="14" height="24" fill="#0D5463" opacity="0.20"/>
+    <path  d="M122,356 Q129,346 136,356" fill="#0D5463" opacity="0.20"/>
+    <rect  x="142" y="356" width="14" height="24" fill="#0D5463" opacity="0.20"/>
+    <path  d="M142,356 Q149,346 156,356" fill="#0D5463" opacity="0.20"/>
+    <!-- Tier C (low) -->
+    <rect  x="122" y="400" width="14" height="24" fill="#0D5463" opacity="0.18"/>
+    <path  d="M122,400 Q129,390 136,400" fill="#0D5463" opacity="0.18"/>
+    <rect  x="142" y="400" width="14" height="24" fill="#0D5463" opacity="0.18"/>
+    <path  d="M142,400 Q149,390 156,400" fill="#0D5463" opacity="0.18"/>
+    <!-- Warm window lights left tower -->
+    <rect x="126" y="360" width="10" height="16" fill="#F97316" opacity="0.30"/>
+    <rect x="146" y="360" width="10" height="16" fill="#F97316" opacity="0.28"/>
+
+    <!-- ─── RIGHT TOWER ─── -->
+    <rect x="224" y="300" width="56" height="158" fill="#0A1628"/>
+
+    <polygon points="224,300 252,228 280,300" fill="#0A1628"/>
+    <polygon points="247,228 252,210 257,228" fill="#0A1628"/>
+    <circle cx="252" cy="208" r="4" fill="#0A1628"/>
+
+    <!-- Right tower: gothic arch windows (3 tiers) -->
+    <rect  x="234" y="315" width="14" height="22" fill="#0D5463" opacity="0.22"/>
+    <path  d="M234,315 Q241,306 248,315" fill="#0D5463" opacity="0.22"/>
+    <rect  x="254" y="315" width="14" height="22" fill="#0D5463" opacity="0.22"/>
+    <path  d="M254,315 Q261,306 268,315" fill="#0D5463" opacity="0.22"/>
+
+    <rect  x="234" y="356" width="14" height="24" fill="#0D5463" opacity="0.20"/>
+    <path  d="M234,356 Q241,346 248,356" fill="#0D5463" opacity="0.20"/>
+    <rect  x="254" y="356" width="14" height="24" fill="#0D5463" opacity="0.20"/>
+    <path  d="M254,356 Q261,346 268,356" fill="#0D5463" opacity="0.20"/>
+
+    <rect  x="234" y="400" width="14" height="24" fill="#0D5463" opacity="0.18"/>
+    <path  d="M234,400 Q241,390 248,400" fill="#0D5463" opacity="0.18"/>
+    <rect  x="254" y="400" width="14" height="24" fill="#0D5463" opacity="0.18"/>
+    <path  d="M254,400 Q261,390 268,400" fill="#0D5463" opacity="0.18"/>
+
+    <rect x="238" y="360" width="10" height="16" fill="#F97316" opacity="0.30"/>
+    <rect x="258" y="360" width="10" height="16" fill="#F97316" opacity="0.28"/>
+
+    <!-- Central main arch (between towers above colonnade) -->
+    <path d="M166 450 Q195 410 224 450" fill="#0D5463" opacity="0.20"/>
+    <rect x="172" y="440" width="46" height="14" fill="#0D5463" opacity="0.20"/>
+
+  </g>
+</svg>

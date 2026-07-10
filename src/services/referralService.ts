@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { ReferralStats, LeaderboardEntry, Achievement } from '@/types/referral';
+import { ReferralStats, LeaderboardEntry, Achievement, AchievementProgressResponse } from '@/types/referral';
 
 export const referralService = {
     // Get user's referral stats (code, count, bonus)
@@ -28,6 +28,14 @@ export const referralService = {
     // Get user achievements
     getUserAchievements: async (token: string): Promise<Achievement[]> => {
         const response = await api.get('/user/achievements', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    },
+
+    // Get per-badge achievement progress with remaining hints
+    getAchievementProgress: async (token: string): Promise<AchievementProgressResponse> => {
+        const response = await api.get('/users/me/achievement-progress', {
             headers: { Authorization: `Bearer ${token}` }
         });
         return response.data;

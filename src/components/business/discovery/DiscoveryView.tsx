@@ -220,7 +220,7 @@ export default function DiscoveryView({ data, onPlanTrip, heroImage }: Discovery
                 </div>
 
                 {/* 3. Footer Feature: Hidden Gem */}
-                <HiddenGemCard item={data.hidden_gem} />
+                {data.hidden_gem && <HiddenGemCard item={data.hidden_gem} />}
 
             </div>
 

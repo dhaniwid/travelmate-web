@@ -1,143 +1,135 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import HeroHeader from '@/components/business/discovery/HeroHeader';
-import SearchBar from '@/components/business/discovery/SearchBar';
-import SuggestionChips from '@/components/business/discovery/SuggestionChips';
-import TripPlannerModal from '@/components/business/create-trip/TripPlannerModal';
-import { TripResponse } from '@/types';
-import Navbar from '@/components/layout/Navbar';
+import React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
-import { toast } from 'sonner';
+import { Sparkles, MapPin } from 'lucide-react';
+import SearchBar from '@/components/business/discovery/SearchBar';
+import Navbar from '@/components/layout/Navbar';
+import { getAllDestinationSlugs, FEATURED_DESTINATIONS } from '@/data/destinations';
+
+const CHIPS = [
+    { slug: 'bali', label: 'Bali' },
+    { slug: 'yogyakarta', label: 'Yogyakarta' },
+    { slug: 'semarang', label: 'Semarang' },
+    { slug: 'jakarta', label: 'Jakarta' },
+    { slug: 'bandung', label: 'Bandung' },
+];
+
+const CATEGORY_LABELS: Record<string, string> = {
+    semarang: 'Kolonial',
+    yogyakarta: 'Budaya',
+    bali: 'Spiritual',
+    jakarta: 'Urban',
+    bandung: 'Kreatif',
+};
+
+const TRENDING = FEATURED_DESTINATIONS.slice(0, 4);
 
 export default function HomePage() {
-    // --- HOOKS & STATES ---
     const router = useRouter();
-    const { isSignedIn } = useAuth();
-    const [searchCity, setSearchCity] = useState('');
-    const [isLoading] = useState(false);
 
-    // State untuk Modal
-    const [isPlannerOpen, setIsPlannerOpen] = useState(false);
-
-    // State baru: Menentukan kota apa yang dikirim ke Form
-    // Jika kosong = User mengetik sendiri di form (Direct Flow)
-    // Jika terisi = Auto-fill dari Discovery (Discovery Flow)
-    const [plannerDestination, setPlannerDestination] = useState('');
-
-    // --- HELPERS ---
-    // Transition to Preview-First: Allow unauthenticated generation
-    const openPlannerWithAuthCheck = (destination: string) => {
-        // We no longer block here. Instead, we let them generate.
-        // We show a conversion toast to encourage sign-in
-        if (!isSignedIn) {
-            // No longer using toast.info here to avoid overlap with modal header.
-            // Information will be displayed inside CreateTripForm.
-        }
-        setPlannerDestination(destination);
-        setIsPlannerOpen(true);
-    };
-
-    // --- HANDLERS ---
-
-    // 1. Search Handler (Directly opens planner now)
-    const handleSearch = () => {
-        if (!searchCity.trim()) return;
-        openPlannerWithAuthCheck(searchCity);
-    };
-
-    const handleChipSelect = (city: string) => {
-        setSearchCity(city);
-        openPlannerWithAuthCheck(city);
-    };
-
-    // 3. Direct Plan Handler (Triggered from "Surprise Me")
     const handleSurpriseMe = () => {
-        openPlannerWithAuthCheck(''); // Empty dest triggers "Surprise Me" logic in AI backend
+        const slugs = getAllDestinationSlugs();
+        const random = slugs[Math.floor(Math.random() * slugs.length)];
+        router.push(`/explore/${random}`);
     };
 
-    const handleTripGenerated = (data: TripResponse) => {
-        toast.success("Trip created! Redirecting...");
-
-        // ALWAYS redirect to /trips/:id (fetch from DB, no stale sessionStorage)
-        // The backend saves the trip via FinalizeAndSaveToDB
-        if (data.trip?.id) {
-            // Store ID if anonymous (Preview-First Flow)
-            if (!isSignedIn) {
-                localStorage.setItem('pending_trip_id', data.trip.id);
-            }
-            router.push(`/trips/${data.trip.id}`);
-        } else {
-            // Fallback: if no trip ID, go home
-            console.error("No trip ID in response:", data);
-            router.push('/');
-        }
-    };
-
-    // --- HELPER VARS ---
-    const showHeader = !isLoading;
-
-    // --- RENDER: DISCOVERY / HERO MODE ---
     return (
-        <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-white px-4 py-8 md:px-8 max-w-7xl mx-auto flex flex-col relative overflow-hidden">
+        <div className="min-h-screen bg-[#060F1E] text-white">
             <Navbar />
 
-            {/* Modal Planner */}
-            <TripPlannerModal
-                isOpen={isPlannerOpen}
-                onClose={() => setIsPlannerOpen(false)}
-                initialDestination={plannerDestination} // Pass kota sesuai flow
-                onTripGenerated={handleTripGenerated}
-            />
+            <main className="max-w-[480px] md:max-w-2xl lg:max-w-3xl mx-auto px-4 pt-20 pb-16 space-y-6">
 
-            {/* Background Decorations */}
-            <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-teal-50/50 to-transparent -z-10 pointer-events-none" />
-            <div className="absolute top-20 right-0 w-64 h-64 bg-blue-100/30 rounded-full blur-3xl -z-10 animate-pulse pointer-events-none" />
+                {/* Hero Card */}
+                <div className="bg-[#0A1628] rounded-[20px] p-6 md:p-8 space-y-5 border border-white/5">
 
-            {/* HEADER AREA */}
-            <div className="py-24 md:py-36 flex flex-col items-center justify-center space-y-8">
+                    {/* Context pill */}
+                    <div className="inline-flex items-center gap-1.5 bg-white/8 border border-white/10 rounded-full px-3 py-1 text-xs text-slate-300">
+                        <MapPin className="w-3 h-3 text-teal-400" />
+                        Bali · 3 hari · Budget friendly
+                    </div>
 
-                {/* 1. Logo & Headline */}
-                <HeroHeader isCompact={false} />
+                    {/* Headline */}
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-bold leading-snug text-white">
+                            Jangan cuma plan.{' '}
+                            <span className="text-teal-400">Impikan dulu.</span>
+                        </h1>
+                        <p className="mt-2 text-sm md:text-base text-slate-400 leading-relaxed">
+                            Ceritakan destinasimu — Miru siapkan semua, dari itinerary sampai akomodasi.
+                        </p>
+                    </div>
 
-                {/* 2. Main Action Area */}
-                <div className="w-full transition-all duration-700 max-w-xl">
-
-                    {/* Search Bar (Primary Action) */}
-                    <SearchBar
-                        city={searchCity}
-                        setCity={setSearchCity}
-                        onSearch={handleSearch}
-                        isLoading={isLoading}
-                        isCompact={false}
-                    />
-
-                    {/* Subtle Inspiration Path */}
-                    {!isLoading && (
-                        <div className="mt-6 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 delay-200">
-                            <p className="text-slate-400 text-sm font-medium">
-                                Not sure where to go? {' '}
-                                <button
-                                    onClick={handleSurpriseMe}
-                                    className="text-teal-600 hover:text-teal-700 font-bold hover:underline transition-all"
-                                >
-                                    Surprise me ✨
-                                </button>
-                            </p>
-
-                            <div className="mt-8">
-                                <SuggestionChips onSelect={handleChipSelect} />
-                            </div>
-                        </div>
-                    )}
+                    {/* Integrated search bar */}
+                    <SearchBar isCompact={false} />
                 </div>
-            </div>
 
-            {/* TRIP RESULT MODE (FULL SCREEN) */}
-            <div className="flex-1 w-full relative z-10" />
-        </main>
+                {/* Suggestion chips — horizontal scroll */}
+                <div className="overflow-x-auto -mx-4 px-4 scrollbar-none">
+                    <div className="flex gap-2 w-max">
+                        {CHIPS.map(({ slug, label }) => (
+                            <Link
+                                key={slug}
+                                href={`/explore/${slug}`}
+                                className="shrink-0 px-4 py-2 bg-white/6 border border-white/10 rounded-full text-sm font-medium text-slate-300 hover:border-teal-400/60 hover:text-teal-300 hover:bg-teal-400/8 transition-all"
+                            >
+                                {label}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Trending section */}
+                <section className="space-y-3">
+                    <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
+                        Trending minggu ini
+                    </h2>
+                    <div className="grid grid-cols-2 gap-3">
+                        {TRENDING.map((dest) => (
+                            <Link
+                                key={dest.slug}
+                                href={`/explore/${dest.slug}`}
+                                className="block bg-[#0A1628] border border-white/5 rounded-2xl p-4 hover:border-teal-400/30 hover:bg-[#0D1F38] transition-all group"
+                            >
+                                <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-teal-400 bg-teal-400/10 rounded-full px-2 py-0.5 mb-2">
+                                    {CATEGORY_LABELS[dest.slug] ?? 'Destinasi'}
+                                </span>
+                                <p className="text-sm font-bold text-white group-hover:text-teal-100 transition-colors leading-tight">
+                                    {dest.name}
+                                </p>
+                                <p className="text-xs text-slate-500 mt-1 line-clamp-1">
+                                    {dest.quickFacts.budget}
+                                </p>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Surprise Me card */}
+                <div className="bg-[#0A1628] border border-white/8 rounded-2xl p-5 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-amber-400/10 flex items-center justify-center shrink-0">
+                            <Sparkles className="w-4 h-4 text-amber-400" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold text-white">Belum tahu mau ke mana?</p>
+                            <p className="text-xs text-slate-500 mt-0.5">Biar Miru yang pilihkan untukmu</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleSurpriseMe}
+                        className="shrink-0 px-4 py-2 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-[#060F1E] text-sm font-bold rounded-xl transition-colors"
+                    >
+                        Surprise me
+                    </button>
+                </div>
+
+                {/* Footer trust line */}
+                <p className="text-center text-xs text-slate-600 pt-2">
+                    Gratis untuk memulai · Tanpa kartu kredit
+                </p>
+            </main>
+        </div>
     );
 }

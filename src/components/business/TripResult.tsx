@@ -18,15 +18,12 @@ import { useAuth } from '@clerk/nextjs';
 
 // New Modular Views
 import StickyTabNav, { TabType } from '@/components/trip/StickyTabNav';
-import OverviewView from '@/components/trip/views/OverviewView';
 import ItineraryView from '@/components/trip/views/ItineraryView';
 import LogisticsView from '@/components/trip/views/LogisticsView';
 import EssentialsView from '@/components/trip/views/EssentialsView';
 import MapView from '@/components/trip/views/MapView';
-// import FlightsView from '@/components/trip/views/FlightsView'; // Deprecated in favor of LogisticsView
-
-import { SumiView } from '@/components/passport/SumiView';
 import MiruChatDrawer from '@/components/trip/MiruChatDrawer'; // NEW
+import CollapsibleOverview from '@/components/business/trip-result/CollapsibleOverview';
 import ItinerarySkeleton from './ItinerarySkeleton';
 import ShareModal from '@/components/business/trip/ShareModal';
 import UpgradeModal from '@/components/ui/UpgradeModal';
@@ -79,7 +76,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     const [generationStartTime] = React.useState(() => Date.now());
 
     // Default to 'generating' if no status provided AND no activities exist yet
-    const hasActivities = plan.itinerary && plan.itinerary.some(d => d.activities && d.activities.length > 0);
+    const hasActivities = plan?.itinerary && plan.itinerary.some(d => d.activities && d.activities.length > 0);
     const initialStatus = hasActivities ? 'completed' : 'generating';
 
     const [itineraryStatus, setItineraryStatus] = React.useState(trip.itinerary_status || initialStatus);
@@ -158,7 +155,8 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     }, [itineraryStatus, enrichmentStatus, trip.id]);
 
     const [isUpdating, startUpdateTransition] = useTransition();
-    const [isChatOpen, setIsChatOpen] = React.useState(false); // NEW
+    const [isChatOpen, setIsChatOpen] = React.useState(false);
+    const [isOverviewExpanded, setIsOverviewExpanded] = React.useState(false);
 
     // Initial State from Trip Data
     const [preferences, setPreferences] = React.useState({
@@ -168,9 +166,14 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
         pace: trip.user_preferences?.pace || 'Balanced'
     });
 
-    // Tab Management
-    const initialTab = (searchParams.get('view') as TabType) || 'overview';
-    const [activeTab, setActiveTab] = React.useState<TabType>(initialTab);
+    // Tab Management — map legacy tab values to new 3-tab structure
+    const rawTab = searchParams.get('view') || searchParams.get('tab');
+    const resolveTab = (t: string | null): TabType => {
+        if (t === 'map') return 'map';
+        if (t === 'logistics' || t === 'flights' || t === 'essentials') return 'logistics';
+        return 'itinerary'; // default + handles 'overview', 'sumi', null
+    };
+    const [activeTab, setActiveTab] = React.useState<TabType>(resolveTab(rawTab));
 
     // Sync Tab with URL
     useEffect(() => {
@@ -203,7 +206,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                 setSelectedActivityId(`${activeDay}-0`);
             }
         }
-    }, [activeDay, currentPlan.itinerary]);
+    }, [activeDay, currentPlan?.itinerary]);
 
     const handleApplyPreferences = async (newPrefs: any) => {
         // 1. Optimistic Update
@@ -444,20 +447,20 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
 
     const dayArray = (currentPlan?.itinerary || []).map(d => d.day);
 
+    const activeDayActivities = React.useMemo(() => {
+        return currentPlan?.itinerary?.find(d => d.day === activeDay)?.activities || [];
+    }, [currentPlan?.itinerary, activeDay]);
+
+    const allActivities = React.useMemo(() => {
+        return currentPlan?.itinerary?.flatMap(d => d.activities) || [];
+    }, [currentPlan?.itinerary]);
+
     if (!currentPlan || !currentPlan.itinerary) {
         return <ItinerarySkeleton />;
     }
 
-    const activeDayActivities = React.useMemo(() => {
-        return currentPlan.itinerary?.find(d => d.day === activeDay)?.activities || [];
-    }, [currentPlan.itinerary, activeDay]);
-
-    const allActivities = React.useMemo(() => {
-        return currentPlan.itinerary?.flatMap(d => d.activities) || [];
-    }, [currentPlan.itinerary]);
-
     return (
-        <div id="trip-content" className="animate-in fade-in duration-700 pb-20 bg-white min-h-screen">
+        <div id="trip-content" className="animate-in fade-in duration-700 pb-20 bg-[#060F1E] min-h-screen">
             {/* 0. Scroll-Aware Navbar */}
             <ScrollAwareNavbar
                 title={`Trip to ${trip.destination || 'Unknown'}`}
@@ -468,40 +471,49 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                 onShare={() => setIsShareOpen(true)}
             />
 
-            {/* 1. Dashboard Header (Compact version) */}
+            {/* 1. Hero Header — compact dark */}
             <TripHeader
                 data={data}
                 planState={currentPlan}
                 totalBudget={currentPlan.total || 0}
                 isHistoryView={isSavedView}
-                onOpenCustomize={() => setIsCustomizeOpen(true)}
                 onSaveSuccess={() => setIsSaved(true)}
                 onShare={() => setIsShareOpen(true)}
                 preferences={preferences}
-                compact={activeTab !== 'overview'}
+                compact={true}
+            />
+
+            {/* 1b. Collapsible Overview — between header and tab bar */}
+            <CollapsibleOverview
+                trip={currentTrip}
+                plan={currentPlan}
+                isExpanded={isOverviewExpanded}
+                onToggle={() => setIsOverviewExpanded(prev => !prev)}
+                isPro={subscription?.subscription_tier === 'PRO'}
+                onUpgrade={() => setIsUpgradeOpen(true)}
             />
 
             {/* 2. Sticky Tab Navigation */}
             <StickyTabNav activeTab={activeTab} onTabChange={setActiveTab} />
 
             {/* 3. Dynamic Content Area */}
-            <main className="max-w-7xl mx-auto py-8 px-4 md:px-8">
+            <main className="max-w-[480px] md:max-w-2xl lg:max-w-3xl mx-auto px-4 md:px-8 pt-4 pb-8">
 
                 {/* ENRICHMENT PROGRESS BANNER - Only show if it's REALLY enriching in background (e.g. legacy or pro) */}
                 {itineraryStatus === 'completed' && enrichmentStatus === 'enriching' && (
-                    <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between gap-4 animate-pulse">
+                    <div className="mb-6 bg-gradient-to-r from-teal-950/40 to-blue-950/40 border border-white/8 p-4 rounded-xl flex items-center justify-between gap-4 animate-pulse">
                         <div className="flex items-center gap-3">
-                            <div className="bg-white p-2 rounded-full shadow-sm">
-                                <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                            <div className="bg-white/8 p-2 rounded-full">
+                                <Loader2 className="w-5 h-5 text-teal-400 animate-spin" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-bold text-blue-900">Enriching your trip details...</h4>
-                                <p className="text-xs text-blue-700">Miru is adding specific descriptions, logistics, and hidden gems.</p>
+                                <h4 className="text-sm font-bold text-white">Melengkapi detail tripmu...</h4>
+                                <p className="text-xs text-white/60">Miru sedang menambahkan deskripsi, logistik, dan hidden gems.</p>
                             </div>
                         </div>
-                        <Badge variant="secondary" className="bg-white text-blue-700 shadow-sm">
+                        <Badge variant="secondary" className="bg-white/8 text-teal-400 border-0">
                             <Sparkles className="w-3 h-3 mr-1" />
-                            Processing
+                            Proses
                         </Badge>
                     </div>
                 )}
@@ -543,50 +555,40 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                         transition={{ duration: 0.2, ease: "easeOut" }}
                         className="w-full"
                     >
-                        {activeTab === 'overview' && (
-                            <OverviewView
-                                trip={currentTrip}
-                                plan={currentPlan}
-                            />
-                        )}
-
                         {activeTab === 'itinerary' && (
-                            <ItineraryView
-                                trip={currentTrip}
-                                plan={currentPlan}
-                                activeDay={activeDay}
-                                onDayChange={handleDayClick}
-                                onReplace={handleReplace}
-                                onDelete={handleDelete}
-                                onAddBelow={handleAddBelow}
-                                selectedActivityId={selectedActivityId}
-                                onActivitySelect={setSelectedActivityId}
-                                isEnriching={enrichmentStatus === 'enriching'}
-                                startTime={generationStartTime}
-                                onUpgrade={() => setIsUpgradeOpen(true)}
-                            />
+                            <div className="space-y-6">
+                                <ItineraryView
+                                    trip={currentTrip}
+                                    plan={currentPlan}
+                                    activeDay={activeDay}
+                                    onDayChange={handleDayClick}
+                                    onReplace={handleReplace}
+                                    onDelete={handleDelete}
+                                    onAddBelow={handleAddBelow}
+                                    selectedActivityId={selectedActivityId}
+                                    onActivitySelect={setSelectedActivityId}
+                                    isEnriching={enrichmentStatus === 'enriching'}
+                                    startTime={generationStartTime}
+                                    onUpgrade={() => setIsUpgradeOpen(true)}
+                                />
+                            </div>
                         )}
 
                         {activeTab === 'map' && (
                             <MapView
                                 trip={currentTrip}
-                                activities={allActivities}
+                                itinerary={currentPlan.itinerary}
                                 selectedActivityId={selectedActivityId}
                                 onActivitySelect={setSelectedActivityId}
                             />
                         )}
 
-                        {activeTab === 'flights' && (
+                        {activeTab === 'logistics' && (
                             <LogisticsView
                                 trip={currentTrip}
                                 plan={currentPlan}
-                            />
-                        )}
-
-                        {activeTab === 'essentials' && (
-                            <EssentialsView
-                                trip={currentTrip}
-                                plan={currentPlan}
+                                isPro={subscription?.subscription_tier === 'PRO'}
+                                onUpgrade={() => setIsUpgradeOpen(true)}
                             />
                         )}
                     </motion.div>
@@ -647,11 +649,20 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
 
             {/* MIRU CHAT FAB & DRAWER */}
             <div className="fixed bottom-6 right-6 z-40">
+                {/* Mobile: icon only */}
                 <Button
                     onClick={() => setIsChatOpen(true)}
-                    className="h-14 w-14 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 shadow-xl hover:scale-110 transition-transform flex items-center justify-center border-2 border-white"
+                    className="md:hidden h-14 w-14 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 shadow-xl hover:scale-110 transition-transform flex items-center justify-center border-2 border-white"
                 >
                     <Sparkles className="w-6 h-6 text-white" />
+                </Button>
+                {/* Desktop: extended with label */}
+                <Button
+                    onClick={() => setIsChatOpen(true)}
+                    className="hidden md:flex items-center gap-2 h-12 px-5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 shadow-xl hover:scale-105 transition-transform border-2 border-white font-bold text-white text-sm"
+                >
+                    <Sparkles className="w-4 h-4" />
+                    Tanya Miru
                 </Button>
             </div>
 

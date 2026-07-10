@@ -14,7 +14,53 @@ export interface SaveTripPayload {
 }
 
 export const tripService = {
-    // 1. Generate Trip (Legacy/Blocking)
+    // 1a. Generate Trip — Streaming SSE (preferred, fast first byte)
+    // Calls /api/stream-generate (Next.js proxy → Go SSE endpoint).
+    // Invokes onTripCreated with trip_id as soon as the DB stub is ready (~1–2s).
+    // Invokes onSkeletonComplete when the full plan is saved to DB.
+    createTripStreaming: async (
+        data: TripRequest,
+        token: string | null,
+        onTripCreated: (tripId: string) => void,
+        onSkeletonComplete: (tripId: string) => void,
+        onError: (message: string) => void,
+    ): Promise<void> => {
+        const response = await fetch('/api/stream-generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({ message: 'Generation failed' }));
+            throw new Error(err.message || 'Generation failed');
+        }
+
+        const reader = response.body!.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const text = decoder.decode(value, { stream: true });
+            // SSE format: "data: {...}\n\n" — split and parse each line
+            const lines = text.split('\n').filter(l => l.startsWith('data: '));
+            for (const line of lines) {
+                try {
+                    const payload = JSON.parse(line.slice(6));
+                    if (payload.event === 'trip_created') onTripCreated(payload.trip_id);
+                    if (payload.event === 'skeleton_complete') onSkeletonComplete(payload.trip_id);
+                    if (payload.event === 'error') onError(payload.message ?? 'Unknown error');
+                } catch { /* ignore malformed chunks */ }
+            }
+        }
+    },
+
+    // 1b. Generate Trip (Legacy/Blocking — kept for fallback)
     createTrip: async (data: TripRequest, token: string | null = null): Promise<{ trip_id: string; message: string }> => {
         const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
         const response = await api.post('/trips', data, config);

@@ -3,7 +3,6 @@
 import React from 'react';
 import HighlightsRow from '@/components/business/trip-result/HighlightsRow';
 import DiscoverySection from '@/components/business/trip-result/DiscoverySection';
-import FlightWatchCard from '@/components/business/trip/FlightWatchCard';
 import { Trip, TripPlan } from '@/types';
 import { Sparkles } from 'lucide-react';
 
@@ -48,7 +47,7 @@ export default function OverviewView({ trip, plan }: OverviewViewProps) {
                                 </div>
                                 <div className="space-y-4">
                                     <div>
-                                        <h3 className="text-xs font-black text-teal-600 uppercase tracking-[0.3em] mb-2">Morning Briefing</h3>
+                                        <h3 className="text-xs font-black text-teal-600 uppercase tracking-[0.3em] mb-2">Briefing Perjalanan</h3>
                                         <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
                                             {plan.tagline || `Adventure in ${trip.destination}`}
                                         </h2>
@@ -77,39 +76,21 @@ export default function OverviewView({ trip, plan }: OverviewViewProps) {
                 <div className="lg:col-span-12 space-y-8">
                     <div className="flex items-center justify-between px-2">
                         <div>
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-500 mb-1">Editor's Choice</h3>
-                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Must Visit Spots</h2>
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-500 mb-1">Pilihan Editor</h3>
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Wajib Dikunjungi</h2>
                         </div>
                     </div>
                     <HighlightsRow highlights={highlights} destination={trip.destination} />
                 </div>
 
                 {/* 3. Discovery & DNA */}
-                <div className="lg:col-span-8">
+                <div className="lg:col-span-12">
                     <DiscoverySection
                         culinary={plan.culinary_signature}
-                        hiddenGem={plan.hidden_gem}
                         history={plan.history_snippet}
+                        destination={trip.destination}
                     />
                 </div>
-
-                {/* Flight Guardian Sidebar — temporarily hidden for launch 
-                <div className="lg:col-span-4">
-                    <div className="sticky top-24 space-y-4">
-                        <div>
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-500 mb-3">
-                                Flight Guardian
-                            </h3>
-                            <FlightWatchCard
-                                tripId={trip.id}
-                                destinationCity={trip.destination}
-                                destinationAirport={plan.destination_airport}
-                                variant="compact"
-                            />
-                        </div>
-                    </div>
-                </div>
-                */}
             </div>
         </div>
     );

@@ -1,32 +1,45 @@
+'use client';
+
 import React, { useMemo } from 'react';
-import { Button } from '@/components/ui/button';
 import { MapPin, RefreshCw, Trash2, PlusCircle, Utensils, Bed, Coffee, Sparkles, ChevronRight, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Activity } from '@/types';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { tripService } from '@/services/trip';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/nextjs';
+import { fetchUnsplashImage } from '@/services/imageService';
 
 interface ActivityCardProps {
     activity: Activity;
-    tripId?: string;       // NEW: For lazy loading
-    dayIndex?: number;     // NEW: For lazy loading
-    activityIndex?: number; // NEW: For lazy loading
+    tripId?: string;
+    dayIndex?: number;
+    activityIndex?: number;
     onReplace?: () => void;
     onDelete?: () => void;
     onAddBelow?: (time: string) => void;
-    onEnrich?: (enriched: Activity) => void; // Optional: Bubble up enrichment
+    onEnrich?: (enriched: Activity) => void;
     className?: string;
     destinationName: string;
     isSelected?: boolean;
-    isExpanded?: boolean; // NEW: Control expansion from parent
+    isExpanded?: boolean;
     onClick?: () => void;
     isLoading?: boolean;
-    isHiddenGem?: boolean; // NEW
-    isPro?: boolean;      // NEW: For quota display
-    aiEditsUsed?: number; // NEW: For quota display
+    isHiddenGem?: boolean;
+    isPro?: boolean;
+    aiEditsUsed?: number;
+}
+
+const TIME_OF_DAY = (timeStr: string) => {
+    const hour = parseInt((timeStr || '').split(':')[0]);
+    if (isNaN(hour)) return { icon: '☕', label: 'Pagi', color: 'text-orange-400' };
+    if (hour < 11) return { icon: '☕', label: 'Pagi', color: 'text-orange-400' };
+    if (hour < 16) return { icon: '☀️', label: 'Siang', color: 'text-yellow-400' };
+    if (hour < 19) return { icon: '🌅', label: 'Sore', color: 'text-rose-400' };
+    return { icon: '🌙', label: 'Malam', color: 'text-indigo-400' };
+};
+
+// Skeleton block for dark bg
+function DarkSkeleton({ className }: { className?: string }) {
+    return <div className={cn('bg-white/8 animate-pulse rounded-lg', className)} />;
 }
 
 export default function ActivityCard({
@@ -46,51 +59,44 @@ export default function ActivityCard({
     isLoading: parentLoading = false,
     isHiddenGem: forcedIsHiddenGem,
     isPro = false,
-    aiEditsUsed = 0
+    aiEditsUsed = 0,
 }: ActivityCardProps) {
     const { getToken } = useAuth();
     const [activity, setActivity] = React.useState<Activity>(initialActivity);
     const [isInternalLoading, setIsInternalLoading] = React.useState(false);
     const [hasAttemptedEnrichment, setHasAttemptedEnrichment] = React.useState(false);
+    const [userSetTime, setUserSetTime] = React.useState<string | null>(null);
+    const [isSettingTime, setIsSettingTime] = React.useState(false);
+    const [fallbackImageUrl, setFallbackImageUrl] = React.useState<string | null>(null);
 
     const isHiddenGem = forcedIsHiddenGem ?? activity.is_hidden_gem;
 
-    // Sync if initialActivity changes (e.g. from parent)
-    React.useEffect(() => {
-        setActivity(initialActivity);
-    }, [initialActivity]);
+    React.useEffect(() => { setActivity(initialActivity); }, [initialActivity]);
 
-    // LAZY LOADING ENRICHMENT LOGIC
+    // Lazy enrichment on expand
     React.useEffect(() => {
-        const shouldEnrich =
+        if (
             isExpanded &&
             activity.is_skeleton &&
             !hasAttemptedEnrichment &&
             tripId &&
             dayIndex !== undefined &&
-            activityIndex !== undefined;
-
-        if (shouldEnrich) {
+            activityIndex !== undefined
+        ) {
             handleEnrichment();
         }
     }, [isExpanded, activity.is_skeleton, hasAttemptedEnrichment, tripId, dayIndex, activityIndex]);
 
     const handleEnrichment = async () => {
         if (!tripId) return;
-
         try {
             setIsInternalLoading(true);
             setHasAttemptedEnrichment(true);
-
-            // Use the centralized tripService to avoid duplicate /api/v1 issues
             const token = await getToken();
             const enrichedData = await tripService.enrichActivity(tripId, dayIndex!, activityIndex!, token);
-
             if (enrichedData) {
                 setActivity(enrichedData);
-                if (onEnrich) {
-                    onEnrich(enrichedData);
-                }
+                onEnrich?.(enrichedData);
             }
         } catch (error) {
             console.error('[ActivityCard] Enrichment error:', error);
@@ -99,219 +105,240 @@ export default function ActivityCard({
         }
     };
 
+    // Unsplash fallback on expand
+    React.useEffect(() => {
+        if (!isExpanded || activity.image_url || fallbackImageUrl) return;
+        const query = activity.place_name || activity.activity;
+        if (!query) return;
+        fetchUnsplashImage(query).then(url => { if (url) setFallbackImageUrl(url); });
+    }, [isExpanded, activity.image_url, activity.place_name, activity.activity]);
+
     const isLoading = parentLoading || isInternalLoading;
 
-    // Miru's Generic POI Check
     const isGeneric = useMemo(() => {
-        if (activity.location_type === 'generic') return true;
+        if ((activity as any).location_type === 'generic') return true;
         const lowerName = activity.activity.toLowerCase();
         const lowerDesc = activity.description?.toLowerCase() || '';
         const lowerPlace = activity.place_name?.toLowerCase() || '';
-
-        // Inference keywords
         const genericKeywords = ['around', 'near', 'check-in', 'check in', 'free time', 'explore', 'arrival', 'departure'];
-        if (genericKeywords.some(k => lowerName.includes(k) || lowerDesc.includes(k) || lowerPlace.includes(k))) return true;
-        return false;
+        return genericKeywords.some(k => lowerName.includes(k) || lowerDesc.includes(k) || lowerPlace.includes(k));
     }, [activity]);
 
-    // Helper to get generic icon
     const getGenericIcon = () => {
         const type = (activity.type || '').toLowerCase();
         const actName = activity.activity.toLowerCase();
-
         if (type.includes('culinary') || type.includes('eat') || actName.includes('lunch') || actName.includes('dinner'))
-            return <Utensils className="w-4 h-4 text-orange-400" />;
+            return <Utensils className="w-3.5 h-3.5 text-orange-400" />;
         if (type.includes('stay') || type.includes('hotel') || actName.includes('check-in'))
-            return <Bed className="w-4 h-4 text-blue-400" />;
+            return <Bed className="w-3.5 h-3.5 text-sky-400" />;
         if (type.includes('coffee') || actName.includes('coffee'))
-            return <Coffee className="w-4 h-4 text-amber-500" />;
-        return <Sparkles className="w-4 h-4 text-purple-400" />;
+            return <Coffee className="w-3.5 h-3.5 text-amber-400" />;
+        return <Sparkles className="w-3.5 h-3.5 text-violet-400" />;
     };
 
-    const handleCardClick = (e: React.MouseEvent) => {
-        if (onClick) onClick();
-    };
+    const locationLabel = (() => {
+        const isDuplicate = activity.place_name?.trim().toLowerCase() === activity.activity?.trim().toLowerCase();
+        if (!isDuplicate && activity.place_name) return activity.place_name;
+        if (activity.address && activity.address.trim().toLowerCase() !== activity.activity?.trim().toLowerCase())
+            return activity.address;
+        return destinationName;
+    })();
+
+    const tod = TIME_OF_DAY(activity.time);
+    const imageUrl = activity.image_url || fallbackImageUrl;
 
     return (
         <div
-            onClick={isLoading ? undefined : handleCardClick}
+            onClick={isLoading ? undefined : onClick}
+            style={{ borderWidth: '0.5px' }}
             className={cn(
-                "group relative bg-white rounded-xl p-5 border shadow-sm hover:shadow-md transition-all duration-300",
-                !isLoading && "cursor-pointer",
-                isSelected ? "ring-2 ring-blue-500 border-transparent bg-blue-50/10 shadow-blue-100/50" : "border-slate-200/60",
-                isHiddenGem && "border-teal-500/30 bg-gradient-to-br from-white to-teal-50/20 shadow-teal-100/20 border-[1.5px]",
+                'group relative rounded-xl border transition-all duration-200',
+                !isLoading && 'cursor-pointer active:scale-[0.99]',
+                isSelected
+                    ? 'bg-[#0D2040] border-teal-500/40 ring-1 ring-teal-500/30'
+                    : 'bg-[#0A1628] border-white/8 hover:border-white/16',
+                isHiddenGem && 'border-teal-500/30 bg-teal-500/5',
                 className
             )}
         >
-            {/* GEM BADGE */}
+            {/* Hidden Gem badge */}
             {isHiddenGem && !isLoading && (
                 <div className="absolute -top-2.5 right-4 z-10">
-                    <Badge className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white border-none shadow-sm text-[10px] py-0.5 px-2.5 font-bold flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" />
-                        Hidden Gem
-                    </Badge>
+                    <span className="inline-flex items-center gap-1 bg-teal-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">
+                        <Sparkles className="w-2.5 h-2.5" /> Hidden Gem
+                    </span>
                 </div>
             )}
+
             {isLoading ? (
-                <div className="flex gap-4 sm:gap-6">
-                    <div className="flex-1 flex flex-col gap-3">
-                        {/* Skeleton Header */}
-                        <div className="flex items-center gap-2 mb-1.5">
-                            <Skeleton className="w-16 h-4 rounded-md" />
-                            <Skeleton className="w-20 h-5 rounded-full" />
+                /* ── Skeleton ── */
+                <div className="p-4 flex gap-3">
+                    <div className="flex-1 space-y-2.5">
+                        <div className="flex items-center gap-2">
+                            <DarkSkeleton className="w-14 h-3.5" />
+                            <DarkSkeleton className="w-20 h-4 rounded-full" />
                         </div>
-                        <Skeleton className="w-3/4 h-7 rounded-md" />
-
-                        {/* Skeleton Location */}
-                        <div className="flex items-center gap-2 mt-1">
-                            <Skeleton className="w-5 h-5 rounded-full" />
-                            <Skeleton className="w-1/2 h-4 rounded-md" />
-                        </div>
-
-                        {/* Skeleton Description */}
-                        <div className="space-y-2 mt-1 pl-7">
-                            <Skeleton className="w-full h-3 rounded-md" />
-                            <Skeleton className="w-5/6 h-3 rounded-md" />
+                        <DarkSkeleton className="w-3/4 h-5" />
+                        <div className="flex items-center gap-1.5 mt-1">
+                            <DarkSkeleton className="w-4 h-4 rounded-full" />
+                            <DarkSkeleton className="w-2/5 h-3.5" />
                         </div>
                     </div>
-                    {/* Skeleton Image */}
-                    <Skeleton className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl hidden sm:block" />
+                    <DarkSkeleton className="w-16 h-16 rounded-xl flex-shrink-0" />
                 </div>
             ) : (
-                <div className="flex gap-4 sm:gap-6">
-                    <div className="flex-1 flex flex-col gap-3">
-
-                        {/* 1. Header: Time & Title */}
-                        <div>
-                            <div className="flex items-center gap-2 mb-1.5">
-                                <Clock className="w-3 h-3 text-slate-400" />
-                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">
-                                    {activity.time || "Flexible"}
+                <div className="p-4">
+                    {/* Top row: time label + image thumbnail (collapsed) */}
+                    <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                            {/* Time of day */}
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                                <span className="text-[13px] leading-none">{tod.icon}</span>
+                                <span className={cn('text-[11px] font-semibold uppercase tracking-wide', tod.color)}>
+                                    {tod.label}
                                 </span>
+                                {userSetTime && (
+                                    <>
+                                        <span className="text-white/20 text-xs">·</span>
+                                        <span className="flex items-center gap-0.5 text-[11px] text-white/40">
+                                            <Clock className="w-2.5 h-2.5" /> {userSetTime}
+                                        </span>
+                                    </>
+                                )}
                                 {activity.type && (
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border-none">
+                                    <span className="ml-auto text-[10px] text-white/30 bg-white/6 px-2 py-0.5 rounded-full">
                                         {activity.type}
-                                    </Badge>
+                                    </span>
                                 )}
                             </div>
 
-                            <h4 className="text-xl font-bold text-slate-800 leading-tight group-hover:text-blue-600 transition-colors">
+                            {/* Activity name */}
+                            <h4 className="text-[15px] font-semibold text-white leading-snug line-clamp-2 pr-6">
                                 {activity.activity}
                             </h4>
+
+                            {/* Location */}
+                            <div className="flex items-center gap-1.5 mt-1.5">
+                                {isGeneric ? (
+                                    <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">{getGenericIcon()}</div>
+                                ) : (
+                                    <MapPin className="w-3 h-3 text-teal-400 flex-shrink-0 mt-px" />
+                                )}
+                                <span className="text-[12px] text-white/45 truncate">{locationLabel}</span>
+                            </div>
                         </div>
 
-                        {/* 2. Location (Specific vs Generic) */}
-                        <div className="flex items-start gap-2">
-                            {isGeneric ? (
-                                <div className="w-5 h-5 flex items-center justify-center rounded-full bg-slate-50 flex-shrink-0 mt-0.5">
-                                    {getGenericIcon()}
-                                </div>
-                            ) : (
-                                <div className="w-5 h-5 flex items-center justify-center rounded-full bg-blue-50 flex-shrink-0 mt-0.5 group-hover:bg-blue-100 transition-colors">
-                                    <MapPin className="w-3 h-3 text-blue-600" />
-                                </div>
-                            )}
-
-                            <span className="text-sm font-semibold text-slate-500 mt-0.5 break-words line-clamp-1 group-hover:text-slate-900 transition-colors">
-                                {activity.place_name || destinationName}
-                            </span>
-                        </div>
-
-                        {/* 3. Description (Collapsible) */}
-                        <AnimatePresence>
-                            {isExpanded && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                                    className="overflow-hidden"
-                                >
-                                    {isLoading && !activity.description ? (
-                                        <div className="space-y-2 mt-2 pl-7">
-                                            <Skeleton className="w-full h-3 rounded-md" />
-                                            <Skeleton className="w-5/6 h-3 rounded-md" />
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-slate-500 leading-relaxed pl-7 mt-2">
-                                            {activity.description || activity.description_short}
-                                        </p>
-                                    )}
-
-                                    {/* Action Buttons (Visible only when expanded) */}
-                                    <div className="flex items-center gap-2 mt-4 pl-7 flex-wrap">
-                                        <Button
-                                            size="sm" variant="outline"
-                                            className="h-8 text-xs gap-1.5 rounded-full border-slate-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                                            onClick={(e) => { e.stopPropagation(); window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.place_name || activity.activity)}`, '_blank'); }}
-                                        >
-                                            <MapPin className="w-3.5 h-3.5" />
-                                            Open in Maps
-                                        </Button>
-
-                                        <div className="w-px h-4 bg-slate-200 mx-1"></div>
-
-                                        <Button
-                                            variant="ghost" size="sm"
-                                            onClick={(e) => { e.stopPropagation(); onAddBelow?.(activity.time); }}
-                                            className="h-8 px-2 text-xs text-slate-400 hover:text-blue-600 hover:bg-slate-50 rounded-full"
-                                            title="Add Activity Below"
-                                        >
-                                            <PlusCircle className="w-3.5 h-3.5 mr-1" /> Add
-                                        </Button>
-                                        <Button
-                                            variant="ghost" size="sm"
-                                            onClick={(e) => { e.stopPropagation(); onReplace?.(); }}
-                                            className="h-8 px-2 text-xs text-slate-400 hover:text-teal-600 hover:bg-slate-50 rounded-full relative group/replace"
-                                            title="Swap Activity"
-                                        >
-                                            <RefreshCw className="w-3.5 h-3.5 mr-1" />
-                                            {(!isPro && aiEditsUsed !== undefined) ? (
-                                                <div className="flex items-center">
-                                                    <span>Replace</span>
-                                                    <Badge className="ml-1.5 h-4 px-1 text-[8px] bg-teal-50 text-teal-600 border-teal-100 font-black">
-                                                        {aiEditsUsed}/3
-                                                    </Badge>
-                                                </div>
-                                            ) : (
-                                                "Replace"
-                                            )}
-                                            {!isPro && <Sparkles className="w-2 h-2 absolute -top-0.5 -right-0.5 text-teal-500 animate-pulse" />}
-                                        </Button>
-                                        <Button
-                                            variant="ghost" size="sm"
-                                            onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
-                                            className="h-8 px-2 text-xs text-slate-400 hover:text-red-600 hover:bg-slate-50 rounded-full"
-                                            title="Delete"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
-                                        </Button>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-
-                    {/* Image Thumbnail (Collapsible) */}
-                    {isExpanded && (
-                        <div className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 hidden sm:block animate-in fade-in zoom-in duration-300">
-                            {isLoading && !activity.image_url ? (
-                                <Skeleton className="w-full h-full" />
-                            ) : activity.image_url ? (
+                        {/* Thumbnail — always visible if image exists */}
+                        {imageUrl && (
+                            <div className="w-14 h-14 flex-shrink-0 rounded-xl overflow-hidden border border-white/8">
                                 <img
-                                    src={activity.image_url}
+                                    src={imageUrl}
                                     alt={activity.place_name || activity.activity}
-                                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                                    className="w-full h-full object-cover"
                                     loading="lazy"
                                 />
+                            </div>
+                        )}
+
+                        {/* Chevron */}
+                        <ChevronRight className={cn(
+                            'absolute top-4 right-4 w-4 h-4 transition-transform duration-200 flex-shrink-0',
+                            isExpanded ? 'rotate-90 text-teal-400' : 'text-white/20'
+                        )} />
+                    </div>
+
+                    {/* Expanded content */}
+                    {isExpanded && (
+                        <div className="mt-3 pt-3 border-t border-white/8 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                            {/* Full description */}
+                            {activity.description || activity.description_short ? (
+                                <p className="text-[13px] text-white/60 leading-relaxed">
+                                    {activity.description || activity.description_short}
+                                </p>
+                            ) : isInternalLoading ? (
+                                <div className="space-y-1.5">
+                                    <DarkSkeleton className="w-full h-3" />
+                                    <DarkSkeleton className="w-5/6 h-3" />
+                                </div>
                             ) : null}
+
+                            {/* Larger image when expanded */}
+                            {imageUrl && (
+                                <div className="w-full h-36 rounded-xl overflow-hidden border border-white/8">
+                                    <img
+                                        src={imageUrl}
+                                        alt={activity.place_name || activity.activity}
+                                        className="w-full h-full object-cover"
+                                        loading="lazy"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Action buttons */}
+                            <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.place_name || activity.activity)}`, '_blank');
+                                    }}
+                                    className="flex items-center gap-1 h-7 px-3 rounded-full border border-white/12 text-[11px] text-white/50 hover:text-teal-400 hover:border-teal-500/40 transition-colors"
+                                >
+                                    <MapPin className="w-3 h-3" /> Buka Maps
+                                </button>
+
+                                {/* Set time */}
+                                {isSettingTime ? (
+                                    <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                                        <input
+                                            type="time"
+                                            defaultValue={userSetTime || ''}
+                                            autoFocus
+                                            className="h-7 px-2 text-[11px] rounded-full border border-white/20 bg-white/8 text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
+                                            onChange={e => setUserSetTime(e.target.value || null)}
+                                            onBlur={() => setIsSettingTime(false)}
+                                            onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setIsSettingTime(false); }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setIsSettingTime(true); }}
+                                        className="flex items-center gap-1 h-7 px-3 rounded-full border border-white/12 text-[11px] text-white/40 hover:text-white/70 transition-colors"
+                                    >
+                                        <Clock className="w-3 h-3" />
+                                        {userSetTime || '+ Waktu'}
+                                    </button>
+                                )}
+
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onAddBelow?.(activity.time); }}
+                                    className="flex items-center gap-1 h-7 px-3 rounded-full border border-white/12 text-[11px] text-white/40 hover:text-teal-400 hover:border-teal-500/30 transition-colors"
+                                >
+                                    <PlusCircle className="w-3 h-3" /> Tambah
+                                </button>
+
+                                {/* Ganti Aktivitas — primary action */}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onReplace?.(); }}
+                                    className="flex items-center gap-1 h-7 px-3 rounded-full bg-teal-500/15 border border-teal-500/30 text-[11px] text-teal-400 hover:bg-teal-500/25 transition-colors"
+                                >
+                                    <RefreshCw className="w-3 h-3" />
+                                    Ganti Aktivitas
+                                    {!isPro && (
+                                        <span className="ml-1 text-[9px] bg-teal-500/20 px-1.5 py-px rounded-full font-bold">
+                                            {aiEditsUsed}/3
+                                        </span>
+                                    )}
+                                </button>
+
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+                                    className="flex items-center gap-1 h-7 px-2 rounded-full text-[11px] text-white/30 hover:text-rose-400 transition-colors"
+                                >
+                                    <Trash2 className="w-3 h-3" />
+                                </button>
+                            </div>
                         </div>
                     )}
-
-                    {/* 5. Chevron Details Indicator */}
-                    <div className={`absolute top-5 right-5 transition-transform duration-300 ${isExpanded ? 'rotate-90' : 'text-slate-300'}`}>
-                        <ChevronRight className={cn("w-5 h-5", isExpanded ? "text-blue-600" : "text-slate-300")} />
-                    </div>
                 </div>
             )}
         </div>

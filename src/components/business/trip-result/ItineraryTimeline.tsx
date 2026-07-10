@@ -1,26 +1,28 @@
-import React, { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { MapPin, Calendar, ChevronDown, ChevronUp, Coffee, Sun, Sunset, Moon, RefreshCw, Trash2, Plus, Sparkles as SparklesIcon, Lock } from 'lucide-react';
+'use client';
+
+import React from 'react';
+import { Calendar, RefreshCw, Sparkles as SparklesIcon } from 'lucide-react';
 import { cn, formatDate } from '@/lib/utils';
-import { TripResponse, ItineraryItem, Activity } from '@/types';
+import { TripResponse, Activity } from '@/types';
 import ActivityCard from './ActivityCard';
-import LockedActivityCard from './LockedActivityCard';
 import EnrichmentLoadingState from './EnrichmentLoadingState';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useRouter } from 'next/navigation';
 
-// Helper Vibe Waktu
-const getTimeBasedStyle = (timeStr: string) => {
-    if (!timeStr) return { icon: Sun, color: "text-slate-500", bg: "bg-slate-50", border: "border-slate-200" };
+// Time-of-day → dot accent color
+const dotAccent = (timeStr: string) => {
+    const h = parseInt((timeStr || '').split(':')[0]);
+    if (isNaN(h) || h < 11) return 'border-orange-400/60 bg-[#060F1E]';
+    if (h < 16) return 'border-yellow-400/60 bg-[#060F1E]';
+    if (h < 19) return 'border-rose-400/60 bg-[#060F1E]';
+    return 'border-indigo-400/60 bg-[#060F1E]';
+};
 
-    const hour = parseInt(timeStr.split(':')[0]);
-    if (isNaN(hour)) return { icon: Sun, color: "text-slate-500", bg: "bg-slate-50", border: "border-slate-200" };
-
-    if (hour < 11) return { icon: Coffee, color: "text-orange-500", bg: "bg-orange-50", border: "border-orange-200" };
-    if (hour < 16) return { icon: Sun, color: "text-blue-500", bg: "bg-blue-50", border: "border-blue-200" };
-    if (hour < 19) return { icon: Sunset, color: "text-rose-500", bg: "bg-rose-50", border: "border-rose-200" };
-    return { icon: Moon, color: "text-indigo-500", bg: "bg-indigo-50", border: "border-indigo-200" };
+const dotIcon = (timeStr: string) => {
+    const h = parseInt((timeStr || '').split(':')[0]);
+    if (isNaN(h) || h < 11) return '☕';
+    if (h < 16) return '☀️';
+    if (h < 19) return '🌅';
+    return '🌙';
 };
 
 interface ItineraryTimelineProps {
@@ -34,10 +36,10 @@ interface ItineraryTimelineProps {
     onActivitySelect: (id: string | null) => void;
     onDayChange?: (day: number) => void;
     totalDays?: number;
-    startDate?: string; // NEW PROP
-    isEnriching?: boolean; // NEW: Progressive Loading State
+    startDate?: string;
+    isEnriching?: boolean;
     onUpgrade?: () => void;
-    aiEditsUsed?: number; // NEW
+    aiEditsUsed?: number;
 }
 
 export default function ItineraryTimeline({
@@ -54,79 +56,67 @@ export default function ItineraryTimeline({
     startDate,
     isEnriching = false,
     onUpgrade,
-    aiEditsUsed = 0
+    aiEditsUsed = 0,
 }: ItineraryTimelineProps) {
-    // 🛡️ Safe Access: Pastikan itinerary selalu array
-    const itinerary = plan?.itinerary || [];
-
-    // STRICT TABS: Filter only for the active day
     const dayPlan = (plan?.itinerary || []).find(d => d.day === activeDay);
+    const { subscription } = useSubscription();
+    const isPro = subscription?.subscription_tier === 'PRO';
 
-    // Calculate Date for this day
-    let dateDisplay = "";
+    let dateDisplay = '';
     if (startDate) {
         const d = new Date(startDate);
         if (!isNaN(d.getTime())) {
             d.setDate(d.getDate() + (activeDay - 1));
-            dateDisplay = ` • ${formatDate(d)}`;
+            dateDisplay = formatDate(d);
         }
     }
 
-    const { subscription } = useSubscription();
-    const router = useRouter();
-    const isPro = subscription?.subscription_tier === 'PRO';
-
     const activities = React.useMemo(() => {
-        let list = [...(dayPlan?.activities || [])].sort((a, b) => {
-            return (a.time || "").localeCompare(b.time || "");
-        });
-
-        // HIDDEN GEMS LOGIC
-        if (!isPro) {
-            // 1. Hide actual hidden gems from FREE users
-            list = list.filter(act => !act.is_hidden_gem);
-        }
-
+        let list = [...(dayPlan?.activities || [])].sort((a, b) =>
+            (a.time || '').localeCompare(b.time || '')
+        );
+        if (!isPro) list = list.filter(act => !act.is_hidden_gem);
         return list;
     }, [dayPlan?.activities, isPro]);
 
-    // TEASER LOGIC: Inject locked card if FREE user on Day 1 or 2
-    const showTeaser = !isPro && (activeDay === 1 || activeDay === 2) && activities.length > 0;
+    const showTeaser = !isPro && activities.length > 0;
 
-    // Render Single Activity Item
+    // Auto-scroll to first activity when activeDay changes
+    React.useEffect(() => {
+        const el = document.getElementById(`activity-${activeDay}-0`);
+        if (el) {
+            const y = el.getBoundingClientRect().top + window.pageYOffset - 160;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+    }, [activeDay]);
+
     const renderActivity = (act: Activity, idx: number, total: number, dayNum: number) => {
-        const style = getTimeBasedStyle(act.time);
-        const TimeIcon = style.icon;
         const activityId = `${dayNum}-${idx}`;
         const isSelected = selectedActivityId === activityId;
 
         return (
             <div
-                key={activityId} // Use stable activityId instead of idx
+                key={activityId}
                 id={`activity-${activityId}`}
-                className="relative pl-10 pb-12 last:pb-0 group/act animate-in fade-in slide-in-from-top-2 duration-300"
+                className="relative pl-9 pb-4 last:pb-0"
             >
-                {/* Connector Line - Solid Gradient (Premium iOS Feel) */}
+                {/* Connector line */}
                 {idx !== total - 1 && (
-                    <div className="absolute left-[16.5px] top-8 bottom-0 w-[3px] bg-gradient-to-b from-[#42707D] via-[#42707D]/60 to-orange-400 rounded-full" />
+                    <div className="absolute left-[13px] top-7 bottom-0 w-px bg-gradient-to-b from-white/12 to-white/4" />
                 )}
 
-                {/* Dot Marker - White with Teal Border (iOS Signature Look) */}
+                {/* Dot */}
                 <div className={cn(
-                    "absolute left-0 top-1 w-9 h-9 rounded-full flex items-center justify-center border-4 z-10 transition-all duration-300 group-hover/act:scale-110",
-                    isSelected ? "border-[#42707D] bg-[#42707D] scale-110 shadow-lg" : "border-[#42707D] bg-white shadow-xl"
+                    'absolute left-0 top-1.5 w-7 h-7 rounded-full flex items-center justify-center border-2 text-[12px] z-10 transition-all duration-200',
+                    isSelected ? 'scale-110 border-teal-400 bg-[#060F1E] shadow-sm shadow-teal-900/40' : dotAccent(act.time)
                 )}>
-                    <TimeIcon className={cn(
-                        "w-4 h-4 transition-colors",
-                        isSelected ? "text-white" : "text-[#42707D]"
-                    )} />
+                    {dotIcon(act.time)}
                 </div>
 
-                {/* Activity Card */}
                 <ActivityCard
                     activity={act}
                     tripId={plan.trip_id}
-                    dayIndex={dayNum - 1} // 0-indexed for backend
+                    dayIndex={dayNum - 1}
                     activityIndex={idx}
                     onReplace={() => onReplace?.(dayNum, idx)}
                     onDelete={() => onDelete?.(dayNum, idx)}
@@ -143,100 +133,84 @@ export default function ItineraryTimeline({
         );
     };
 
-    // Auto-scroll to first activity when activeDay changes
-    React.useEffect(() => {
-        const firstActivityId = `activity-${activeDay}-0`;
-        const element = document.getElementById(firstActivityId);
-        if (element) {
-            const yOffset = -150;
-            const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-            window.scrollTo({ top: y, behavior: 'smooth' });
-        }
-    }, [activeDay]);
-
     return (
-        <div className="lg:col-span-2 space-y-8 pb-20 px-4 md:px-0">
-            {/* Header for Day Context */}
-            <div className="mb-8 animate-in fade-in delay-75">
-                <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
-                    {dayPlan?.title || `Day ${activeDay}`}
+        <div className="pb-20">
+            {/* Day context header */}
+            <div className="px-4 pt-4 pb-3 animate-in fade-in duration-200">
+                <h3 className="text-[16px] font-semibold text-white">
+                    {dayPlan?.title || `Hari ${activeDay}`}
                 </h3>
-                <p className="text-slate-500 font-medium">
-                    Day {activeDay}{dateDisplay} • {activities.length} planned activities
+                <p className="text-[12px] text-white/40 mt-0.5">
+                    {dateDisplay && `${dateDisplay} · `}{activities.length} aktivitas
                 </p>
             </div>
 
-            <div className="ml-2 md:ml-4 border-l-0 space-y-2">
-                {isEnriching && activities.length > 0 && (
-                    <div className="mb-6 bg-teal-50/50 border border-teal-100/50 rounded-2xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
-                        <RefreshCw className="w-4 h-4 text-teal-600 animate-spin" />
-                        <p className="text-xs font-medium text-teal-800">
-                            Refining descriptions & finding hidden gems for your activities...
-                        </p>
-                    </div>
-                )}
+            {/* Enriching banner */}
+            {isEnriching && activities.length > 0 && (
+                <div className="mx-4 mb-3 flex items-center gap-2.5 px-3 py-2.5 bg-teal-500/8 border border-teal-500/20 rounded-xl animate-in fade-in duration-300">
+                    <RefreshCw className="w-3.5 h-3.5 text-teal-400 animate-spin flex-shrink-0" />
+                    <p className="text-[12px] text-teal-300/80">Menambahkan detail & hidden gems…</p>
+                </div>
+            )}
+
+            {/* Activities */}
+            <div className="px-4">
                 {!dayPlan || !dayPlan.activities || dayPlan.activities.length === 0 ? (
                     isEnriching ? (
                         <EnrichmentLoadingState />
                     ) : (
-                        <div key="empty-day" className="p-12 text-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200 animate-in fade-in">
-                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Calendar className="w-8 h-8 text-slate-300" />
+                        <div className="py-10 text-center border border-white/8 rounded-2xl border-dashed animate-in fade-in">
+                            <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <Calendar className="w-5 h-5 text-white/20" />
                             </div>
-                            <h4 className="text-lg font-bold text-slate-700 mb-1">No activities for Day {activeDay}</h4>
-                            <p className="text-slate-400 text-sm italic">Planning is still in progress...</p>
+                            <p className="text-[13px] text-white/30">Belum ada aktivitas untuk Hari {activeDay}</p>
                         </div>
                     )
                 ) : (
                     <>
-                        {activities.map((act, idx) => {
-                            // Inject teaser at second position (index 1) or last if only 1 activity
-                            const injectOffset = activities.length > 1 ? 1 : 0;
-                            const isTeaserTime = showTeaser && idx === injectOffset;
+                        <div className="space-y-1">
+                            {activities.map((act, idx) => renderActivity(act, idx, activities.length, activeDay))}
+                        </div>
 
-                            return (
-                                <React.Fragment key={`group-${idx}`}>
-                                    {renderActivity(act, idx, activities.length, activeDay)}
-                                    {isTeaserTime && (
-                                        <div className="relative pl-10 pb-12 group/teaser">
-                                            <div className="absolute left-[16.5px] top-8 bottom-0 w-[3px] bg-slate-200 border-r border-slate-300/50 rounded-full" />
-                                            <div className="absolute left-0 top-1 w-9 h-9 rounded-full flex items-center justify-center border-4 border-slate-200 bg-white shadow-sm z-10 transition-all duration-300">
-                                                <Lock className="w-4 h-4 text-slate-400" />
-                                            </div>
-                                            <LockedActivityCard
-                                                onClick={onUpgrade}
-                                            />
-                                        </div>
-                                    )}
-                                </React.Fragment>
-                            );
-                        })}
+                        {/* PRO teaser */}
+                        {showTeaser && (
+                            <button
+                                onClick={onUpgrade}
+                                className="mt-4 w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl border border-dashed border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/8 transition-colors text-left"
+                            >
+                                <SparklesIcon className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                                <p className="text-[12px] text-amber-300/70 flex-1">
+                                    Hidden gems & rahasia lokal tersedia di PRO
+                                </p>
+                                <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full">
+                                    Upgrade →
+                                </span>
+                            </button>
+                        )}
                     </>
                 )}
             </div>
 
-            {/* Day Navigation Footer */}
-            <div className="flex justify-between mt-12 pt-8 border-t border-slate-100">
+            {/* Day nav footer */}
+            <div className="flex items-center justify-between mx-4 mt-8 pt-5 border-t border-white/8">
                 {activeDay > 1 ? (
                     <button
                         onClick={() => onDayChange?.(activeDay - 1)}
-                        className="flex items-center gap-2 text-slate-500 hover:text-blue-600 font-medium transition-colors"
+                        className="text-[13px] text-white/40 hover:text-white/80 transition-colors"
                     >
-                        ← Day {activeDay - 1}
+                        ← Hari {activeDay - 1}
                     </button>
                 ) : <div />}
 
                 {activeDay < (totalDays || 0) ? (
                     <button
                         onClick={() => onDayChange?.(activeDay + 1)}
-                        className="flex items-center gap-2 font-black text-blue-600 hover:text-blue-700 transition-all hover:translate-x-1"
+                        className="text-[13px] font-semibold text-teal-400 hover:text-teal-300 transition-colors"
                     >
-                        Day {activeDay + 1} →
+                        Hari {activeDay + 1} →
                     </button>
                 ) : (
-                    <span className="text-slate-400 font-bold flex items-center gap-2 italic">
-                        End of Trip 🎉
-                    </span>
+                    <span className="text-[12px] text-white/30 italic">Akhir perjalanan 🎉</span>
                 )}
             </div>
         </div>

@@ -2,39 +2,89 @@
 
 import React from 'react';
 import { TripHighlight } from '@/types';
-import { Compass, Mountain, Building2, MapPin, Camera, Sun, LucideIcon } from 'lucide-react';
+import { Compass, Mountain, Building2, ShoppingBag, UtensilsCrossed, Landmark, TreePine, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { fetchUnsplashImage } from '@/services/imageService';
 
 interface HighlightsRowProps {
     highlights?: TripHighlight[];
     destination: string;
 }
 
-const getIconForType = (type: string): LucideIcon => {
+interface CategoryStyle {
+    icon: LucideIcon;
+    gradient: string;
+    iconColor: string;
+    badge: string;
+}
+
+const getCategoryStyle = (type: string): CategoryStyle => {
     const t = type.toLowerCase();
-    if (t.includes('nature') || t.includes('mountain')) return Mountain;
-    if (t.includes('culture') || t.includes('history') || t.includes('building')) return Building2;
-    if (t.includes('urban') || t.includes('city')) return MapPin;
-    if (t.includes('photo') || t.includes('view')) return Camera;
-    if (t.includes('beach') || t.includes('sun')) return Sun;
-    return Compass;
+
+    if (t.includes('culinary') || t.includes('food') || t.includes('kuliner') || t.includes('makan') || t.includes('restaurant')) {
+        return {
+            icon: UtensilsCrossed,
+            gradient: 'from-orange-500 to-amber-600',
+            iconColor: 'text-orange-200',
+            badge: 'bg-orange-500/80',
+        };
+    }
+    if (t.includes('shop') || t.includes('market') || t.includes('belanja') || t.includes('pasar')) {
+        return {
+            icon: ShoppingBag,
+            gradient: 'from-slate-600 to-slate-800',
+            iconColor: 'text-slate-300',
+            badge: 'bg-slate-500/80',
+        };
+    }
+    if (t.includes('nature') || t.includes('mountain') || t.includes('beach') || t.includes('forest') || t.includes('alam') || t.includes('pantai') || t.includes('gunung')) {
+        return {
+            icon: TreePine,
+            gradient: 'from-green-600 to-emerald-700',
+            iconColor: 'text-green-200',
+            badge: 'bg-green-600/80',
+        };
+    }
+    // Default: Sightseeing / culture / history
+    return {
+        icon: Landmark,
+        gradient: 'from-teal-500 to-teal-700',
+        iconColor: 'text-teal-200',
+        badge: 'bg-teal-600/80',
+    };
 };
 
 const HighlightCard = ({ place }: { place: TripHighlight }) => {
-    const Icon = getIconForType(place.type || '');
-    const imageUrl = (place as any).image_url; // Some highlights might have enriched URLs
+    const style = getCategoryStyle(place.type || '');
+    const Icon = style.icon;
+    const [imageUrl, setImageUrl] = React.useState<string | null>(place.image_url || null);
+    const [imgLoaded, setImgLoaded] = React.useState(false);
+
+    React.useEffect(() => {
+        if (imageUrl) return;
+        const query = place.image_prompt || place.title;
+        if (!query) return;
+        fetchUnsplashImage(query).then(url => {
+            if (url) setImageUrl(url);
+        });
+    }, []);
 
     return (
         <div className="flex-none w-64 h-80 relative rounded-[2rem] overflow-hidden group transition-all duration-500 hover:scale-[1.02] snap-start shadow-lg border border-white/10">
-            {/* Background: Image or Gradient fallback */}
-            {imageUrl ? (
+            {/* Background: photo or category-coloured fallback */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${style.gradient} flex items-center justify-center`}>
+                <Icon className={`w-24 h-24 ${style.iconColor} opacity-30 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6`} />
+            </div>
+            {imageUrl && (
                 <div
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                    className={cn(
+                        "absolute inset-0 bg-cover bg-center transition-all duration-700 group-hover:scale-110",
+                        imgLoaded ? "opacity-100" : "opacity-0"
+                    )}
                     style={{ backgroundImage: `url(${imageUrl})` }}
-                />
-            ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center">
-                    <Icon className="w-20 h-20 text-white/20 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6" />
+                    onLoad={() => setImgLoaded(true)}
+                >
+                    <img src={imageUrl} alt="" className="hidden" onLoad={() => setImgLoaded(true)} />
                 </div>
             )}
 
@@ -45,8 +95,8 @@ const HighlightCard = ({ place }: { place: TripHighlight }) => {
             {/* Content */}
             <div className="absolute inset-0 p-6 flex flex-col justify-end">
                 <div className="space-y-2 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-[10px] font-black uppercase tracking-widest text-white/90">
-                        <Icon className="w-3 h-3 text-teal-300" />
+                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${style.badge} backdrop-blur-md text-[10px] font-black uppercase tracking-widest text-white`}>
+                        <Icon className="w-3 h-3" />
                         {place.type || 'SPOT'}
                     </div>
                     <h4 className="text-xl font-black text-white leading-tight tracking-tight drop-shadow-md">

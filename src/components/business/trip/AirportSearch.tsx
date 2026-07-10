@@ -5,8 +5,6 @@ import { Search, MapPin, Plane, Loader2, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Location, searchLocations } from '@/services/flightService';
 import { cn } from '@/lib/utils';
-import { useDebounce } from '@/hooks/use-debounce'; // Assuming this exists, otherwise I'll implement local debounce
-
 import { useAuth } from '@clerk/nextjs';
 
 interface AirportSearchProps {

@@ -119,7 +119,7 @@ export default function LogisticsDashboard({ trip, plan }: LogisticsDashboardPro
                         <Wallet className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Est. Budget</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Est. Biaya</p>
                         <p className="text-xs font-bold text-slate-800 truncate">
                             {formattedBudget}
                         </p>
@@ -132,7 +132,7 @@ export default function LogisticsDashboard({ trip, plan }: LogisticsDashboardPro
                         <Ticket className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trip Vibe</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gaya Trip</p>
                         <p className="text-xs font-bold text-slate-800 truncate">
                             {styleTags[0]} {styleTags.length > 1 && `+${styleTags.length - 1}`}
                         </p>

@@ -131,7 +131,7 @@ export default function HistoryCard({ trip, onDelete }: HistoryCardProps) {
                         <Sparkles className="w-3 h-3" /> Trip Vibe
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        {vibeTags.map((tag, idx) => (
+                        {vibeTags.map((tag: string, idx: number) => (
                             <span
                                 key={idx}
                                 className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100"

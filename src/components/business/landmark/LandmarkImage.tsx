@@ -90,6 +90,7 @@ export default function LandmarkImage({ slug, mood = 'auto', size = 'card', alt,
                     src={imagePath}
                     alt={alt ?? `Foto landmark ${slug}`}
                     className="w-full h-full object-cover"
+                    style={size === 'header' ? { objectPosition: 'center 20%' } : undefined}
                     loading="lazy"
                 />
             </div>

@@ -249,8 +249,8 @@ export default function TripHeader({
             {/* Landmark image */}
             <LandmarkImage
                 slug={toSlug(trip.destination)}
-                mood="auto"
-                size="card"
+                mood="landscape"
+                size="header"
                 alt={`Landmark ${trip.destination}`}
                 className="!w-full !h-48 !rounded-xl mb-4"
             />

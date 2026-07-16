@@ -69,7 +69,7 @@ export default function TransportCard({ option }: { option: TransportOption }) {
 
             {/* Leg visualizer */}
             <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 scrollbar-hide">
-                {legs.map((leg, index) => {
+                {legs.map((leg: string, index: number) => {
                     const timeMatch = leg.match(/\((.*?)\)/);
                     const time = timeMatch ? timeMatch[1] : "";
                     const name = leg.replace(/\(.*?\)/, "").trim();

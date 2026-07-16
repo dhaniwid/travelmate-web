@@ -34,7 +34,7 @@ export default function HistoryCard({ trip, onDelete }: HistoryCardProps) {
     // Mengubah kalimat panjang jadi tags pendek.
     // Contoh: "Relaxed, Nature" -> ["Relaxed", "Nature"]
     const vibeTags = trip.style
-        ? trip.style.split(',').map(s => s.trim()).slice(0, 2) // Ambil max 2
+        ? trip.style.split(',').map((s: string) => s.trim()).slice(0, 2) // Ambil max 2
         : ['General Trip'];
 
     // --- 3. LOGIC: BUDGET ---

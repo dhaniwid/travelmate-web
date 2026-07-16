@@ -17,7 +17,7 @@ export default function HistoryCard({ trip, onDelete }: HistoryCardProps) {
     const [isDeleting, setIsDeleting] = useState(false);
 
     // --- 1. LOGIC: TIME STATUS ---
-    const startDate = new Date(trip.start_date);
+    const startDate = new Date(trip.start_date ?? 0);
     const today = new Date();
     // Set jam ke 00:00 agar perbandingan hari akurat
     today.setHours(0,0,0,0);
@@ -39,7 +39,7 @@ export default function HistoryCard({ trip, onDelete }: HistoryCardProps) {
 
     // --- 3. LOGIC: BUDGET ---
     const displayBudget = trip.budget_range
-        || (trip.budget > 0 ? formatMoney(trip.budget) : "Flexible");
+        || ((trip.budget ?? 0) > 0 ? formatMoney(trip.budget ?? 0) : "Flexible");
 
     // Handler Delete
     const handleDeleteClick = (e: React.MouseEvent) => {

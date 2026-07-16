@@ -58,7 +58,7 @@ const AccommodationCard: React.FC<AccommodationCardProps> = ({ option, tripConte
     // Parse hotel suggestions into array for clickable links
     const hotelList: string[] = Array.isArray(option.hotel_suggestions)
         ? option.hotel_suggestions
-        : ((option.hotel_suggestions as string) || '').split(',').map((h: string) => h.trim()).filter(Boolean);
+        : ((option.hotel_suggestions as unknown as string) || '').split(',').map((h: string) => h.trim()).filter(Boolean);
 
     return (
         <div className={cn(

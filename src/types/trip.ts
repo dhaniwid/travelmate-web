@@ -19,6 +19,7 @@ export type {
     ArrivalGuide,
     PackingItem,
 } from '@miru/types';
+import type { ArrivalGuide } from '@miru/types';
 
 // ─── Web-only types ───────────────────────────────────────────────────────────
 

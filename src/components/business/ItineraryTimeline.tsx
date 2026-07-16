@@ -95,11 +95,11 @@ interface ItineraryTimelineProps {
 function TimelineItem({ activity, isLast, isFirst }: { activity: Activity, isLast: boolean, isFirst: boolean }) {
     const [isSwapped, setIsSwapped] = useState(false);
 
-    const currentData = isSwapped && activity.alternative
-        ? { ...activity.alternative, time: activity.time }
+    const currentData = isSwapped && activity.alternatives?.[0]
+        ? { ...activity.alternatives[0], time: activity.time }
         : activity;
 
-    const hasAlternative = !!activity.alternative;
+    const hasAlternative = !!(activity.alternatives && activity.alternatives.length > 0);
 
     return (
         <div className="relative group pb-10 last:pb-0">

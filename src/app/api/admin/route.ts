@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { currentUser } from '@clerk/nextjs/server';
 
 const GO_API = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8889/api/v1').replace(/\/+$/, '');
 const ADMIN_SECRET = process.env.ADMIN_SECRET ?? '';
+const ADMIN_EMAILS = ['dhaniwid@gmail.com', 'admin@miru.travel', 'widodo.apple@gmail.com'];
 
-// Guard: X-Admin-Token header must match ADMIN_SECRET (never exposed to client)
-function guardAdmin(req: NextRequest): boolean {
-    const token = req.headers.get('x-admin-token') ?? '';
-    return token !== '' && token === ADMIN_SECRET;
+// Guard: verify Clerk session and admin email whitelist — token never passed from client
+async function guardAdmin(): Promise<boolean> {
+    const user = await currentUser();
+    const email = user?.emailAddresses[0]?.emailAddress;
+    return !!email && ADMIN_EMAILS.includes(email);
 }
 
 // GET /api/admin?search=... → proxy to Go GET /admin/users
 export async function GET(req: NextRequest) {
-    if (!guardAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!await guardAdmin()) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const search = req.nextUrl.searchParams.get('search') ?? '';
     const url = `${GO_API}/admin/users${search ? `?search=${encodeURIComponent(search)}` : ''}`;
@@ -23,7 +26,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin  body: { userId, tier, duration_days }
 export async function POST(req: NextRequest) {
-    if (!guardAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!await guardAdmin()) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { userId, tier, duration_days } = await req.json();
     if (!userId || !tier) return NextResponse.json({ error: 'userId and tier required' }, { status: 400 });

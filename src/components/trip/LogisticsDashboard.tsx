@@ -24,7 +24,7 @@ const getTransportIcon = (type: string) => {
 export default function LogisticsDashboard({ trip, plan }: LogisticsDashboardProps) {
     const { arrival_guide, budget_breakdown } = plan;
 
-    const totalCost = plan.total || (
+    const totalCost = (plan as any).total || (
         (budget_breakdown?.transport || 0) +
         (budget_breakdown?.accommodation || 0) +
         (budget_breakdown?.food || 0) +
@@ -92,9 +92,9 @@ export default function LogisticsDashboard({ trip, plan }: LogisticsDashboardPro
                                     {tag.trim()}
                                 </span>
                             ))}
-                            {trip.user_preferences?.pace && (
+                            {(trip as any).user_preferences?.pace && (
                                 <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                                    {trip.user_preferences.pace}
+                                    {(trip as any).user_preferences.pace}
                                 </span>
                             )}
                         </div>

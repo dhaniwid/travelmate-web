@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useRef, useState } from 'react';
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -17,6 +17,7 @@ import { getDestination, DestinationData } from '@/data/destinations';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
+import LandmarkImage from '@/components/business/landmark/LandmarkImage';
 
 // ─── Province map ─────────────────────────────────────────────────────────────
 
@@ -33,93 +34,24 @@ const PROVINCE: Record<string, string> = {
     surabaya: 'Jawa Timur',
 };
 
-// ─── SVG loading hook ─────────────────────────────────────────────────────────
-
-function useDestinationSvg(destination: DestinationData) {
-    const [svgUrl, setSvgUrl] = useState<string | null>(null);
-    const [isGenerating, setIsGenerating] = useState(true);
-    const didRequest = useRef(false);
-
-    useEffect(() => {
-        if (didRequest.current) return;
-        didRequest.current = true;
-
-        const slug = destination.slug;
-        const knownUrl = `/assets/destinations/${slug}.svg`;
-
-        const img = new Image();
-        img.onload = () => {
-            setSvgUrl(knownUrl);
-            setIsGenerating(false);
-        };
-        img.onerror = () => {
-            fetch('/api/generate-destination-svg', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ slug, cityName: destination.name, landmark: destination.landmark }),
-            })
-                .then((r) => r.json())
-                .then((data) => {
-                    if (data.status === 'ready' && data.url) {
-                        setSvgUrl(data.url);
-                        setIsGenerating(false);
-                    } else {
-                        setIsGenerating(true);
-                        setTimeout(() => {
-                            const check = new Image();
-                            check.onload = () => { setSvgUrl(data.url); setIsGenerating(false); };
-                            check.src = `${data.url}?t=${Date.now()}`;
-                        }, 3000);
-                    }
-                })
-                .catch(() => { setIsGenerating(false); });
-        };
-        img.src = `${knownUrl}?t=${Date.now()}`;
-    }, [destination]);
-
-    return { svgUrl, isGenerating };
-}
-
 // ─── Zone 1: Hero ─────────────────────────────────────────────────────────────
 
-function DestinationHero({
-    destination,
-    svgUrl,
-    isGenerating,
-}: {
-    destination: DestinationData;
-    svgUrl: string | null;
-    isGenerating: boolean;
-}) {
+function DestinationHero({ destination }: { destination: DestinationData }) {
     const province = PROVINCE[destination.slug] ?? 'Indonesia';
 
     return (
         <div className="relative h-[320px] bg-[#0A1628] overflow-hidden">
-            {/* SVG or gradient placeholder */}
-            {svgUrl ? (
-                <img
-                    src={svgUrl}
-                    alt={`${destination.name} landmark`}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    draggable={false}
-                />
-            ) : (
-                <div
-                    className="absolute inset-0"
-                    style={{ background: 'linear-gradient(to bottom, #060F1E 0%, #0D5463 40%, #C2500A 75%, #7A2E0A 100%)' }}
-                >
-                    {isGenerating && <div className="absolute inset-0 animate-pulse bg-white/5" />}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
-                        <div className="w-16 h-16 rounded-full border-[6px] border-white/10" />
-                        <p className="text-xs text-white/20 tracking-wide">
-                            {isGenerating ? 'Memuat ilustrasi…' : 'Ilustrasi landmark akan muncul di sini'}
-                        </p>
-                    </div>
-                </div>
-            )}
+            {/* LandmarkImage hero */}
+            <LandmarkImage
+                slug={destination.slug}
+                mood="landscape"
+                size="header"
+                alt={`Landmark ${destination.name}`}
+                className="!absolute inset-0 !aspect-auto !h-full !rounded-none"
+            />
 
             {/* Bottom gradient for text */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628]/95 via-[#0A1628]/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628]/95 via-[#0A1628]/40 to-transparent" />
 
             {/* Top controls */}
             <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-5 z-20">
@@ -349,18 +281,6 @@ export default function DestinationPage({
     const destination = getDestination(slug);
     const { subscription } = useSubscription();
     const isPro = subscription?.subscription_tier === 'PRO';
-    const { svgUrl, isGenerating } = useDestinationSvg(destination ?? {
-        slug,
-        name: slug,
-        tagline: '',
-        landmark: '',
-        vibeCards: [],
-        quickFacts: { bestTime: '', budget: '', duration: '' },
-        surprisingFact: '',
-        sejarah: '',
-        tipsLokal: [],
-        hiddenGems: '',
-    });
 
     if (!destination) {
         return <DestinationNotFound slug={slug} />;
@@ -369,7 +289,7 @@ export default function DestinationPage({
     return (
         <div className="min-h-screen bg-[#060F1E] text-white pb-24 max-w-[480px] md:max-w-2xl mx-auto">
             {/* Zone 1 — Hero */}
-            <DestinationHero destination={destination} svgUrl={svgUrl} isGenerating={isGenerating} />
+            <DestinationHero destination={destination} />
 
             {/* Zone 2 — Vibe cards */}
             <VibeSection destination={destination} />

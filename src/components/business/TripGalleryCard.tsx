@@ -20,7 +20,7 @@ export default function TripGalleryCard({ trip, onDelete }: TripGalleryCardProps
     const [isDeleting, setIsDeleting] = useState(false);
 
     // --- LOGIC: TIME STATUS & COUNTDOWN ---
-    const startDate = new Date(trip.start_date);
+    const startDate = new Date(trip.start_date ?? 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     startDate.setHours(0, 0, 0, 0);

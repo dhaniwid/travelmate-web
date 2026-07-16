@@ -23,7 +23,7 @@ export default function OverviewView({ trip, plan }: OverviewViewProps) {
             .filter(Boolean)
             .map(act => ({
                 title: act.place_name || act.activity,
-                type: act.type,
+                type: act.type ?? 'Activity',
                 hook: act.description,
                 image_prompt: `High-quality cinematic photo of ${act.place_name || act.activity} in ${trip.destination}`,
             }));

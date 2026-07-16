@@ -38,7 +38,8 @@ const renderPriceTier = (tier: string) => {
 };
 
 export default function LogisticsCard({ plan }: { plan: TripResponse['plan'] }) {
-    const { logistics_context, transport_options, strategic_accommodation } = plan;
+    const { transport_options, strategic_accommodation } = plan;
+    const logistics_context = (plan as any).logistics_context;
 
     return (
         <Card className="border-0 shadow-xl bg-slate-900 text-white overflow-hidden sticky top-24 ring-1 ring-white/10">

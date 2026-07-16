@@ -239,7 +239,7 @@ export default function EssentialsView({ trip, plan }: EssentialsViewProps) {
                                     option={opt}
                                     tripContext={{
                                         destination: trip.destination,
-                                        startDate: trip.start_date,
+                                        startDate: trip.start_date ?? '',
                                         days: trip.trip_days
                                     }}
                                 />

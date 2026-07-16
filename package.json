@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "audit": "playwright test tests/ux-audit.spec.ts --reporter=html",
+    "audit:desktop": "playwright test tests/ux-audit.spec.ts --project=desktop",
+    "audit:mobile": "playwright test tests/ux-audit.spec.ts --project=mobile",
+    "audit:report": "playwright show-report",
+    "test": "playwright test tests/core-journeys.spec.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.10",

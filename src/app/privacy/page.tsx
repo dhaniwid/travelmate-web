@@ -28,7 +28,7 @@ export default function PrivacyPage() {
                         <li><strong>Account Information:</strong> When you sign in via Google or email (through Clerk), we receive your name and email address for authentication purposes.</li>
                         <li><strong>Trip Data:</strong> Trip itineraries, destinations, dates, and preferences you create or save within the app.</li>
                         <li><strong>Usage Data:</strong> Pages you visit and features you interact with, collected via PostHog analytics.</li>
-                        <li><strong>Payment Information:</strong> Processed securely by Stripe. We do not store your card numbers.</li>
+                        <li><strong>Payment Information:</strong> Processed securely by Mayar.id via QRIS or bank transfer. We do not store your payment credentials.</li>
                     </ul>
                 </section>
 
@@ -37,7 +37,7 @@ export default function PrivacyPage() {
                     <ul className="list-disc pl-5 text-slate-600 space-y-2 leading-relaxed">
                         <li>To provide and improve the Miru service</li>
                         <li>To generate and save your travel itineraries</li>
-                        <li>To process subscription payments via Stripe</li>
+                        <li>To process subscription payments via Mayar.id</li>
                         <li>To understand how users interact with the product (PostHog analytics)</li>
                         <li>To send important service-related communications</li>
                     </ul>
@@ -50,7 +50,7 @@ export default function PrivacyPage() {
                     </p>
                     <ul className="list-disc pl-5 text-slate-600 space-y-2 leading-relaxed mt-3">
                         <li><strong>Clerk</strong> — Authentication</li>
-                        <li><strong>Stripe</strong> — Payment processing</li>
+                        <li><strong>Mayar.id</strong> — Payment processing (QRIS &amp; bank transfer)</li>
                         <li><strong>PostHog</strong> — Product analytics</li>
                         <li><strong>Amadeus</strong> — Flight data</li>
                         <li><strong>OpenAI / Gemini</strong> — AI itinerary generation</li>

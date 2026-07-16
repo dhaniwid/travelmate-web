@@ -81,7 +81,7 @@ export default function TermsPage() {
                 <section>
                     <h2 className="text-xl font-bold text-slate-800 mb-3">5. Subscriptions &amp; Payments</h2>
                     <p className="text-slate-600 leading-relaxed">
-                        Pro subscriptions are billed monthly or annually via Stripe. You may cancel at any time. Refunds are handled at our discretion. Continued access to Pro features requires an active subscription.
+                        Pro subscriptions are billed monthly or annually via Mayar.id (QRIS and bank transfer). You may cancel at any time. Refunds are handled at our discretion. Continued access to Pro features requires an active subscription.
                     </p>
                 </section>
 

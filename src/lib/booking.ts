@@ -32,7 +32,7 @@ export const bookingHelper = {
 
     // 2. Generate Link untuk Hotel (Contoh: Agoda / Booking.com / Google Hotels)
     getHotelLink: (hotel: AccommodationOption, destination: string, checkInDate: string) => {
-        const query = encodeURIComponent(`${hotel.name} ${destination}`);
+        const query = encodeURIComponent(`${hotel.area_name} hotel ${destination}`);
 
         // Google Hotels (Paling aman karena agregator)
         return `https://www.google.com/search?q=${query}&kh_src=travel_hotel`;

@@ -1,9 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth, UserButton, SignInButton } from "@clerk/nextjs";
-import { Button } from '@/components/ui/button';
-import { Map } from 'lucide-react';
+import { useAuth, UserButton } from "@clerk/nextjs";
 import { useState, useEffect } from 'react';
 
 export default function Navbar() {
@@ -15,38 +13,21 @@ export default function Navbar() {
     }, []);
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full">
-            {/* Logo - Temporarily removed to prevent stacking on trip header */}
-            {/* Will reposition in Sprint 3 */}
-            {/* <Link href="/" className="flex items-center gap-2 group">
-                <img src="/logo/miru-main-logo.png" alt="Miru" className="h-8" />
-            </Link> */}
+        <nav className="fixed top-0 left-0 right-0 z-50 bg-[#060F1E]/80 backdrop-blur-md flex items-center justify-between px-5 py-4 max-w-[480px] md:max-w-2xl lg:max-w-3xl mx-auto w-full">
+            {/* LOGO — always visible */}
+            <Link href="/" className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-teal-500 flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">M</span>
+                </div>
+                <span className="text-[17px] font-medium text-white">
+                    Miru<span className="text-orange-400">.</span>
+                </span>
+            </Link>
 
-            {/* RIGHT: ACTIONS */}
-            <div className="flex items-center gap-4">
-                {mounted && (
-                    isSignedIn ? (
-                        <>
-                            {/* Tombol History - HANYA MUNCUL JIKA LOGIN */}
-                            <Link href="/history">
-                                <Button variant="ghost" className="gap-2 text-slate-600 hover:text-teal-600 hover:bg-teal-50">
-                                    <Map className="w-4 h-4" />
-                                    <span className="hidden sm:inline">My Trips</span>
-                                </Button>
-                            </Link>
-
-                            {/* Profile Menu */}
-                            <UserButton afterSignOutUrl="/" />
-                        </>
-                    ) : (
-                        <SignInButton mode="modal" forceRedirectUrl="/dashboard">
-                            <Button className="bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-200">
-                                Sign In
-                            </Button>
-                        </SignInButton>
-                    )
-                )}
-            </div>
+            {/* RIGHT: only shown when signed in */}
+            {mounted && isSignedIn && (
+                <UserButton afterSignOutUrl="/" />
+            )}
         </nav>
     );
 }

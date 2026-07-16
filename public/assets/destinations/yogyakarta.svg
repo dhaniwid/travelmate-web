@@ -1,0 +1,168 @@
+<svg id="landmark-yogyakarta" viewBox="0 0 390 650" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Layer 1: Sky — dusk gradient -->
+  <g id="layer-sky">
+    <defs>
+      <linearGradient id="yogya-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#060F1E"/>
+        <stop offset="38%"  stop-color="#0D5463"/>
+        <stop offset="72%"  stop-color="#C2500A"/>
+        <stop offset="100%" stop-color="#7A2E0A"/>
+      </linearGradient>
+    </defs>
+    <rect width="390" height="650" fill="url(#yogya-sky)"/>
+    <!-- Stars -->
+    <circle cx="30"  cy="36"  r="1.2" fill="#FFFFFF" opacity="0.80"/>
+    <circle cx="72"  cy="22"  r="1"   fill="#FFFFFF" opacity="0.70"/>
+    <circle cx="130" cy="48"  r="1.5" fill="#FFFFFF" opacity="0.62"/>
+    <circle cx="195" cy="18"  r="1"   fill="#FFFFFF" opacity="0.88"/>
+    <circle cx="255" cy="44"  r="1.2" fill="#FFFFFF" opacity="0.74"/>
+    <circle cx="312" cy="30"  r="1"   fill="#FFFFFF" opacity="0.78"/>
+    <circle cx="360" cy="58"  r="1.5" fill="#FFFFFF" opacity="0.56"/>
+    <!-- Crescent moon -->
+    <path d="M52 58 Q65 46 78 58 Q65 53 52 58Z" fill="#F5E6C8" opacity="0.90"/>
+  </g>
+
+  <!-- Layer 2: Background — Merapi cone + rolling hills -->
+  <g id="layer-background">
+    <!-- Merapi volcano cone -->
+    <polygon points="195,218 298,400 92,400" fill="#2D6A8A"/>
+    <!-- Caldera glow at peak -->
+    <polygon points="195,218 208,248 182,248" fill="#C2500A" opacity="0.28"/>
+    <!-- Hill left -->
+    <ellipse cx="60"  cy="410" rx="100" ry="52" fill="#2D6A8A" opacity="0.70"/>
+    <!-- Hill right -->
+    <ellipse cx="338" cy="415" rx="95"  ry="48" fill="#2D6A8A" opacity="0.70"/>
+    <!-- Horizon ground fill -->
+    <rect x="0" y="390" width="390" height="30" fill="#2D6A8A"/>
+  </g>
+
+  <!-- Layer 3: Mid-ground — Prambanan 3 candi + palm trees -->
+  <g id="layer-midground">
+    <!-- === Prambanan — stepped Hindu candi === -->
+
+    <!-- Center candi (tallest) -->
+    <rect x="172" y="380" width="46" height="50" fill="#1A3A5C"/>
+    <rect x="175" y="360" width="40" height="22" fill="#1A3A5C"/>
+    <rect x="178" y="340" width="34" height="22" fill="#1A3A5C"/>
+    <rect x="181" y="320" width="28" height="22" fill="#1A3A5C"/>
+    <rect x="184" y="302" width="22" height="20" fill="#1A3A5C"/>
+    <rect x="188" y="286" width="14" height="18" fill="#1A3A5C"/>
+    <rect x="186" y="266" width="18" height="22" fill="#1A3A5C"/>
+    <rect x="188" y="248" width="14" height="20" fill="#1A3A5C"/>
+    <rect x="190" y="232" width="10" height="18" fill="#1A3A5C"/>
+    <rect x="192" y="218" width="6"  height="16" fill="#1A3A5C"/>
+    <polygon points="192,218 195,206 198,218" fill="#1A3A5C"/>
+    <circle cx="195" cy="204" r="3" fill="#1A3A5C"/>
+    <!-- Tier edge details center -->
+    <rect x="172" y="378" width="46" height="2" fill="#2D6A8A" opacity="0.35"/>
+    <rect x="175" y="358" width="40" height="2" fill="#2D6A8A" opacity="0.30"/>
+    <rect x="178" y="338" width="34" height="2" fill="#2D6A8A" opacity="0.28"/>
+    <rect x="181" y="318" width="28" height="2" fill="#2D6A8A" opacity="0.25"/>
+
+    <!-- Left candi -->
+    <rect x="105" y="400" width="36" height="38" fill="#1A3A5C"/>
+    <rect x="108" y="382" width="30" height="20" fill="#1A3A5C"/>
+    <rect x="111" y="366" width="24" height="18" fill="#1A3A5C"/>
+    <rect x="114" y="352" width="18" height="16" fill="#1A3A5C"/>
+    <rect x="117" y="340" width="12" height="14" fill="#1A3A5C"/>
+    <rect x="119" y="326" width="8"  height="16" fill="#1A3A5C"/>
+    <polygon points="119,326 123,312 127,326" fill="#1A3A5C"/>
+    <circle cx="123" cy="310" r="3" fill="#1A3A5C"/>
+    <rect x="105" y="398" width="36" height="2" fill="#2D6A8A" opacity="0.28"/>
+
+    <!-- Right candi -->
+    <rect x="249" y="400" width="36" height="38" fill="#1A3A5C"/>
+    <rect x="252" y="382" width="30" height="20" fill="#1A3A5C"/>
+    <rect x="255" y="366" width="24" height="18" fill="#1A3A5C"/>
+    <rect x="258" y="352" width="18" height="16" fill="#1A3A5C"/>
+    <rect x="261" y="340" width="12" height="14" fill="#1A3A5C"/>
+    <rect x="263" y="326" width="8"  height="16" fill="#1A3A5C"/>
+    <polygon points="263,326 267,312 271,326" fill="#1A3A5C"/>
+    <circle cx="267" cy="310" r="3" fill="#1A3A5C"/>
+    <rect x="249" y="398" width="36" height="2" fill="#2D6A8A" opacity="0.28"/>
+
+    <!-- Prambanan courtyard platform -->
+    <rect x="90" y="434" width="210" height="10" fill="#1A3A5C"/>
+    <rect x="100" y="442" width="190" height="7"  fill="#1A3A5C"/>
+
+    <!-- Palm tree left (proper fronds) -->
+    <path d="M68 540 Q72 500 76 455" stroke="#1A3A5C" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M76 455 Q56 440 38 448"  stroke="#1A3A5C" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M76 455 Q61 436 51 425"  stroke="#1A3A5C" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M76 455 Q74 432 76 420"  stroke="#1A3A5C" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M76 455 Q88 434 96 422"  stroke="#1A3A5C" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M76 455 Q92 442 104 445" stroke="#1A3A5C" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="74" cy="460" r="4" fill="#1A3A5C"/>
+
+    <!-- Palm tree right -->
+    <path d="M322 540 Q318 500 314 455" stroke="#1A3A5C" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M314 455 Q334 440 352 448" stroke="#1A3A5C" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M314 455 Q329 436 339 425" stroke="#1A3A5C" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M314 455 Q316 432 314 420" stroke="#1A3A5C" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M314 455 Q302 434 294 422" stroke="#1A3A5C" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M314 455 Q298 442 286 445" stroke="#1A3A5C" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="316" cy="460" r="4" fill="#1A3A5C"/>
+  </g>
+
+  <!-- Layer 4: Foreground — Borobudur stupa pyramid -->
+  <g id="layer-foreground">
+    <!-- Ground -->
+    <rect x="0" y="618" width="390" height="32" fill="#0A1628"/>
+    <rect x="0" y="604" width="390" height="16" fill="#0A1628"/>
+
+    <!-- Borobudur square terraces (base → up) -->
+    <rect x="40"  y="568" width="310" height="40" fill="#0A1628"/>
+    <rect x="60"  y="536" width="270" height="35" fill="#0A1628"/>
+    <rect x="82"  y="506" width="226" height="33" fill="#0A1628"/>
+    <rect x="105" y="478" width="180" height="31" fill="#0A1628"/>
+    <rect x="130" y="452" width="130" height="29" fill="#0A1628"/>
+    <rect x="152" y="428" width="86"  height="27" fill="#0A1628"/>
+
+    <!-- Tier edge highlights -->
+    <rect x="40"  y="568" width="310" height="2" fill="#0D9488" opacity="0.18"/>
+    <rect x="60"  y="536" width="270" height="2" fill="#0D9488" opacity="0.16"/>
+    <rect x="82"  y="506" width="226" height="2" fill="#0D9488" opacity="0.14"/>
+    <rect x="105" y="478" width="180" height="2" fill="#0D9488" opacity="0.13"/>
+    <rect x="130" y="452" width="130" height="2" fill="#0D9488" opacity="0.12"/>
+    <rect x="152" y="428" width="86"  height="2" fill="#0D9488" opacity="0.12"/>
+
+    <!-- Circular terrace 1 -->
+    <ellipse cx="195" cy="422" rx="70" ry="10" fill="#0A1628"/>
+    <ellipse cx="195" cy="422" rx="70" ry="10" fill="none" stroke="#0D9488" stroke-width="1" opacity="0.16"/>
+    <!-- Circular terrace 2 -->
+    <ellipse cx="195" cy="402" rx="52" ry="8"  fill="#0A1628"/>
+    <ellipse cx="195" cy="402" rx="52" ry="8"  fill="none" stroke="#0D9488" stroke-width="1" opacity="0.14"/>
+    <!-- Circular terrace 3 -->
+    <ellipse cx="195" cy="384" rx="36" ry="7"  fill="#0A1628"/>
+    <ellipse cx="195" cy="384" rx="36" ry="7"  fill="none" stroke="#0D9488" stroke-width="1" opacity="0.13"/>
+
+    <!-- Stupas terrace 1 (7) -->
+    <circle cx="131" cy="420" r="6" fill="#0A1628"/><rect x="128" y="408" width="6" height="12" fill="#0A1628"/>
+    <circle cx="152" cy="417" r="6" fill="#0A1628"/><rect x="149" y="405" width="6" height="12" fill="#0A1628"/>
+    <circle cx="175" cy="415" r="6" fill="#0A1628"/><rect x="172" y="403" width="6" height="12" fill="#0A1628"/>
+    <circle cx="195" cy="414" r="6" fill="#0A1628"/><rect x="192" y="402" width="6" height="12" fill="#0A1628"/>
+    <circle cx="215" cy="415" r="6" fill="#0A1628"/><rect x="212" y="403" width="6" height="12" fill="#0A1628"/>
+    <circle cx="238" cy="417" r="6" fill="#0A1628"/><rect x="235" y="405" width="6" height="12" fill="#0A1628"/>
+    <circle cx="259" cy="420" r="6" fill="#0A1628"/><rect x="256" y="408" width="6" height="12" fill="#0A1628"/>
+
+    <!-- Stupas terrace 2 (5) -->
+    <circle cx="150" cy="400" r="5.5" fill="#0A1628"/><rect x="147" y="389" width="5" height="11" fill="#0A1628"/>
+    <circle cx="172" cy="397" r="5.5" fill="#0A1628"/><rect x="169" y="386" width="5" height="11" fill="#0A1628"/>
+    <circle cx="195" cy="396" r="5.5" fill="#0A1628"/><rect x="192" y="385" width="5" height="11" fill="#0A1628"/>
+    <circle cx="218" cy="397" r="5.5" fill="#0A1628"/><rect x="215" y="386" width="5" height="11" fill="#0A1628"/>
+    <circle cx="240" cy="400" r="5.5" fill="#0A1628"/><rect x="237" y="389" width="5" height="11" fill="#0A1628"/>
+
+    <!-- Stupas terrace 3 (3) -->
+    <circle cx="172" cy="381" r="5" fill="#0A1628"/><rect x="169" y="371" width="5" height="10" fill="#0A1628"/>
+    <circle cx="195" cy="380" r="5" fill="#0A1628"/><rect x="192" y="370" width="5" height="10" fill="#0A1628"/>
+    <circle cx="218" cy="381" r="5" fill="#0A1628"/><rect x="215" y="371" width="5" height="10" fill="#0A1628"/>
+
+    <!-- Main top stupa + spire -->
+    <ellipse cx="195" cy="370" rx="18" ry="12" fill="#0A1628"/>
+    <rect x="189" y="346" width="12" height="26" fill="#0A1628"/>
+    <rect x="192" y="328" width="6"  height="20" fill="#0A1628"/>
+    <polygon points="192,328 195,316 198,328" fill="#0A1628"/>
+    <circle cx="195" cy="314" r="3.5" fill="#0A1628"/>
+  </g>
+</svg>

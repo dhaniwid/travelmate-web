@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Users, Map, TrendingUp, Activity, Lock, UserPlus, BarChart2 } from "lucide-react";
 import KnowledgeFeedPanel from "./KnowledgeFeedPanel";
+import UserSubscriptionPanel from "./UserSubscriptionPanel";
 
 // FORCE DYNAMIC: Always fetch fresh stats
 export const dynamic = "force-dynamic";
@@ -31,7 +32,7 @@ async function getAdminStats(): Promise<AdminStats | null> {
         const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8889/api/v1').replace(/\/+$/, '');
         const res = await fetch(`${apiBase}/admin/stats`, {
             headers: {
-                "X-Admin-Secret": process.env.ADMIN_SECRET || "travelmate_admin_secret_2026",
+                "X-Admin-Secret": process.env.ADMIN_SECRET ?? "",
             },
             cache: "no-store",
         });
@@ -225,6 +226,22 @@ export default async function AdminDashboard() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* PRO Subscription Management */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <span>👑</span> PRO Subscription Management
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                            Manual upgrade/downgrade — bridge selama KYC Mayar.id pending.
+                        </p>
+                    </CardHeader>
+                    <CardContent>
+                        <UserSubscriptionPanel adminToken={process.env.ADMIN_SECRET ?? ''} />
+                    </CardContent>
+                </Card>
+
             </div>
         </div>
     );

@@ -3,72 +3,74 @@
 import React, { useState, useEffect } from 'react';
 import { TripRequest } from '@/types';
 import { tripService } from '@/services/trip';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
-import { Loader2, Sparkles, Gauge } from 'lucide-react';
+import { Loader2, Sparkles, MapPin, X, Lock, Minus, Plus, Backpack, Scale, Gem } from 'lucide-react';
 import { toast } from "sonner";
 import { ProgressStep } from './GenerationProgress';
 import { useUser, useAuth } from "@clerk/nextjs";
-import PremiumBadge from '@/components/ui/PremiumBadge';
+import { cn } from '@/lib/utils';
 
 // Import Modular Components
 import DestinationSection from './create-trip/DestinationSection';
 import DateDurationSection from './create-trip/DateDurationSection';
-import VibeSection from './create-trip/VibeSection';
 import LoadingOverlay from './create-trip/LoadingOverlay';
-import { generateTripAction } from '@/actions/trip';
 import { trackEventAction } from '@/actions/analytics';
-import QuotaBanner from '@/components/ui/QuotaBanner';
 import DiscoveryTeaser from './create-trip/DiscoveryTeaser';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useRouter } from 'next/navigation';
 
 interface CreateTripFormProps {
     onSuccess: (data: any) => void;
+    onClose?: () => void;
     initialDestination?: string;
     initialIsSurprise?: boolean;
+    initialSocialVal?: number;
+    initialTheme?: string;
 }
 
-import { useRouter } from 'next/navigation';
+const BUDGET_OPTIONS = [
+    { value: 1, label: 'Backpacker', icon: Backpack, color: 'text-emerald-400', bg: 'bg-emerald-400/10', border: 'border-emerald-400/40' },
+    { value: 2, label: 'Comfort', icon: Scale, color: 'text-teal-400', bg: 'bg-teal-400/10', border: 'border-teal-400/40' },
+    { value: 3, label: 'Premium', icon: Gem, color: 'text-violet-400', bg: 'bg-violet-400/10', border: 'border-violet-400/40' },
+];
 
-export default function CreateTripForm({ onSuccess, initialDestination = '', initialIsSurprise = false }: CreateTripFormProps) {
+export default function CreateTripForm({
+    onSuccess, onClose,
+    initialDestination = '', initialIsSurprise = false, initialSocialVal = 50, initialTheme = ''
+}: CreateTripFormProps) {
     const { user } = useUser();
     const router = useRouter();
     const { getToken } = useAuth();
+    const { subscription } = useSubscription();
+    const isPro = subscription?.subscription_tier === 'PRO';
 
     // --- FORM STATE ---
     const [isAutoDest, setIsAutoDest] = useState(initialIsSurprise);
     const [isFlexibleDate, setIsFlexibleDate] = useState(false);
+    const [isDurationFlexible, setIsDurationFlexible] = useState(false);
     const [isStreaming, setIsStreaming] = useState(false);
     const [isDone, setIsDone] = useState(false);
-    const [showQuotaBanner, setShowQuotaBanner] = useState(false);
-    const [quotaMessage, setQuotaMessage] = useState<string | undefined>();
-    const [quotaAction, setQuotaAction] = useState({ label: "Upgrade to PRO", href: "/pricing" });
+    const [showDurationUpgrade, setShowDurationUpgrade] = useState(false);
+    const [pax, setPax] = useState(2);
 
-    // Slider (social vibe only - pace comes from Travel DNA)
-    const [socialVal, setSocialVal] = useState([50]);
+    // socialVal retained for backwards-compat with callers but not shown in UI
+    const socialVal = [initialSocialVal];
 
     // Travel DNA (fetched from backend)
     const [userPace, setUserPace] = useState<string>('BALANCED');
 
     // Data
-    // Data
     const [formData, setFormData] = useState<TripRequest>({
-        origin: 'Jakarta', // Will be updated by useEffect
+        origin: '',
         destination: '' + initialDestination,
-        start_date: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Default to tomorrow
-        trip_days: 5, // Smart default: 5 days is most common
-        style: '',
-        budget: 0, // 0=Any, 1=Budget, 2=Mid, 3=Luxury
+        start_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        trip_days: 3,
+        style: initialTheme,
+        budget: 2, // default Comfort
     });
 
-    // Smart Defaults (Origin)
-    useEffect(() => {
-        const lastOrigin = localStorage.getItem('lastOrigin');
-        if (lastOrigin) {
-            setFormData(prev => ({ ...prev, origin: lastOrigin }));
-        }
-    }, []);
+    const [savedOrigin] = useState(() =>
+        typeof window !== 'undefined' ? localStorage.getItem('lastOrigin') ?? '' : ''
+    );
 
     // Loading Steps
     const [steps, setSteps] = useState<ProgressStep[]>([
@@ -82,157 +84,148 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
         setSteps(prev => prev.map(step => step.id === id ? { ...step, status } : step));
     };
 
-    // Fetch Travel DNA on mount
+    // Fetch Travel DNA
     useEffect(() => {
         const fetchPreferences = async () => {
             try {
                 const token = await getToken();
                 if (!token) return;
-
-                // Use tripService to avoid duplicate /api/v1 or base URL issues
                 const data = await tripService.getUserPreferences(token);
                 setUserPace(data.pace || 'BALANCED');
-            } catch (error) {
-                console.log('Travel DNA not set, using default pace');
+            } catch {
+                // use default
             }
         };
         if (user?.id) fetchPreferences();
     }, [user?.id, getToken]);
 
-    // Helper: Generate Vibe String for AI (uses Travel DNA pace)
     const generateStyleString = () => {
-        let styleDesc = [];
+        const parts: string[] = [];
 
-        // Pace Logic from Travel DNA
-        if (userPace === 'RELAXED') styleDesc.push("Very Relaxed, mostly Staycation (60% Hotel time)");
-        else if (userPace === 'FAST') styleDesc.push("Fast paced, heavy exploration, maximize every hour");
-        else styleDesc.push("Balanced mix of rest and activity");
+        if (userPace === 'RELAXED') parts.push('Very Relaxed, mostly Staycation (60% Hotel time)');
+        else if (userPace === 'FAST') parts.push('Fast paced, heavy exploration, maximize every hour');
+        else parts.push('Balanced mix of rest and activity');
 
-        // Social Logic from trip-specific slider
-        if (socialVal[0] < 30) styleDesc.push("Hidden gems, quiet places, avoid crowds");
-        else if (socialVal[0] < 70) styleDesc.push("Mix of popular spots and local secrets");
-        else styleDesc.push("Trendy spots, viral locations, social vibes");
+        if (socialVal[0] < 30) parts.push('Hidden gems, quiet places, avoid crowds');
+        else if (socialVal[0] < 70) parts.push('Mix of popular spots and local secrets');
+        else parts.push('Trendy spots, viral locations, social vibes');
 
-        // Budget Logic (New)
-        if (formData.budget === 1) styleDesc.push("Budget-friendly options, street food, saving costs");
-        else if (formData.budget === 2) styleDesc.push("Mid-range comfort, good value");
-        else if (formData.budget === 3) styleDesc.push("Luxury experience, fine dining, premium spots");
+        if (formData.budget === 1) parts.push('Budget-friendly options, street food, saving costs');
+        else if (formData.budget === 2) parts.push('Mid-range comfort, good value');
+        else if (formData.budget === 3) parts.push('Luxury experience, fine dining, premium spots');
 
-        return styleDesc.join(", ");
+        const safePax = Math.min(20, Math.max(1, pax));
+        if (safePax > 1) parts.push(`Group of ${safePax} people`);
+
+        if (initialTheme) parts.push(`Theme: ${initialTheme}`);
+
+        return parts.join(', ');
     };
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // --- SUBMISSION LOGIC ---
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (isSubmitting) return; // Guard
+        if (isSubmitting) return;
         setIsSubmitting(true);
 
-        // 🛡️ SECURITY: Guest Quota (1 Trip Limit)
         if (!user) {
             const guestUsage = localStorage.getItem('miru_guest_usage');
             if (guestUsage && parseInt(guestUsage) >= 1) {
-                setQuotaMessage("Guest trip limit reached! Discovering more destinations requires a free account.");
-                setQuotaAction({ label: "Create Account", href: "/sign-up" });
-                setShowQuotaBanner(true);
-                setIsSubmitting(false); // Enable again so they can fix account/quota
+                toast.error('Buat akun gratis untuk melanjutkan!', {
+                    description: 'Guest trip sudah digunakan. Sign up untuk generate trip tanpa batas.',
+                    action: { label: 'Sign Up', onClick: () => router.push('/sign-up') },
+                });
+                setIsSubmitting(false);
                 return;
             }
         }
 
-        // Validasi Origin
-        if (!formData.origin.trim()) {
-            toast.error("Please enter a starting point (Origin)");
-            setIsSubmitting(false);
-            return;
-        }
-
         if (!isAutoDest && !formData.destination) {
-            toast.error("Where are we going? Or choose 'Surprise Me'!");
+            toast.error('Destinasi belum diisi. Pilih kota atau coba Surprise Me!');
             setIsSubmitting(false);
             return;
         }
 
         setIsStreaming(true);
         setIsDone(false);
-        // Reset steps for visual effect
         setSteps(prev => prev.map(s => ({ ...s, status: 'pending' })));
+        updateStep('meta', 'loading');
 
         const finalStyle = generateStyleString();
+        const resolvedTripDays = isDurationFlexible
+            ? (isPro ? 5 : 3)
+            : formData.trip_days;
+
         const payload = {
             ...formData,
+            origin: formData.origin.trim() || 'Anywhere',
             destination: isAutoDest ? 'SURPRISE' : formData.destination,
             style: finalStyle,
             start_date: isFlexibleDate ? new Date().toISOString().split('T')[0] : formData.start_date,
+            trip_days: resolvedTripDays,
             budget: 0,
-            user_id: user?.id || "",
+            user_id: user?.id || '',
         };
 
-        // Track trip start
         trackEventAction('trip_started', {
             destination: payload.destination,
             is_guest: !user,
-            days: payload.trip_days
+            days: payload.trip_days,
         });
 
         try {
-            // STEP 1: ASYNC GENERATION REQUEST
-            // Use tripService.createTrip instead of manual fetch
             const token = await getToken();
-            const data = await tripService.createTrip(payload, token);
 
-            // Track successful trip generation
-            trackEventAction('trip_success', {
-                trip_id: data.trip_id,
-                destination: payload.destination,
-                is_guest: !user
-            });
-
-            setIsDone(true);
-
-            console.log("🚀 Trip Started!", data);
-            toast.success("Trip Drafted! Your itinerary is ready ✨", {
-                description: "Taking you to your trip page now."
-            });
-
-            // Store ID if anonymous (Preview-First Flow)
-            if (!user) {
-                localStorage.setItem('pending_trip_id', data.trip_id);
-                localStorage.setItem('pending_claim_trip_id', data.trip_id); // For transfer logic
-                localStorage.setItem('miru_guest_usage', '1'); // Set guest limit
-            }
-
-            // Redirect after allowing completion animation to breathe
-            setTimeout(() => {
-                router.push(`/trips/${data.trip_id}`);
-            }, 1000);
+            await tripService.createTripStreaming(
+                payload,
+                token,
+                (tripId) => {
+                    updateStep('meta', 'complete');
+                    updateStep('iti', 'complete');
+                    updateStep('log', 'loading');
+                    trackEventAction('trip_success', {
+                        trip_id: tripId,
+                        destination: payload.destination,
+                        is_guest: !user,
+                    });
+                    setIsDone(true);
+                    toast.success('Trip dibuat! Menuju halaman perjalanan... ✨', {
+                        description: 'Itinerary sedang dimuat.',
+                    });
+                    if (!user) {
+                        localStorage.setItem('pending_trip_id', tripId);
+                        localStorage.setItem('pending_claim_trip_id', tripId);
+                        localStorage.setItem('miru_guest_usage', '1');
+                    }
+                    router.push(`/trips/${tripId}`);
+                },
+                (tripId) => {
+                    // skeleton_complete
+                    updateStep('log', 'complete');
+                    updateStep('final', 'complete');
+                },
+                (message) => {
+                    throw new Error(message);
+                },
+            );
 
         } catch (error: any) {
-            // Check for quota error (Axios style)
-            if (error.response?.status === 403 && error.response?.data?.code === 'quota_exceeded') {
-                trackEventAction('paywall_shown', { trigger: 'quota_limit' });
-                setQuotaMessage(error.response.data.message || "Monthly trip generation limit reached. Upgrade to PRO for unlimited planning.");
-                setQuotaAction({ label: "Upgrade to PRO", href: "/pricing" });
-                setShowQuotaBanner(true);
+            if (error.response?.status === 403 && error.response?.data?.code === 'free_tier_limit') {
+                trackEventAction('paywall_shown', { trigger: 'duration_gate' });
+                setShowDurationUpgrade(true);
                 setIsStreaming(false);
+                setIsSubmitting(false);
                 return;
             }
-
-            // Track trip generation error
             trackEventAction('trip_error', {
-                error: (error as Error).message || "Unknown error",
+                error: (error as Error).message || 'Unknown error',
                 destination: payload.destination,
-                is_guest: !user
+                is_guest: !user,
             });
-
-            console.error("Trip Creator Error:", error);
             setIsStreaming(false);
-            setIsSubmitting(false); // Enable button again on error
-            toast.error("Something went wrong", {
-                description: error.message || "Please try again later."
-            });
+            setIsSubmitting(false);
+            toast.error('Something went wrong', { description: error.message || 'Please try again later.' });
         }
     };
 
@@ -240,117 +233,193 @@ export default function CreateTripForm({ onSuccess, initialDestination = '', ini
         return <LoadingOverlay steps={steps} isDone={isDone} />;
     }
 
+    const destLabel = isAutoDest
+        ? 'Surprise me! 🎲'
+        : (formData.destination || initialDestination || '');
+
     return (
-        <Card className="w-full max-w-xl mx-auto border-none shadow-2xl bg-white/90 backdrop-blur-sm ring-1 ring-slate-200/50 overflow-x-hidden">
-            <CardHeader>
-                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent flex items-center gap-2">
-                    Design Your Trip 🎨
-                </CardTitle>
-                <CardDescription>
-                    No complex forms. Just tell us the vibe.
-                </CardDescription>
+        <div className="bg-[#0A1628] rounded-t-3xl md:rounded-3xl w-full overflow-hidden shadow-2xl">
+            {/* DRAG HANDLE (mobile only) — larger tap zone */}
+            <div className="flex justify-center py-3 md:hidden">
+                <div className="w-10 h-1 rounded-full bg-white/20" />
+            </div>
 
-                {/* TRAVEL DNA BADGE */}
-                {userPace && (
-                    <div className="flex items-center gap-2 mt-2">
-                        <PremiumBadge text={`Travel DNA Active: ${userPace} Pace`} />
-                    </div>
+            {/* HEADER */}
+            <div className="flex items-center justify-between px-5 pt-4 pb-4 border-b border-white/10">
+                <div>
+                    <p className="text-[11px] text-white/40 tracking-[0.8px]">Rencanakan trip</p>
+                    <p className="text-[17px] font-medium text-white mt-0.5">Buat itinerary baru</p>
+                </div>
+                {onClose && (
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        aria-label="Tutup"
+                        className="w-8 h-8 rounded-full bg-white/8 border border-white/8 flex items-center justify-center hover:bg-white/12 transition-colors"
+                    >
+                        <X className="w-4 h-4 text-slate-400" />
+                    </button>
                 )}
+            </div>
 
-                {/* GUEST MODE BANNER */}
+            {/* FORM BODY — scrollable, keyboard-aware */}
+            <form
+                onSubmit={handleSubmit}
+                className="px-5 py-5 space-y-5 overflow-y-auto overscroll-contain"
+                style={{ maxHeight: 'min(calc(85dvh - 80px), calc(75svh - 60px))' }}
+            >
+                {/* GUEST BANNER */}
                 {!user && (
-                    <div className="mt-4 p-4 rounded-2xl bg-teal-50 border border-teal-100 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
-                        <div className="mt-0.5">
-                            <Sparkles className="w-4 h-4 text-teal-600" />
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-xs font-black text-teal-900 leading-tight">
-                                Try Miru for free! ✨
-                            </p>
-                            <p className="text-[10px] text-teal-800/70 font-medium leading-relaxed">
-                                You're generating a preview. Sign in later to save your trip!
-                            </p>
-                        </div>
+                    <div className="flex items-start gap-3 px-4 py-3 bg-teal-500/8 border border-teal-500/20 rounded-xl">
+                        <Sparkles className="w-4 h-4 text-teal-400 mt-0.5 flex-shrink-0" />
+                        <p className="text-[12px] text-teal-300 leading-relaxed">
+                            Coba Miru gratis — sign in setelah selesai untuk menyimpan trip.
+                        </p>
                     </div>
                 )}
-            </CardHeader>
 
-            <CardContent>
-                <QuotaBanner
-                    isVisible={showQuotaBanner}
-                    onClose={() => setShowQuotaBanner(false)}
-                    message={quotaMessage}
-                    actionLabel={quotaAction.label}
-                    actionHref={quotaAction.href}
-                />
-                <form onSubmit={handleSubmit} className="space-y-8">
+                {/* DESTINATION */}
+                <div>
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="text-[13px] text-white/70 font-medium">Destinasi</p>
+                        {initialDestination && (
+                            <a href="/explore" className="text-[11px] text-teal-400 hover:text-teal-300 transition-colors">
+                                Ganti →
+                            </a>
+                        )}
+                    </div>
 
-                    <DestinationSection
-                        origin={formData.origin}
-                        setOrigin={(val) => {
-                            setFormData({ ...formData, origin: val });
-                            localStorage.setItem('lastOrigin', val);
-                        }}
-                        destination={formData.destination}
-                        setDestination={(val) => setFormData({ ...formData, destination: val })}
-                        isAuto={isAutoDest}
-                        setAuto={setIsAutoDest}
-                    />
-
-                    {/* Discovery Teaser — shows RAG local whispers as user types ✨ */}
-                    {!isAutoDest && (
-                        <DiscoveryTeaser destination={formData.destination} />
+                    {(initialDestination || isAutoDest) ? (
+                        <div className="flex items-center gap-3 px-4 py-3 bg-[#060F1E] border border-teal-500/40 rounded-xl">
+                            <MapPin className="w-4 h-4 text-teal-400 flex-shrink-0" />
+                            <span className="text-[14px] font-medium text-white flex-1">{destLabel}</span>
+                            {initialDestination && <Lock className="w-3.5 h-3.5 text-slate-600" />}
+                        </div>
+                    ) : (
+                        <DestinationSection
+                            origin={formData.origin}
+                            savedOrigin={savedOrigin}
+                            setOrigin={(val) => {
+                                setFormData({ ...formData, origin: val });
+                                if (val) localStorage.setItem('lastOrigin', val);
+                            }}
+                            destination={formData.destination}
+                            setDestination={(val) => setFormData({ ...formData, destination: val })}
+                            isAuto={isAutoDest}
+                            setAuto={setIsAutoDest}
+                        />
                     )}
 
-                    <DateDurationSection
-                        startDate={formData.start_date}
-                        setStartDate={(val) => setFormData({ ...formData, start_date: val })}
-                        tripDays={formData.trip_days}
-                        setTripDays={(val) => setFormData({ ...formData, trip_days: val })}
-                        isFlexible={isFlexibleDate}
-                        setFlexible={setIsFlexibleDate}
-                    />
+                    {!isAutoDest && !initialDestination && formData.destination && (
+                        <div className="mt-2">
+                            <DiscoveryTeaser destination={formData.destination} />
+                        </div>
+                    )}
+                </div>
 
-                    {/* BUDGET SECTION (New) */}
-                    <div className="space-y-4 pt-2">
-                        <div className="flex justify-between items-center">
-                            <label className="text-base font-semibold text-slate-700">Budget Range 💰</label>
-                            <span className="text-xs font-medium px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100">
-                                {formData.budget === 0 ? "Flexible / Not Set" :
-                                    formData.budget === 1 ? "Budget Friendly" :
-                                        formData.budget === 2 ? "Mid-Range" : "Luxury Splurge"}
-                            </span>
+                {/* DURATION */}
+                <DateDurationSection
+                    startDate={formData.start_date}
+                    setStartDate={(val) => setFormData({ ...formData, start_date: val })}
+                    tripDays={formData.trip_days}
+                    setTripDays={(val) => { setFormData({ ...formData, trip_days: val }); setShowDurationUpgrade(false); }}
+                    isFlexible={isFlexibleDate}
+                    setFlexible={setIsFlexibleDate}
+                    isDurationFlexible={isDurationFlexible}
+                    setIsDurationFlexible={setIsDurationFlexible}
+                    isPro={isPro}
+                    onUpgradeNeeded={() => setShowDurationUpgrade(true)}
+                />
+
+                {/* DURATION UPGRADE NUDGE */}
+                {showDurationUpgrade && !isPro && (
+                    <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-400/8 border border-amber-400/20">
+                        <Sparkles className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-semibold text-amber-300">Trip lebih dari 3 hari tersedia di PRO</p>
+                            <p className="text-[11px] text-amber-400/70 mt-0.5">Unlock 4–7 hari dan semua fitur premium.</p>
                         </div>
-                        <div className="pt-2 px-1">
-                            {/* Using a simple 0-3 scale for now since actual currency is complex */}
-                            <Slider
-                                value={[formData.budget]}
-                                onValueChange={(val) => setFormData({ ...formData, budget: val[0] })}
-                                max={3}
-                                step={1}
-                                className="py-2"
-                            />
-                            <div className="flex justify-between text-xs text-slate-400 mt-2 px-1">
-                                <span>Any</span>
-                                <span>$</span>
-                                <span>$$</span>
-                                <span>$$$</span>
-                            </div>
-                        </div>
+                        <a
+                            href={process.env.NEXT_PUBLIC_MAYAR_CHECKOUT_URL || '/pricing'}
+                            className="text-[11px] font-semibold text-amber-400 hover:text-amber-300 whitespace-nowrap underline underline-offset-2"
+                        >
+                            Upgrade →
+                        </a>
                     </div>
+                )}
 
-                    <VibeSection
-                        socialVal={socialVal}
-                        setSocialVal={setSocialVal}
-                    />
+                {/* BUDGET VIBE */}
+                <div>
+                    <p className="text-[13px] text-white/70 font-medium mb-2">Budget</p>
+                    <div className="grid grid-cols-3 gap-2">
+                        {BUDGET_OPTIONS.map((opt) => {
+                            const selected = formData.budget === opt.value;
+                            const Icon = opt.icon;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, budget: opt.value })}
+                                    className={cn(
+                                        'flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border transition-all',
+                                        selected
+                                            ? `${opt.bg} ${opt.border} ${opt.color}`
+                                            : 'bg-[#060F1E] border-white/8 text-slate-500 hover:border-white/20'
+                                    )}
+                                >
+                                    <Icon className="w-5 h-5" />
+                                    <span className="text-[11px] font-medium">{opt.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
 
-                    <Button type="submit" disabled={isSubmitting || isStreaming}
-                        className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-lg py-6 rounded-xl shadow-lg transition-all hover:scale-[1.01]"
-                    >
-                        {isSubmitting || isStreaming ? <Loader2 className="animate-spin" /> : "Plan My Trip ✨"}
-                    </Button>
-                </form>
-            </CardContent>
-        </Card>
+                {/* PAX STEPPER */}
+                <div>
+                    <p className="text-[13px] text-white/70 font-medium mb-2">Jumlah orang</p>
+                    <div className="flex items-center gap-3 px-4 py-3 bg-[#060F1E] border border-white/8 rounded-xl">
+                        <button
+                            type="button"
+                            onClick={() => setPax(p => Math.max(1, p - 1))}
+                            aria-label="Kurangi"
+                            className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-white/8 border border-white/10 text-white flex items-center justify-center hover:bg-white/12 active:scale-95 transition-all"
+                        >
+                            <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="flex-1 text-center text-[15px] font-medium text-white">{pax} orang</span>
+                        <button
+                            type="button"
+                            onClick={() => setPax(p => Math.min(20, p + 1))}
+                            aria-label="Tambah"
+                            className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-white/8 border border-white/10 text-white flex items-center justify-center hover:bg-white/12 active:scale-95 transition-all"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* GENERATE BUTTON */}
+                <button
+                    type="submit"
+                    disabled={isSubmitting || isStreaming}
+                    className="w-full bg-[#0D9488] hover:bg-[#0B8275] text-white rounded-[14px] py-4 flex items-center justify-center gap-2 active:scale-[0.99] transition-all disabled:opacity-50"
+                >
+                    {isSubmitting || isStreaming ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    ) : (
+                        <>
+                            <Sparkles className="w-4 h-4 text-white" />
+                            <span className="text-[15px] font-medium truncate max-w-[220px]">
+                                {destLabel ? `Buat itinerary ke ${destLabel}` : 'Buat itinerary'}
+                            </span>
+                        </>
+                    )}
+                </button>
+
+                {/* Safe-area bottom padding for iOS */}
+                <div className="h-safe-bottom" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} />
+            </form>
+        </div>
     );
 }

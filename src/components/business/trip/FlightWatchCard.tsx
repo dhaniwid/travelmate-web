@@ -15,12 +15,12 @@ import {
 } from '@/services/flightService';
 import { formatDistanceToNow } from 'date-fns';
 import AirportSearch from './AirportSearch';
-import { useRouter } from 'next/navigation';
 
 interface FlightWatchCardProps {
     tripId: string;
     destinationCity: string;
     destinationAirport?: string;
+    initialOrigin?: string; // pre-filled from transport search origin city
     variant?: 'full' | 'compact'; // 'full' for Logistics tab, 'compact' for Overview sidebar
 }
 
@@ -28,25 +28,25 @@ export default function FlightWatchCard({
     tripId,
     destinationCity,
     destinationAirport,
+    initialOrigin = '',
     variant = 'full',
 }: FlightWatchCardProps) {
     const { getToken, isLoaded, isSignedIn } = useAuth();
-    const router = useRouter(); // Moved inside component
     const [isActive, setIsActive] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isActivating, setIsActivating] = useState(false);
     const [isChecking, setIsChecking] = useState(false); // New state
     const [activeAlert, setActiveAlert] = useState<FlightAlertStatus | null>(null);
-    const [originAirport, setOriginAirport] = useState('');
+    const [originAirport, setOriginAirport] = useState(initialOrigin);
     const [flightOffer, setFlightOffer] = useState<any>(null); // New state
 
     // Auto-determine destination if available, or allow manual override
     const [manualDestination, setManualDestination] = useState('');
     const destination = destinationAirport || manualDestination;
 
-    // Fetch existing alerts on mount — wait for Clerk to be ready first
+    // Fetch existing alerts on mount — wait for Clerk to be ready and tripId to be available
     useEffect(() => {
-        if (!isLoaded || !isSignedIn) return; // Don't fire until auth is ready
+        if (!isLoaded || !isSignedIn || !tripId) return;
         fetchAlertStatus();
     }, [tripId, isLoaded, isSignedIn]);
 
@@ -86,11 +86,11 @@ export default function FlightWatchCard({
             if (offers && offers.length > 0) {
                 setFlightOffer(offers[0]);
             } else {
-                toast.error("No flights found for this route.");
+                toast.error("Penerbangan tidak ditemukan untuk rute ini.");
             }
         } catch (error) {
             console.error(error);
-            toast.error("Failed to check flights.");
+            toast.error("Gagal mengecek penerbangan.");
         } finally {
             setIsChecking(false);
         }
@@ -98,12 +98,12 @@ export default function FlightWatchCard({
 
     const handleActivate = async () => {
         if (!originAirport.trim()) {
-            toast.error('Please enter your origin airport code');
+            toast.error('Masukkan kode bandara asal kamu');
             return;
         }
 
         if (!destination.trim()) {
-            toast.error('Destination airport not available for this trip');
+            toast.error('Bandara tujuan tidak tersedia untuk trip ini');
             return;
         }
 
@@ -117,11 +117,11 @@ export default function FlightWatchCard({
                 token
             );
 
-            toast.success(`Flight Guardian activated! Current price: ${response.currency} ${response.current_price}`);
+            toast.success(`Flight Guardian aktif! Harga saat ini: ${response.currency} ${response.current_price}`);
             await fetchAlertStatus();
             setFlightOffer(null);
         } catch (error: any) {
-            toast.error(error.response?.data?.error || 'Failed to activate Flight Guardian');
+            toast.error(error.response?.data?.error || 'Gagal mengaktifkan Flight Guardian');
         } finally {
             setIsActivating(false);
         }
@@ -133,11 +133,11 @@ export default function FlightWatchCard({
         try {
             const token = await getToken();
             await deactivateFlightAlert(activeAlert.id, token);
-            toast.success('Flight Guardian deactivated');
+            toast.success('Flight Guardian dinonaktifkan');
             setIsActive(false);
             setActiveAlert(null);
         } catch (error) {
-            toast.error('Failed to deactivate Flight Guardian');
+            toast.error('Gagal menonaktifkan Flight Guardian');
         }
     };
 
@@ -161,7 +161,7 @@ export default function FlightWatchCard({
                         </div>
                         <div>
                             <h4 className="text-sm font-black text-slate-800">Flight Guardian</h4>
-                            <p className="text-[10px] text-slate-500 font-medium">Track flight prices & save money.</p>
+                            <p className="text-[10px] text-slate-500 font-medium">Pantau harga penerbangan & hemat lebih banyak.</p>
                         </div>
                     </div>
 
@@ -169,20 +169,13 @@ export default function FlightWatchCard({
                         onClick={() => {
                             // Redirect to Logistics tab
                             const url = new URL(window.location.href);
-                            url.searchParams.set('view', 'flights');
-                            window.history.pushState({}, '', url.toString());
-                            // Force a re-render or let the parent handle it if possible, 
-                            // but in this app structure, changing URL param + reload might be safest 
-                            // or better: let the parent (TripResult) handle the tab switch if we could access it.
-                            // For now, let's use a hard navigation or window.location to be safe, 
-                            // OR just use a simple link if we can. 
-                            // Actually, let's just use window.location.href for now to ensure tab switch.
-                            window.location.search = '?view=flights';
+                            url.searchParams.set('view', 'logistics');
+                            window.location.search = '?view=logistics';
                         }}
                         variant="outline"
                         className="w-full h-9 bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 font-bold rounded-xl text-xs shadow-sm"
                     >
-                        Setup in Logistics
+                        Atur di Logistics
                         <ArrowRight className="w-3 h-3 ml-2" />
                     </Button>
 
@@ -207,18 +200,18 @@ export default function FlightWatchCard({
                                     <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-black text-slate-800">Guardian Active</h4>
+                                    <h4 className="text-sm font-black text-slate-800">Guardian Aktif</h4>
                                     <p className="text-[10px] text-slate-500">{activeAlert!.origin_airport} → {activeAlert!.destination_airport}</p>
                                 </div>
                             </div>
                         </div>
                         <div className="flex gap-2 mb-3">
                             <div className="flex-1 bg-blue-50 rounded-xl p-3 text-center">
-                                <p className="text-[10px] font-bold text-blue-600 uppercase mb-0.5">Current</p>
+                                <p className="text-[10px] font-bold text-blue-600 uppercase mb-0.5">Sekarang</p>
                                 <p className="text-base font-black text-blue-900">{activeAlert!.currency} {activeAlert!.current_price.toFixed(0)}</p>
                             </div>
                             <div className="flex-1 bg-green-50 rounded-xl p-3 text-center">
-                                <p className="text-[10px] font-bold text-green-600 uppercase mb-0.5">Lowest</p>
+                                <p className="text-[10px] font-bold text-green-600 uppercase mb-0.5">Terendah</p>
                                 <p className="text-base font-black text-green-900">{activeAlert!.currency} {activeAlert!.lowest_price_seen.toFixed(0)}</p>
                             </div>
                         </div>
@@ -227,7 +220,7 @@ export default function FlightWatchCard({
                             variant="outline"
                             className="w-full h-8 text-xs border-slate-200 hover:border-red-300 hover:bg-red-50 hover:text-red-600 font-bold rounded-xl"
                         >
-                            Stop Monitoring
+                            Hentikan Pemantauan
                         </Button>
                     </>
                 )}
@@ -243,8 +236,8 @@ export default function FlightWatchCard({
                         <Plane className="w-6 h-6 text-blue-600" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-black text-slate-800">Monitor Flight Prices</h3>
-                        <p className="text-xs text-slate-600">Let Miru watch for price drops</p>
+                        <h3 className="text-lg font-black text-slate-800">Pantau Harga Penerbangan</h3>
+                        <p className="text-xs text-slate-600">Biarkan Miru memantau penurunan harga</p>
                     </div>
                 </div>
 
@@ -256,7 +249,7 @@ export default function FlightWatchCard({
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Origin Airport</label>
+                            <label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Bandara Asal</label>
                             <AirportSearch
                                 value={originAirport}
                                 onChange={(loc) => setOriginAirport(loc ? loc.iata_code : '')}
@@ -265,7 +258,7 @@ export default function FlightWatchCard({
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Destination ({destinationCity})</label>
+                            <label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Tujuan ({destinationCity})</label>
                             {destinationAirport ? (
                                 <div className="h-10 flex items-center justify-center rounded-xl border border-slate-200 border-dashed text-slate-500 font-bold bg-slate-50/50">
                                     {destinationAirport}
@@ -290,7 +283,7 @@ export default function FlightWatchCard({
                                 <div>
                                     <div className="text-sm font-bold text-slate-900">{flightOffer.airline}</div>
                                     <div className="text-xs text-emerald-700 font-medium">
-                                        {flightOffer.duration} • {flightOffer.stops === 0 ? 'Direct' : `${flightOffer.stops} Stop(s)`}
+                                        {flightOffer.duration} • {flightOffer.stops === 0 ? 'Langsung' : `${flightOffer.stops} Transit`}
                                     </div>
                                 </div>
                             </div>
@@ -298,7 +291,7 @@ export default function FlightWatchCard({
                                 <div className="text-lg font-black text-emerald-700">
                                     {new Intl.NumberFormat('en-US', { style: 'currency', currency: flightOffer.currency }).format(flightOffer.price)}
                                 </div>
-                                <div className="text-[10px] text-emerald-600 font-medium uppercase tracking-wide">Best Price</div>
+                                <div className="text-[10px] text-emerald-600 font-medium uppercase tracking-wide">Harga Terbaik</div>
                             </div>
                         </div>
                     )}
@@ -314,9 +307,9 @@ export default function FlightWatchCard({
                             className="w-full h-12 text-base rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold shadow-lg shadow-slate-200/50 transition-all hover:scale-[1.01]"
                         >
                             {isChecking ? (
-                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Checking Flights...</>
+                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Mengecek Penerbangan...</>
                             ) : (
-                                "Check Flight Prices"
+                                "Cek Harga Penerbangan"
                             )}
                         </Button>
                     ) : (
@@ -326,9 +319,9 @@ export default function FlightWatchCard({
                             className="w-full h-12 text-base rounded-2xl bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white font-bold shadow-lg shadow-blue-200/50 transition-all hover:scale-[1.01]"
                         >
                             {isActivating ? (
-                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Activating Guardian...</>
+                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Mengaktifkan Guardian...</>
                             ) : (
-                                <><Shield className="w-4 h-4 mr-2" /> Track This Price</>
+                                <><Shield className="w-4 h-4 mr-2" /> Pantau Harga Ini</>
                             )}
                         </Button>
                     )}
@@ -377,7 +370,7 @@ export default function FlightWatchCard({
                             <TrendingDown className="w-4 h-4 text-white" />
                         </div>
                         <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">
-                            Current Best
+                            Harga Sekarang
                         </span>
                     </div>
                     <p className="text-2xl font-black text-blue-900">
@@ -400,7 +393,7 @@ export default function FlightWatchCard({
                             className={`text-xs font-bold ${priceDropPercent > 0 ? 'text-green-700' : 'text-slate-700'
                                 } uppercase tracking-wide`}
                         >
-                            Lowest Seen
+                            Terendah Tercatat
                         </span>
                     </div>
                     <div className="flex items-baseline gap-2">
@@ -424,8 +417,8 @@ export default function FlightWatchCard({
                 <div className="flex items-center gap-2 text-xs text-slate-500 mb-4 bg-slate-50 rounded-xl p-3">
                     <Clock className="w-4 h-4" />
                     <span className="font-medium">
-                        Last checked{' '}
-                        {activeAlert!.last_checked_at ? formatDistanceToNow(new Date(activeAlert!.last_checked_at as string), { addSuffix: true }) : 'Just now'}
+                        Terakhir dicek{' '}
+                        {activeAlert!.last_checked_at ? formatDistanceToNow(new Date(activeAlert!.last_checked_at as string), { addSuffix: true }) : 'baru saja'}
                     </span>
                 </div>
             )}
@@ -434,7 +427,7 @@ export default function FlightWatchCard({
             <div className="flex items-start gap-2 bg-blue-50 rounded-xl p-3 mb-4">
                 <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-blue-700 leading-relaxed">
-                    Miru checks prices every 12 hours. You'll be notified if we find a better deal!
+                    Miru mengecek harga setiap 12 jam. Kamu akan diberitahu jika ada penawaran lebih baik!
                 </p>
             </div>
 
@@ -444,7 +437,7 @@ export default function FlightWatchCard({
                 variant="outline"
                 className="w-full h-10 border-2 border-slate-200 hover:border-red-300 hover:bg-red-50 text-slate-600 hover:text-red-600 font-bold rounded-xl transition-colors"
             >
-                Stop Monitoring
+                Hentikan Pemantauan
             </Button>
         </div>
     );

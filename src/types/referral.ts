@@ -20,6 +20,23 @@ export interface LeaderboardEntry {
     badge: string; // Tier icon/name
 }
 
+export interface AchievementProgressItem {
+    tier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
+    badge_name: string;
+    icon: string;
+    referrals_needed: number;
+    current_count: number;
+    remaining: number;
+    unlocked: boolean;
+    unlocked_at?: string;
+}
+
+export interface AchievementProgressResponse {
+    current_referrals: number;
+    items: AchievementProgressItem[];
+    all_unlocked: boolean;
+}
+
 export interface GamificationState {
     achievements: Achievement[];
     leaderboard: LeaderboardEntry[];

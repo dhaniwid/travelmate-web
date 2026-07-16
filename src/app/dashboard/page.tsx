@@ -1,35 +1,47 @@
 'use client';
 
-import { useAuth, useUser, UserButton } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { useEffect, useState, Suspense } from "react";
+
 import Link from 'next/link';
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Trip } from '@/types';
-import TripGalleryCard from '@/components/business/TripGalleryCard';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, Plane, Calendar, MapPin, Clock, ArrowRight, Zap, Sparkles } from 'lucide-react';
+import { Plus, Loader2, Plane, MapPin, Sparkles, Compass, Waves, TreePine, Utensils, Landmark, Flower2, ChevronRight } from 'lucide-react';
 import { toast } from "sonner";
 import TripPlannerModal from '@/components/business/create-trip/TripPlannerModal';
-import { fetchUnsplashImage } from '@/services/imageService';
 import { cn, formatDate } from '@/lib/utils';
 import { useSubscription } from "@/hooks/useSubscription";
-import QuotaIndicator from "@/components/dashboard/QuotaIndicator";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import TrendingDestinations from "@/components/dashboard/TrendingDestinations";
 import EmptyState from "@/components/ui/EmptyState";
+import TripContextBanner from "@/components/dashboard/TripContextBanner";
+import MiruRadarCard from "@/components/dashboard/MiruRadarCard";
 
-export default function DashboardPage() {
+const THEMES = [
+    { theme: 'Pantai & Laut', label: 'Pantai & Laut', icon: Waves, iconColor: 'text-teal-400', iconBg: 'bg-teal-400/10', socialVal: 60 },
+    { theme: 'Alam & Petualangan', label: 'Alam & Petualangan', icon: TreePine, iconColor: 'text-emerald-400', iconBg: 'bg-emerald-400/10', socialVal: 40 },
+    { theme: 'Kota & Kuliner', label: 'Kota & Kuliner', icon: Utensils, iconColor: 'text-orange-400', iconBg: 'bg-orange-400/10', socialVal: 80 },
+    { theme: 'Budaya & Sejarah', label: 'Budaya & Sejarah', icon: Landmark, iconColor: 'text-amber-400', iconBg: 'bg-amber-400/10', socialVal: 30 },
+    { theme: 'Relaksasi & Spa', label: 'Relaksasi & Spa', icon: Flower2, iconColor: 'text-violet-400', iconBg: 'bg-violet-400/10', socialVal: 20 },
+];
+
+function DashboardContent() {
     const { getToken, isLoaded, isSignedIn } = useAuth();
     const { user } = useUser();
     const router = useRouter();
+
     const [trips, setTrips] = useState<Trip[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isPlannerOpen, setIsPlannerOpen] = useState(false);
     const [isSurpriseMode, setIsSurpriseMode] = useState(false);
-    const [heroImage, setHeroImage] = useState<string | null>(null);
+    const [plannerDestination, setPlannerDestination] = useState('');
+    const [plannerSocialVal, setPlannerSocialVal] = useState(50);
+    const [plannerTheme, setPlannerTheme] = useState('');
+    const searchParams = useSearchParams();
 
     // Subscription Hook
-    const { subscription, quota, isLoading: isSubLoading } = useSubscription();
+    const { subscription, isLoading: isSubLoading } = useSubscription();
 
     // Fetch Trips
     useEffect(() => {
@@ -48,11 +60,11 @@ export default function DashboardPage() {
                     const json = await res.json();
                     setTrips(json.data || []);
                 } else {
-                    toast.error("Failed to load your trips");
+                    toast.error("Gagal memuat trip kamu");
                 }
             } catch (err) {
                 console.error(err);
-                toast.error("Something went wrong");
+                toast.error("Terjadi kesalahan, coba lagi");
             } finally {
                 setIsLoading(false);
             }
@@ -60,6 +72,21 @@ export default function DashboardPage() {
 
         fetchTrips();
     }, [isLoaded, isSignedIn, getToken]);
+
+    // Open planner from /explore/[destination] → "Plan My Trip" CTA
+    // Falls back to localStorage because Clerk OAuth redirect strips query params
+    useEffect(() => {
+        if (!isLoaded || !isSignedIn) return;
+        const openParam = searchParams.get('open');
+        const destParam = searchParams.get('destination');
+        const pendingDest = localStorage.getItem('pending_planner_destination');
+
+        if (openParam === 'planner' || pendingDest) {
+            setPlannerDestination(destParam ?? pendingDest ?? '');
+            setIsPlannerOpen(true);
+            localStorage.removeItem('pending_planner_destination');
+        }
+    }, [searchParams, isLoaded, isSignedIn]);
 
     // Handle post-signup redirect for pending trips & claiming
     useEffect(() => {
@@ -76,7 +103,7 @@ export default function DashboardPage() {
                     const res = await claimTripAction(claimTripId, user.id);
                     if (res.success) {
                         localStorage.removeItem('pending_claim_trip_id');
-                        toast.success("Trip successfully claimed to your account! ✨");
+                        toast.success("Trip berhasil diklaim ke akunmu! ✨");
                     }
                 } catch (err) {
                     console.error("Failed to claim trip:", err);
@@ -86,7 +113,7 @@ export default function DashboardPage() {
             // 2. Redirect back if needed
             if (pendingTripId) {
                 localStorage.removeItem('pending_trip_id');
-                toast.success("Welcome back! Loading your saved trip...");
+                toast.success("Selamat datang kembali! Membuka trip kamu...");
                 router.push(`/trips/${pendingTripId}`);
             }
         };
@@ -102,26 +129,6 @@ export default function DashboardPage() {
     const sortedTrips = [...trips].sort((a, b) =>
         new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
     );
-
-    const nextTrip = sortedTrips.find(t =>
-        new Date(t.start_date).getTime() >= todayTime
-    );
-
-    // Load hero image for next trip
-    useEffect(() => {
-        if (!nextTrip) return;
-
-        const loadHeroImage = async () => {
-            try {
-                const url = await fetchUnsplashImage(nextTrip.destination);
-                setHeroImage(url);
-            } catch (error) {
-                console.error("Failed to load hero image", error);
-            }
-        };
-
-        loadHeroImage();
-    }, [nextTrip?.destination]);
 
     // Handle Delete
     const handleDelete = async (id: string) => {
@@ -145,63 +152,38 @@ export default function DashboardPage() {
         }
     };
 
-    // Calculate countdown for next trip
-    const getCountdown = (trip: Trip) => {
-        const startDate = new Date(trip.start_date);
-        startDate.setHours(0, 0, 0, 0);
-        const diffTime = startDate.getTime() - todayTime;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 0) return "Today";
-        if (diffDays === 1) return "Tomorrow";
-        return `In ${diffDays} days`;
-    };
-
     // Handle Create Trip Click
-    const handleCreateTrip = (options?: { isSurprise?: boolean }) => {
+    const handleCreateTrip = (options?: { isSurprise?: boolean; socialVal?: number; theme?: string }) => {
         if (isSubLoading) return;
-
-        // Check Quota
-        // ... (keep quota logic)
-        const isPro = subscription?.subscription_tier === 'PRO';
-        const remaining = quota?.remaining ?? 0;
-
-        if (!isPro && remaining <= 0) {
-            toast.error("You've reached your free trip limit for this month.", {
-                action: {
-                    label: "Upgrade",
-                    onClick: () => router.push('/pricing')
-                }
-            });
-            setTimeout(() => router.push('/pricing'), 1500);
-            return;
-        }
-
         setIsSurpriseMode(options?.isSurprise ?? false);
+        setPlannerSocialVal(options?.socialVal ?? 50);
+        setPlannerTheme(options?.theme ?? '');
         setIsPlannerOpen(true);
     };
 
     if (!isLoaded || isLoading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-10 h-10 text-teal-600 animate-spin" />
-                    <p className="text-slate-500 font-medium animate-pulse">Loading your dashboard...</p>
+            <div className="min-h-screen bg-[#060F1E] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="w-8 h-8 text-teal-500 animate-spin" />
+                    <p className="text-slate-500 text-sm animate-pulse">Memuat dashboard...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-32">
+        <div className="min-h-screen bg-[#060F1E] text-white pb-24">
             <TripPlannerModal
                 isOpen={isPlannerOpen}
-                onClose={() => setIsPlannerOpen(false)}
-                initialDestination=""
+                onClose={() => { setIsPlannerOpen(false); setPlannerDestination(''); setPlannerSocialVal(50); setPlannerTheme(''); }}
+                initialDestination={plannerDestination}
                 initialIsSurprise={isSurpriseMode}
+                initialSocialVal={plannerSocialVal}
+                initialTheme={plannerTheme}
                 onTripGenerated={(data) => {
                     setTrips(prev => [data.trip, ...prev]);
-                    toast.success("Trip created successfully!");
+                    toast.success("Trip berhasil dibuat!");
                     if (data.trip?.id) {
                         router.push(`/trips/${data.trip.id}`);
                     }
@@ -209,191 +191,154 @@ export default function DashboardPage() {
             />
 
             {/* HEADER */}
-            <DashboardHeader quota={quota ?? undefined} subscription={subscription ?? undefined} isSubLoading={isSubLoading} />
+            <DashboardHeader subscription={subscription ?? undefined} isSubLoading={isSubLoading} />
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+            <main className="max-w-[480px] md:max-w-2xl lg:max-w-3xl mx-auto px-4 pt-5 space-y-5">
 
-                {/* SECTION 1: DREAM INPUT (HERO REDESIGNED) */}
-                <section className="relative rounded-[3rem] overflow-hidden min-h-[420px] flex items-center justify-center text-center px-4 shadow-2xl shadow-teal-900/20">
-                    {/* CSS MESH GRADIENT BACKGROUND */}
-                    <div className="absolute inset-0 z-0 bg-slate-900">
-                        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-teal-900 via-slate-900 to-black opacity-90" />
-                        <div className="absolute -top-40 -right-40 w-96 h-96 bg-teal-500/30 rounded-full blur-[128px]" />
-                        <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-600/20 rounded-full blur-[128px]" />
-                        {/* Subtle Grid Pattern */}
-                        <div
-                            className="absolute inset-0 opacity-[0.05]"
-                            style={{
-                                backgroundImage: `linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px), 
-                                                linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-                                backgroundSize: '40px 40px'
-                            }}
-                        />
-                    </div>
+                {/* CONTEXTUAL TRIP BANNER */}
+                {trips.length > 0 && (
+                    <TripContextBanner
+                        trips={trips}
+                        onTripUpdated={(tripId, patch) =>
+                            setTrips(prev => prev.map(t => t.id === tripId ? { ...t, ...patch } : t))
+                        }
+                    />
+                )}
 
-                    <div className="relative z-10 max-w-3xl mx-auto space-y-10 animate-in fade-in zoom-in-95 duration-700">
-                        <div className="space-y-4">
-                            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-none drop-shadow-xl">
-                                Plan your dream trip, <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-teal-400">{user?.firstName || 'Traveler'}</span>
-                            </h2>
-                            <p className="text-xl md:text-2xl text-slate-300 font-medium max-w-2xl mx-auto">
-                                Let's craft a personalized day-by-day itinerary in seconds.
-                            </p>
-                        </div>
+                {/* DUAL CTA */}
+                <div className="grid grid-cols-2 gap-3">
+                    <button
+                        onClick={() => handleCreateTrip()}
+                        className="bg-[#0A1628] border border-white/5 rounded-[14px] p-4 text-left hover:bg-[#0D1F38] active:scale-[0.98] transition-all"
+                    >
+                        <Sparkles className="w-5 h-5 text-teal-400 mb-2" />
+                        <p className="text-[14px] font-medium text-white mb-0.5">Mulai Planning</p>
+                        <p className="text-[11px] text-slate-400">Sudah tahu tujuan?</p>
+                    </button>
+                    <button
+                        onClick={() => router.push('/explore')}
+                        className="bg-white/8 border border-white/5 rounded-[14px] p-4 text-left hover:bg-white/12 active:scale-[0.98] transition-all"
+                    >
+                        <Compass className="w-5 h-5 text-slate-400 mb-2" />
+                        <p className="text-[14px] font-medium text-white mb-0.5">Jelajahi Destinasi</p>
+                        <p className="text-[11px] text-slate-400">Cari inspirasi dulu</p>
+                    </button>
+                </div>
 
-                        {/* ACTION BUTTONS */}
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <Button
-                                onClick={() => handleCreateTrip()}
-                                size="lg"
-                                className="h-14 px-8 rounded-full text-lg font-bold bg-teal-600 hover:bg-teal-700 text-white shadow-[0_0_20px_rgba(13,148,136,0.3)] transition-all hover:scale-105 active:scale-95"
-                            >
-                                <Sparkles className="w-5 h-5 mr-2" />
-                                Start Planning
-                            </Button>
-
-                            <Button
-                                onClick={() => handleCreateTrip({ isSurprise: true })}
-                                variant="outline"
-                                size="lg"
-                                className="h-14 px-8 rounded-full text-lg font-bold bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white backdrop-blur-sm transition-all hover:scale-105 active:scale-95"
-                            >
-                                <Zap className="w-5 h-5 mr-2 text-amber-400" />
-                                Surprise Me
-                            </Button>
-                        </div>
-                    </div>
+                {/* MIRU RADAR */}
+                <section>
+                    <MiruRadarCard
+                        onCreateTrip={(destination) => {
+                            setPlannerDestination(destination);
+                            setIsPlannerOpen(true);
+                        }}
+                    />
                 </section>
 
-                {nextTrip ? (
-                    <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 mt-12">
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-6 flex items-center gap-2">
-                            <Plane className="w-6 h-6 text-teal-600" />
-                            Your Upcoming Trip
-                        </h2>
-                        <Link href={`/trips/${nextTrip.id}`}>
-                            <div className="group relative rounded-3xl overflow-hidden bg-white border-2 border-slate-200 hover:border-teal-400 shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer">
-                                {/* Background Image */}
-                                <div className="absolute inset-0 w-full h-full">
-                                    {heroImage ? (
-                                        <img
-                                            src={heroImage}
-                                            alt={nextTrip.destination}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-gradient-to-br from-teal-600 via-blue-600 to-indigo-600" />
-                                    )}
-                                </div>
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-                                <div className="relative z-10 p-8 md:p-12 min-h-[280px] flex flex-col justify-between">
-                                    <div className="flex items-start justify-between">
-                                        <div className="space-y-1">
-                                            <p className="text-white/70 text-xs font-bold uppercase tracking-widest">
-                                                Boarding Pass
-                                            </p>
-                                            <h3 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none">
-                                                {nextTrip.destination}
-                                            </h3>
+                {/* MY TRIPS */}
+                {trips.length > 0 && (
+                    <section>
+                        <div className="flex items-center justify-between mb-3">
+                            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Trip kamu</p>
+                            {trips.length > 3 && (
+                                <Link href="/trips" className="flex items-center gap-0.5 text-[12px] text-teal-400 hover:text-teal-300 transition-colors">
+                                    Lihat semua <ChevronRight className="w-3.5 h-3.5" />
+                                </Link>
+                            )}
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            {sortedTrips.slice(0, 3).map(trip => {
+                                const tripDate = new Date(trip.start_date);
+                                tripDate.setHours(0, 0, 0, 0);
+                                const isUpcoming = tripDate.getTime() >= todayTime;
+                                return (
+                                    <Link key={trip.id} href={`/trips/${trip.id}`}>
+                                        <div className="flex items-center gap-3 px-3 py-3 bg-[#0A1628] border border-white/5 rounded-xl hover:border-white/10 transition-colors">
+                                            <div className="w-10 h-10 rounded-xl bg-[#060F1E] flex items-center justify-center flex-shrink-0">
+                                                <MapPin className="w-4 h-4 text-teal-400" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[14px] font-medium text-white leading-tight truncate">{trip.destination}</p>
+                                                <p className="text-[12px] text-slate-400 mt-0.5">
+                                                    {formatDate(trip.start_date)} · {trip.trip_days} hari
+                                                </p>
+                                            </div>
+                                            <span className={cn(
+                                                "text-[11px] px-2.5 py-1 rounded-full whitespace-nowrap",
+                                                isUpcoming
+                                                    ? "text-teal-400 bg-teal-400/10"
+                                                    : "text-slate-400 bg-white/8"
+                                            )}>
+                                                {isUpcoming ? "Akan datang" : "Selesai"}
+                                            </span>
+                                            <ChevronRight className="w-4 h-4 text-slate-600 flex-shrink-0" />
                                         </div>
-                                        <div className="px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-sm font-bold flex items-center gap-2">
-                                            <Clock className="w-4 h-4" />
-                                            {getCountdown(nextTrip)}
-                                        </div>
-                                    </div>
-                                    <div className="flex items-end justify-between border-t border-white/20 pt-6">
-                                        <div className="space-y-1">
-                                            <p className="text-white/60 text-xs uppercase tracking-wider">Departure</p>
-                                            <p className="text-white font-bold flex items-center gap-2">
-                                                <Calendar className="w-4 h-4" />
-                                                {formatDate(nextTrip.start_date)}
-                                            </p>
-                                        </div>
-                                        <div className="space-y-1 text-right">
-                                            <p className="text-white/60 text-xs uppercase tracking-wider">Duration</p>
-                                            <p className="text-white font-bold">{nextTrip.trip_days} Days</p>
-                                        </div>
-                                        <div className="space-y-1 text-right">
-                                            <p className="text-white/60 text-xs uppercase tracking-wider">From</p>
-                                            <p className="text-white font-bold flex items-center gap-1">
-                                                <MapPin className="w-4 h-4" />
-                                                {nextTrip.origin}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="absolute right-8 bottom-8 flex gap-1 opacity-20">
-                                        {[...Array(8)].map((_, i) => (
-                                            <div
-                                                key={i}
-                                                className="w-1 bg-white rounded-full"
-                                                style={{ height: `${20 + Math.random() * 30}px` }}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </Link>
+                                    </Link>
+                                );
+                            })}
+                        </div>
                     </section>
-                ) : (
-                    /* EMPTY STATE: Replaced TrendingDestinations with the new EmptyState component */
-                    <div className="mt-12">
+                )}
+
+                {trips.length === 0 && (
+                    <div className="py-4">
                         <EmptyState
                             icon={Plane}
-                            title="No adventures yet! 🌍"
-                            description="Your future trips will appear here. Ready to plan your first miracle journey?"
-                            actionLabel="Create My First Trip"
+                            title="Belum ada petualangan nih! 🌍"
+                            description="Trip yang kamu buat akan muncul di sini. Siap mulai perjalanan pertamamu?"
+                            actionLabel="Buat Trip Pertamaku"
                             onAction={() => handleCreateTrip()}
                         />
-                        <div className="mt-20">
-                            <h3 className="text-xl font-bold text-slate-800 mb-8 px-2">Or get inspired by these spots:</h3>
+                        <div className="mt-8">
                             <TrendingDestinations onCreateTrip={() => handleCreateTrip()} />
                         </div>
                     </div>
                 )}
 
-                {/* SECTION 3: QUICK START TEMPLATES (HIDDEN FOR NOW) */}
-                {/* <section>
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-6">Start with a Theme</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {[
-                            { title: 'Foodie Paradise', count: 'Culinary Focus', color: 'bg-orange-100 text-orange-800' },
-                            { title: 'Hidden Gems', count: 'Off-path Spots', color: 'bg-indigo-100 text-indigo-800' },
-                            { title: 'Nature Retreat', count: 'Relaxed Pace', color: 'bg-emerald-100 text-emerald-800' },
-                        ].map((col, idx) => (
-                            <div
-                                key={idx}
-                                onClick={() => handleCreateTrip()} // TODO: Pass specific theme props in future
-                                className="p-6 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:bg-slate-50"
-                            >
-                                <div className={cn("w-12 h-12 rounded-full mb-4 flex items-center justify-center font-bold text-xl group-hover:scale-110 transition-transform", col.color)}>
-                                    {col.title[0]}
-                                </div>
-                                <h3 className="font-bold text-lg text-slate-800 mb-1">{col.title}</h3>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-slate-500 font-medium">{col.count}</span>
-                                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-teal-500 group-hover:text-white transition-colors">
-                                        <ArrowRight className="w-4 h-4" />
+                {/* START WITH A THEME */}
+                <section>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Mulai dengan tema</p>
+                    <div className="relative overflow-x-auto -mx-4 px-4 scrollbar-none snap-x snap-mandatory">
+                        <div className="flex gap-2.5 w-max pb-2">
+                            {THEMES.map((t) => (
+                                <button
+                                    key={t.theme}
+                                    onClick={() => handleCreateTrip({ theme: t.theme, socialVal: t.socialVal })}
+                                    className="snap-start flex flex-col items-center gap-2 bg-[#0A1628] border border-white/5 rounded-2xl px-4 py-4 w-[108px] min-h-[96px] justify-center hover:bg-[#0D1F38] hover:border-white/10 active:scale-[0.97] transition-all"
+                                >
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${t.iconBg}`}>
+                                        <t.icon className={`w-5 h-5 ${t.iconColor}`} />
                                     </div>
-                                </div>
-                            </div>
-                        ))}
+                                    <p className="text-[11px] font-medium text-white leading-tight text-center">{t.label}</p>
+                                </button>
+                            ))}
+                        </div>
+                        {/* Right-edge fade to signal more content */}
+                        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#060F1E] to-transparent" />
                     </div>
-                </section> */}
+                </section>
             </main>
 
-            {/* FLOATING ACTION BUTTON */}
+            {/* EXTENDED FAB */}
             {!isPlannerOpen && (
-                <div className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-[60] animate-in fade-in duration-300">
+                <div className="fixed bottom-6 right-4 z-[60]">
                     <Button
-                        size="icon"
                         onClick={() => handleCreateTrip()}
-                        className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-gradient-to-tr from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 shadow-2xl shadow-teal-500/40 text-white transition-all active:scale-95 hover:scale-110"
-                        title="Plan New Trip"
+                        className="h-12 px-5 rounded-full bg-teal-500 hover:bg-teal-400 shadow-lg shadow-teal-900/40 text-white transition-all active:scale-95 gap-2"
                     >
-                        <Plus className="w-6 h-6 md:w-8 md:h-8" />
+                        <Plus className="w-5 h-5 flex-shrink-0" />
+                        <span className="text-[14px] font-medium">Buat Trip Baru</span>
                     </Button>
                 </div>
             )}
         </div>
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense>
+            <DashboardContent />
+        </Suspense>
     );
 }

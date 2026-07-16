@@ -1,48 +1,61 @@
 'use client';
 
-import React from 'react';
-// Hapus useRouter karena kita tidak mau redirect
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import React, { useEffect } from 'react';
 import CreateTripForm from '@/components/business/CreateTripForm';
-import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
-import { DialogTitle } from '@radix-ui/react-dialog';
 
 interface TripPlannerModalProps {
     isOpen: boolean;
     onClose: () => void;
     initialDestination: string;
     initialIsSurprise?: boolean;
+    initialSocialVal?: number;
+    initialTheme?: string;
     onTripGenerated: (data: any) => void;
 }
 
-export default function TripPlannerModal({ isOpen, onClose, initialDestination, initialIsSurprise = false, onTripGenerated }: TripPlannerModalProps) {
+export default function TripPlannerModal({ isOpen, onClose, initialDestination, initialIsSurprise = false, initialSocialVal = 50, initialTheme = '', onTripGenerated }: TripPlannerModalProps) {
+    // Lock body scroll when open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [isOpen]);
+
+    if (!isOpen) return null;
 
     const handleSuccess = (data: any) => {
-        // Data format: { trip: {...}, plan: {...} }
-
-        // 1. Kirim data ke Parent (HomePage) agar bisa ditampilkan
         onTripGenerated(data);
-
-        // 2. Tutup Modal
         onClose();
-
-        // ❌ HAPUS: router.push(...)
-        // Kita tidak mau pindah halaman otomatis
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 bg-transparent border-none shadow-none">
-                <VisuallyHidden.Root>
-                    <DialogTitle>Create Trip</DialogTitle>
-                </VisuallyHidden.Root>
+        <div
+            className="fixed inset-0 z-[60] flex flex-col justify-end md:justify-center md:items-center"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Buat itinerary baru"
+        >
+            {/* Backdrop */}
+            <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={onClose}
+            />
+
+            {/* Sheet — slides up on mobile, centered on desktop */}
+            <div className="relative w-full md:max-w-xl z-10 animate-in slide-in-from-bottom duration-300 md:animate-in md:zoom-in-95 md:duration-200">
                 <CreateTripForm
                     key={isOpen ? 'open' : 'closed'}
                     onSuccess={handleSuccess}
+                    onClose={onClose}
                     initialDestination={initialDestination}
                     initialIsSurprise={initialIsSurprise}
+                    initialSocialVal={initialSocialVal}
+                    initialTheme={initialTheme}
                 />
-            </DialogContent>
-        </Dialog>
+            </div>
+        </div>
     );
 }

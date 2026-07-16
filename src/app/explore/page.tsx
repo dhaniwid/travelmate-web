@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, MapPin, Umbrella, Building2, Mountain, Palette, Coffee, ArrowRight } from 'lucide-react';
+import { Search, MapPin, Umbrella, Building2, Mountain, Palette, Coffee, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -18,10 +18,11 @@ const CATEGORIES = [
 ];
 
 const POPULAR_DESTINATIONS = [
-    { id: 1, name: 'Bali, Indonesia', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80', rating: '4.8' },
-    { id: 2, name: 'Tokyo, Japan', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80', rating: '4.9' },
-    { id: 3, name: 'Paris, France', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80', rating: '4.7' },
-    { id: 4, name: 'New York, USA', image: 'https://images.unsplash.com/photo-1496442226666-8d4a0e62e6e9?auto=format&fit=crop&w=600&q=80', rating: '4.6' },
+    { id: 1, slug: 'bali', name: 'Bali', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80', rating: '4.8' },
+    { id: 2, slug: 'yogyakarta', name: 'Yogyakarta', image: 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=600&q=80', rating: '4.9' },
+    { id: 3, slug: 'semarang', name: 'Semarang', image: 'https://images.unsplash.com/photo-1555899434-94d1368aa7af?auto=format&fit=crop&w=600&q=80', rating: '4.7' },
+    { id: 4, slug: 'jakarta', name: 'Jakarta', image: 'https://images.unsplash.com/photo-1555899434-94d1368aa7af?auto=format&fit=crop&w=600&q=80', rating: '4.6' },
+    { id: 5, slug: 'bandung', name: 'Bandung', image: 'https://images.unsplash.com/photo-1555899434-94d1368aa7af?auto=format&fit=crop&w=600&q=80', rating: '4.7' },
 ];
 
 export default function ExplorePage() {
@@ -31,7 +32,13 @@ export default function ExplorePage() {
         <div className="min-h-screen bg-slate-50 pb-24">
             {/* Header / Search */}
             <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-4 safe-area-top">
-                <h1 className="text-2xl font-black text-slate-900 mb-4 px-1">Explore</h1>
+                <div className="flex items-center gap-3 mb-4 px-1">
+                    <Link href="/" className="flex items-center gap-1.5 text-slate-500 hover:text-teal-600 transition-colors text-sm font-medium">
+                        <ArrowLeft className="w-4 h-4" />
+                        Home
+                    </Link>
+                    <h1 className="text-2xl font-black text-slate-900">Explore</h1>
+                </div>
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
@@ -76,7 +83,7 @@ export default function ExplorePage() {
 
                     <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
                         {POPULAR_DESTINATIONS.map((dest) => (
-                            <div key={dest.id} className="break-inside-avoid relative group rounded-2xl overflow-hidden cursor-pointer">
+                            <Link key={dest.id} href={`/explore/${dest.slug}`} className="break-inside-avoid relative group rounded-2xl overflow-hidden cursor-pointer block">
                                 <img
                                     src={dest.image}
                                     alt={dest.name}
@@ -94,7 +101,7 @@ export default function ExplorePage() {
                                         <span className="text-white/80 text-[10px] ml-1">{dest.rating}</span>
                                     </div>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 </section>

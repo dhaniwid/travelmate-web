@@ -89,6 +89,20 @@ export function useReferral() {
         enabled: isLoaded && isSignedIn,
     });
 
+    const {
+        data: achievementProgress,
+        isLoading: isProgressLoading,
+    } = useQuery({
+        queryKey: ['achievementProgress'],
+        queryFn: async () => {
+            if (!isLoaded || !isSignedIn) return null;
+            const token = await getToken();
+            if (!token) return null;
+            return referralService.getAchievementProgress(token);
+        },
+        enabled: isLoaded && isSignedIn,
+    });
+
     return {
         // Data
         referralStats,
@@ -96,16 +110,20 @@ export function useReferral() {
         leaderboardCount: leaderboardData?.count || 0,
         achievements: achievements || [],
         userRank,
+        achievementProgress: achievementProgress ?? null,
 
         // Loading States
-        isLoading: isStatsLoading || isLeaderboardLoading || isAchievementsLoading || isRankLoading,
+        isLoading: isStatsLoading || isLeaderboardLoading || isAchievementsLoading || isRankLoading || isProgressLoading,
         isStatsLoading,
         isLeaderboardLoading,
         isAchievementsLoading,
         isRankLoading,
+        isProgressLoading,
         isClaiming: claimReferral.isPending,
 
-        // Errors
+        // Errors — distinguish "still loading" vs "failed to load" vs "no data"
+        isStatsError: !!statsError,
+        isProgressError: !!achievementsError,
         error: statsError || leaderboardError || achievementsError,
 
         // Actions

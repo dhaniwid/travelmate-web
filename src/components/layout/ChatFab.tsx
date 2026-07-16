@@ -2,18 +2,19 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { Sparkles, X, Send, Bot } from 'lucide-react';
+import { Sparkles, X, Send, Bot, Zap } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import TypewriterText from '@/components/ui/TypewriterText';
 import QuickPrompts from '@/components/trip/chat/QuickPrompts';
+import Link from 'next/link';
 
-// Shared markdown styles — mirrors TypewriterText for visual consistency
+// Shared markdown styles — dark theme
 const markdownComponents: Components = {
     strong: ({ children, ...props }) => (
-        <span className="font-bold text-teal-700" {...props}>{children}</span>
+        <span className="font-bold text-teal-400" {...props}>{children}</span>
     ),
     ul: ({ children, ...props }) => (
         <ul className="list-disc pl-4 space-y-0.5 my-1" {...props}>{children}</ul>
@@ -31,7 +32,7 @@ const markdownComponents: Components = {
         <em className="italic" {...props}>{children}</em>
     ),
     code: ({ children, ...props }) => (
-        <code className="bg-teal-50 text-teal-800 rounded px-1 py-0.5 text-[11px] font-mono" {...props}>{children}</code>
+        <code className="bg-teal-500/15 text-teal-300 rounded px-1 py-0.5 text-[11px] font-mono" {...props}>{children}</code>
     ),
 };
 
@@ -41,13 +42,20 @@ interface Message {
     id: number;
     role: 'user' | 'miru';
     content: string;
-    /** Miru messages animate via TypewriterText on first render; once done, rendered as plain text. */
     animated: boolean;
+}
+
+interface ChatUsage {
+    used: number;
+    limit: number;
+    is_pro: boolean;
 }
 
 interface ChatFabProps {
     tripId: string;
 }
+
+const CHAT_LIMIT = 5;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -59,18 +67,38 @@ export default function ChatFab({ tripId }: ChatFabProps) {
             id: 0,
             role: 'miru',
             content:
-                "Hi! I'm Miru ✨ Ask me anything about your trip — I can help you adjust timings, suggest alternatives, or answer questions about your itinerary.",
-            animated: false, // welcome message renders immediately
+                "Halo! Aku Miru ✨ Tanya apa saja tentang tripmu — aku bisa bantu ubah waktu, saran alternatif, atau jawab pertanyaan soal itinerary kamu.",
+            animated: false,
         },
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [usage, setUsage] = useState<ChatUsage | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const msgIdRef = useRef(1);
 
-    // Number of user-sent messages (excludes the welcome Miru message)
-    const userMessageCount = messages.filter((m) => m.role === 'user').length;
+    const isLimitReached = usage !== null && !usage.is_pro && usage.used >= CHAT_LIMIT;
+
+    // ── Fetch usage when chat opens ───────────────────────────────────────────
+
+    const fetchUsage = useCallback(async () => {
+        try {
+            const token = await getToken();
+            const res = await api.get<ChatUsage>('/chat/usage', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setUsage(res.data);
+        } catch {
+            // silent — no usage data means we don't block
+        }
+    }, [getToken]);
+
+    useEffect(() => {
+        if (isOpen && usage === null) {
+            fetchUsage();
+        }
+    }, [isOpen, usage, fetchUsage]);
 
     // ── Scroll helpers ────────────────────────────────────────────────────────
 
@@ -78,19 +106,15 @@ export default function ChatFab({ tripId }: ChatFabProps) {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, []);
 
-    // Scroll whenever messages change or a typewriter tick fires (via onComplete)
     useEffect(() => {
         scrollToBottom();
     }, [messages, scrollToBottom]);
 
-    // Focus input when chat opens
     useEffect(() => {
         if (isOpen) {
             setTimeout(() => inputRef.current?.focus(), 150);
         }
     }, [isOpen]);
-
-    // ── Mark a Miru message as "done animating" so it no longer re-triggers ──
 
     const markAnimated = useCallback((id: number) => {
         setMessages((prev) =>
@@ -103,7 +127,7 @@ export default function ChatFab({ tripId }: ChatFabProps) {
     const sendMessage = useCallback(
         async (text: string) => {
             const trimmed = text.trim();
-            if (!trimmed || isLoading) return;
+            if (!trimmed || isLoading || isLimitReached) return;
 
             const userMsg: Message = {
                 id: msgIdRef.current++,
@@ -122,14 +146,29 @@ export default function ChatFab({ tripId }: ChatFabProps) {
                     { trip_id: tripId, message: trimmed },
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
+
+                // Increment local usage counter
+                setUsage((prev) =>
+                    prev && !prev.is_pro ? { ...prev, used: prev.used + 1 } : prev
+                );
+
                 const miruMsg: Message = {
                     id: msgIdRef.current++,
                     role: 'miru',
                     content: res.data.reply,
-                    animated: true, // ← triggers the typewriter
+                    animated: true,
                 };
                 setMessages((prev) => [...prev, miruMsg]);
-            } catch {
+            } catch (err: any) {
+                // Handle rate limit from backend
+                if (err?.response?.status === 429) {
+                    setUsage((prev) =>
+                        prev ? { ...prev, used: CHAT_LIMIT } : null
+                    );
+                    setMessages((prev) => prev.slice(0, -1));
+                    setInput(trimmed);
+                    return;
+                }
                 toast.error('Miru is unavailable right now. Please try again.');
                 setMessages((prev) => prev.slice(0, -1));
                 setInput(trimmed);
@@ -137,7 +176,7 @@ export default function ChatFab({ tripId }: ChatFabProps) {
                 setIsLoading(false);
             }
         },
-        [isLoading, getToken, tripId]
+        [isLoading, isLimitReached, getToken, tripId]
     );
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -147,13 +186,12 @@ export default function ChatFab({ tripId }: ChatFabProps) {
         }
     };
 
-    // Quick prompt: populate + immediately submit
     const handleQuickPrompt = useCallback(
-        (msg: string) => {
-            sendMessage(msg);
-        },
+        (msg: string) => sendMessage(msg),
         [sendMessage]
     );
+
+    const userMessageCount = messages.filter((m) => m.role === 'user').length;
 
     // ── Render ────────────────────────────────────────────────────────────────
 
@@ -161,7 +199,7 @@ export default function ChatFab({ tripId }: ChatFabProps) {
         <>
             {/* ── Chat Sheet ──────────────────────────────────────────────── */}
             {isOpen && (
-                <div className="fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[390px] flex flex-col rounded-3xl shadow-2xl border border-white/20 overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300 bg-white">
+                <div className="fixed bottom-36 right-4 sm:bottom-20 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[390px] flex flex-col rounded-3xl shadow-2xl border border-white/10 overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300 bg-[#0A1628]">
 
                     {/* Header */}
                     <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-teal-600 to-emerald-600 flex-shrink-0">
@@ -174,17 +212,29 @@ export default function ChatFab({ tripId }: ChatFabProps) {
                                 <p className="text-teal-100 text-xs mt-0.5">Your trip assistant</p>
                             </div>
                         </div>
-                        <button
-                            onClick={() => setIsOpen(false)}
-                            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                            aria-label="Close chat"
-                        >
-                            <X className="w-4 h-4 text-white" />
-                        </button>
+                        <div className="flex items-center gap-3">
+                            {/* FREE user counter */}
+                            {usage && !usage.is_pro && (
+                                <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                                    isLimitReached
+                                        ? 'bg-red-500/30 text-red-100'
+                                        : 'bg-white/20 text-teal-100'
+                                }`}>
+                                    {usage.used}/{CHAT_LIMIT} pesan
+                                </span>
+                            )}
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                                aria-label="Close chat"
+                            >
+                                <X className="w-4 h-4 text-white" />
+                            </button>
+                        </div>
                     </div>
 
                     {/* Messages */}
-                    <div className="overflow-y-auto p-4 space-y-3 bg-slate-50 max-h-[320px]">
+                    <div className="overflow-y-auto p-4 space-y-3 bg-[#060F1E] max-h-[320px]">
                         {messages.map((msg) => (
                             <div
                                 key={msg.id}
@@ -198,10 +248,9 @@ export default function ChatFab({ tripId }: ChatFabProps) {
                                 <div
                                     className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
                                         ? 'bg-teal-600 text-white rounded-tr-sm'
-                                        : 'bg-white text-slate-700 shadow-sm border border-slate-100 rounded-tl-sm'
+                                        : 'bg-[#0D2040] text-white/80 border border-white/8 rounded-tl-sm'
                                         }`}
                                 >
-                                    {/* Typewriter for fresh Miru messages, markdown for settled ones */}
                                     {msg.role === 'miru' && msg.animated ? (
                                         <TypewriterText
                                             text={msg.content}
@@ -211,7 +260,7 @@ export default function ChatFab({ tripId }: ChatFabProps) {
                                             }}
                                         />
                                     ) : msg.role === 'miru' ? (
-                                        <div className="text-sm text-slate-700 leading-relaxed">
+                                        <div className="text-sm text-white/80 leading-relaxed">
                                             <ReactMarkdown components={markdownComponents}>
                                                 {msg.content}
                                             </ReactMarkdown>
@@ -223,13 +272,12 @@ export default function ChatFab({ tripId }: ChatFabProps) {
                             </div>
                         ))}
 
-                        {/* Typing indicator — three dots while loading */}
                         {isLoading && (
                             <div className="flex gap-2 justify-start">
                                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                                     <Bot className="w-3.5 h-3.5 text-white" />
                                 </div>
-                                <div className="bg-white border border-slate-100 shadow-sm px-4 py-3 rounded-2xl rounded-tl-sm flex gap-1 items-center">
+                                <div className="bg-[#0D2040] border border-white/8 px-4 py-3 rounded-2xl rounded-tl-sm flex gap-1 items-center">
                                     <span className="w-1.5 h-1.5 bg-teal-400 rounded-full animate-bounce [animation-delay:0ms]" />
                                     <span className="w-1.5 h-1.5 bg-teal-400 rounded-full animate-bounce [animation-delay:150ms]" />
                                     <span className="w-1.5 h-1.5 bg-teal-400 rounded-full animate-bounce [animation-delay:300ms]" />
@@ -239,28 +287,45 @@ export default function ChatFab({ tripId }: ChatFabProps) {
                         <div ref={messagesEndRef} />
                     </div>
 
-                    {/* Quick Prompts — only before the user sends their first message */}
-                    {userMessageCount === 0 && !isLoading && (
-                        <div className="flex-shrink-0 border-t border-slate-100 bg-white">
+                    {/* Quick Prompts */}
+                    {userMessageCount === 0 && !isLoading && !isLimitReached && (
+                        <div className="flex-shrink-0 border-t border-white/8 bg-[#0A1628]">
                             <QuickPrompts onSelect={handleQuickPrompt} disabled={isLoading} />
                         </div>
                     )}
 
+                    {/* Limit reached banner */}
+                    {isLimitReached && (
+                        <div className="flex-shrink-0 border-t border-white/8 bg-amber-500/10 px-4 py-3 flex items-start gap-3">
+                            <Sparkles className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-amber-900">Batas chat harian tercapai 💬</p>
+                                <p className="text-xs text-amber-700 mt-0.5">Reset besok, atau upgrade PRO untuk unlimited.</p>
+                            </div>
+                            <Link
+                                href="/pricing"
+                                className="flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-900 whitespace-nowrap underline underline-offset-2"
+                            >
+                                <Zap className="w-3 h-3" /> Upgrade PRO
+                            </Link>
+                        </div>
+                    )}
+
                     {/* Input */}
-                    <div className="px-3 py-3 bg-white border-t border-slate-100 flex gap-2 items-center flex-shrink-0">
+                    <div className="px-3 py-3 bg-[#0A1628] border-t border-white/8 flex gap-2 items-center flex-shrink-0">
                         <input
                             ref={inputRef}
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder="Ask Miru anything..."
-                            disabled={isLoading}
-                            className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent disabled:opacity-50 transition-all"
+                            placeholder={isLimitReached ? 'Batas harian tercapai...' : 'Tanya Miru apa saja...'}
+                            disabled={isLoading || isLimitReached}
+                            className="flex-1 bg-white/6 border border-white/10 rounded-2xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-transparent disabled:opacity-50 transition-all"
                         />
                         <button
                             onClick={() => sendMessage(input)}
-                            disabled={!input.trim() || isLoading}
+                            disabled={!input.trim() || isLoading || isLimitReached}
                             className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                             aria-label="Send message"
                         >
@@ -271,19 +336,17 @@ export default function ChatFab({ tripId }: ChatFabProps) {
             )}
 
             {/* ── FAB ─────────────────────────────────────────────────────── */}
+            {/* Extended FAB — mobile: above bottom nav (bottom-20), desktop: bottom-6 */}
             <button
                 onClick={() => setIsOpen((prev) => !prev)}
-                className={`fixed bottom-6 right-4 sm:right-6 z-50 w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 ${isOpen
+                className={`fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 flex items-center gap-2 h-12 px-5 rounded-full shadow-xl font-bold text-white text-sm transition-all duration-300 hover:scale-105 active:scale-95 ${isOpen
                     ? 'bg-slate-700 hover:bg-slate-800'
-                    : 'bg-gradient-to-br from-teal-500 to-emerald-500 hover:shadow-teal-300/50'
+                    : 'bg-gradient-to-br from-teal-500 to-emerald-500'
                     }`}
-                aria-label={isOpen ? 'Close Miru chat' : 'Open Miru chat'}
+                aria-label={isOpen ? 'Tutup Miru' : 'Tanya Miru'}
             >
-                {isOpen ? (
-                    <X className="w-6 h-6 text-white" />
-                ) : (
-                    <Sparkles className="w-6 h-6 text-white" />
-                )}
+                {isOpen ? <X className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+                <span>{isOpen ? 'Tutup' : 'Tanya Miru'}</span>
             </button>
         </>
     );

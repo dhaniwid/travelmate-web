@@ -3,6 +3,7 @@
 import React from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 interface TrendingDestinationsProps {
     onCreateTrip: () => void;
@@ -10,23 +11,26 @@ interface TrendingDestinationsProps {
 
 const TRENDING_PLACES = [
     {
-        name: 'Bali, Indonesia',
+        slug: 'bali',
+        name: 'Bali',
         image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80',
-        description: 'Tropical paradise with rich culture.',
-        tags: ['Nature', 'Culture']
+        description: 'Pura, sawah, dan ombak — semua dalam satu pulau.',
+        tags: ['Alam', 'Budaya'],
     },
     {
-        name: 'Kyoto, Japan',
-        image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80',
-        description: 'Ancient temples & cherry blossoms.',
-        tags: ['History', 'Food']
+        slug: 'yogyakarta',
+        name: 'Yogyakarta',
+        image: 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=600&q=80',
+        description: 'Borobudur, Prambanan, dan kedalaman budaya Jawa.',
+        tags: ['Sejarah', 'Warisan Dunia'],
     },
     {
-        name: 'Amalfi Coast, Italy',
-        image: 'https://images.unsplash.com/photo-1633321088355-d0f8c1eaad48?auto=format&fit=crop&w=600&q=80',
-        description: 'Stunning cliffs & lemon groves.',
-        tags: ['Romance', 'Scenery']
-    }
+        slug: 'semarang',
+        name: 'Semarang',
+        image: 'https://images.unsplash.com/photo-1555899434-94d1368aa7af?auto=format&fit=crop&w=600&q=80',
+        description: 'Kota kolonial yang belum ditemukan banyak orang.',
+        tags: ['Kolonial', 'Kuliner'],
+    },
 ];
 
 export default function TrendingDestinations({ onCreateTrip }: TrendingDestinationsProps) {
@@ -35,19 +39,21 @@ export default function TrendingDestinations({ onCreateTrip }: TrendingDestinati
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-amber-500" />
-                    Trending This Week
+                    Trending Minggu Ini
                 </h2>
-                <Button variant="ghost" className="text-teal-600 font-bold hover:text-teal-700 hover:bg-teal-50" onClick={onCreateTrip}>
-                    See All <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
+                <Link href="/explore">
+                    <Button variant="ghost" className="text-teal-600 font-bold hover:text-teal-700 hover:bg-teal-50">
+                        Lihat Semua <ArrowRight className="w-4 h-4 ml-1" />
+                    </Button>
+                </Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {TRENDING_PLACES.map((place, idx) => (
-                    <div
+                    <Link
                         key={idx}
-                        onClick={onCreateTrip}
-                        className="group relative h-[320px] rounded-[2rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 ring-1 ring-slate-900/5 hover:-translate-y-1"
+                        href={`/explore/${place.slug}`}
+                        className="group relative h-[320px] rounded-[2rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 ring-1 ring-slate-900/5 hover:-translate-y-1 block"
                     >
                         {/* Image */}
                         <img
@@ -78,10 +84,10 @@ export default function TrendingDestinations({ onCreateTrip }: TrendingDestinati
                             </p>
 
                             <div className="w-full py-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold text-center opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 text-sm hover:bg-white hover:text-slate-900">
-                                Plan This Trip
+                                Lihat Destinasi →
                             </div>
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
         </section>

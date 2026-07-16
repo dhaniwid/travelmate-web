@@ -1,17 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TripResponse } from '@/types';
-import {
-    MapPin,
-    Calendar,
-    Clock,
-    Sparkles,
-    ExternalLink,
-    Share2,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Lock, Sparkles, Share2 } from 'lucide-react';
+import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -19,167 +11,278 @@ interface PublicTripViewProps {
     data: TripResponse;
 }
 
+function fmtRupiah(n: number): string {
+    if (!n) return '—';
+    return `Rp ${n.toLocaleString('id-ID')}`;
+}
+
+function todLabel(time: string): string {
+    const t = (time || '').toLowerCase();
+    if (t.includes('pagi') || t.includes('morning')) return 'Pagi';
+    if (t.includes('siang') || t.includes('afternoon') || t.includes('noon')) return 'Siang';
+    if (t.includes('sore') || t.includes('evening')) return 'Sore';
+    if (t.includes('malam') || t.includes('night')) return 'Malam';
+    const match = t.match(/^(\d{1,2}):/);
+    if (match) {
+        const h = parseInt(match[1]);
+        if (h < 11) return 'Pagi';
+        if (h < 15) return 'Siang';
+        if (h < 18) return 'Sore';
+        return 'Malam';
+    }
+    return time;
+}
+
 export default function PublicTripView({ data }: PublicTripViewProps) {
     const { trip, plan } = data;
+    const [selectedDay, setSelectedDay] = useState(0);
 
-    // Derive date range
+    // Gating: Day 1 window = within 24h of creation.
+    // Missing or invalid created_at → treat as within window (all days open).
+    const createdAtRaw = trip.created_at ? new Date(trip.created_at) : null;
+    const createdAt = createdAtRaw && !isNaN(createdAtRaw.getTime()) ? createdAtRaw : null;
+    const isDay1Window = createdAt
+        ? Date.now() - createdAt.getTime() < 24 * 60 * 60 * 1000
+        : true;
+
+    const itinerary = plan?.itinerary || [];
+
+    // Date range display
     const startDateObj = trip.start_date ? new Date(trip.start_date) : null;
-    let dateRange = '';
+    let dateChip = '';
     if (startDateObj && !isNaN(startDateObj.getTime())) {
-        const formattedStart = formatDate(startDateObj);
-        let formattedEnd = '';
-        if (trip.trip_days > 0) {
-            const endDateObj = new Date(startDateObj);
-            endDateObj.setDate(startDateObj.getDate() + (trip.trip_days - 1));
-            formattedEnd = formatDate(endDateObj);
+        const s = formatDate(startDateObj);
+        if (trip.trip_days > 1) {
+            const end = new Date(startDateObj);
+            end.setDate(startDateObj.getDate() + trip.trip_days - 1);
+            dateChip = `${s}–${formatDate(end)}`;
+        } else {
+            dateChip = s;
         }
-        dateRange = formattedEnd ? `${formattedStart} – ${formattedEnd}` : formattedStart;
     }
 
-    const handleCopyLink = () => {
+    const styleLabel = trip.style
+        ? trip.style.charAt(0).toUpperCase() + trip.style.slice(1).toLowerCase()
+        : '';
+
+    const destination = trip.destination || '';
+
+    const handleShare = () => {
         if (typeof window === 'undefined') return;
-        navigator.clipboard.writeText(window.location.href);
-        toast.success('Link copied to clipboard!');
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            toast.success('Link disalin!');
+        });
     };
 
-    const heroImage = (plan as any)?.image_url || (trip as any)?.image_url || null;
+    const destParam = destination ? `?destination=${encodeURIComponent(destination)}` : '';
+    const signUpUrl = `/sign-up?redirect=${encodeURIComponent(`/dashboard${destParam}`)}`;
+
+    const bd = plan?.budget_breakdown;
+    const budgetItems = bd ? [
+        { label: 'Transport', value: bd.transport },
+        { label: 'Akomodasi', value: bd.accommodation },
+        { label: 'Makan', value: bd.food },
+        { label: 'Total', value: (bd.transport || 0) + (bd.accommodation || 0) + (bd.food || 0) + (bd.tickets || 0) + (bd.misc || 0), isTotal: true },
+    ] : null;
+
+    const currentDayPlan = itinerary[selectedDay];
+    // Gating based on actual day ordinal, not array index — defensive against unordered API responses
+    const isDayVisible = (currentDayPlan?.day ?? 1) === 1 || isDay1Window;
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans">
-            {/* ── HERO HEADER ── */}
-            <div className="relative w-full h-[55vw] max-h-[520px] min-h-[280px] overflow-hidden bg-slate-900">
-                {heroImage && (
-                    <img
-                        src={heroImage}
-                        alt={trip.destination}
-                        className="absolute inset-0 w-full h-full object-cover scale-105"
-                    />
-                )}
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/80" />
+        <div className="min-h-screen bg-[#060F1E] font-sans pb-16">
+            <div className="max-w-[480px] mx-auto px-4">
 
-                {/* Top bar */}
-                <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 py-4 z-10">
-                    {/* Miru wordmark */}
-                    <a href="/" className="text-white font-black text-xl tracking-tight drop-shadow-md">
-                        miru<span className="text-teal-400">.</span>
-                    </a>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleCopyLink}
-                        className="text-white bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full border border-white/20 gap-2 text-xs font-bold"
+                {/* ── HERO HEADER ── */}
+                <div
+                    className="relative rounded-2xl overflow-hidden mb-5 mt-4"
+                    style={{ background: '#0A1628', minHeight: 220, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '1.5rem' }}
+                >
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(10,22,40,0.2) 0%, rgba(10,22,40,0.85) 100%)', zIndex: 1 }} />
+
+                    {/* MIRU pill top-right */}
+                    <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 bg-white/15 backdrop-blur-md rounded-full px-3 py-1" style={{ border: '0.5px solid rgba(255,255,255,0.2)' }}>
+                        <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                        <span className="text-white text-[11px] font-medium tracking-[1.5px]">MIRU</span>
+                    </div>
+
+                    {/* Share button top-left */}
+                    <button
+                        onClick={handleShare}
+                        className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-white/15 backdrop-blur-md rounded-full px-3 py-1 text-white text-[11px] font-medium hover:bg-white/25 transition-colors"
+                        style={{ border: '0.5px solid rgba(255,255,255,0.2)' }}
                     >
-                        <Share2 className="w-3.5 h-3.5" />
-                        Share
-                    </Button>
-                </div>
+                        <Share2 className="w-3 h-3" />
+                        Bagikan
+                    </button>
 
-                {/* Destination info */}
-                <div className="absolute inset-x-0 bottom-0 px-6 pb-8 z-10 space-y-2">
-                    <Badge className="bg-teal-500/80 text-white border-none text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm">
-                        <Sparkles className="w-3 h-3 mr-1" /> AI-Generated Itinerary
-                    </Badge>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight drop-shadow-lg">
-                        {trip.destination || 'Amazing Destination'}
-                    </h1>
-                    <div className="flex flex-wrap items-center gap-4 text-white/80 text-sm font-medium">
-                        {dateRange && (
-                            <span className="flex items-center gap-1.5">
-                                <Calendar className="w-4 h-4 opacity-70" />
-                                {dateRange}
-                            </span>
-                        )}
-                        {trip.trip_days > 0 && (
-                            <span className="flex items-center gap-1.5">
-                                <Clock className="w-4 h-4 opacity-70" />
-                                {trip.trip_days} {trip.trip_days === 1 ? 'Day' : 'Days'}
-                            </span>
-                        )}
-                        {trip.origin && (
-                            <span className="flex items-center gap-1.5">
-                                <MapPin className="w-4 h-4 opacity-70" />
-                                From {trip.origin}
-                            </span>
-                        )}
+                    <div className="relative z-10">
+                        <p className="text-white/60 text-[11px] tracking-[1.5px] uppercase mb-1.5">Trip itinerary</p>
+                        <h1 className="text-white text-[28px] font-medium leading-tight mb-2">{destination || 'Destinasi'}</h1>
+                        <div className="flex items-center gap-3 flex-wrap">
+                            {dateChip && <span className="text-white/75 text-[13px]">{dateChip}</span>}
+                            {dateChip && trip.trip_days > 0 && <span className="text-white/30">·</span>}
+                            {trip.trip_days > 0 && <span className="text-white/75 text-[13px]">{trip.trip_days} hari</span>}
+                            {styleLabel && <><span className="text-white/30">·</span><span className="text-white/75 text-[13px]">{styleLabel}</span></>}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* ── ITINERARY ── */}
-            <div className="max-w-2xl mx-auto px-4 py-10 space-y-8">
-                <div className="text-center space-y-1">
-                    <p className="text-xs font-bold uppercase tracking-widest text-teal-600">Day-by-Day Plan</p>
-                    <h2 className="text-2xl font-black text-slate-900">Your Itinerary</h2>
+                {/* ── INVITATION BANNER ── */}
+                <div
+                    className="flex items-center gap-[10px] px-4 py-3 rounded-xl mb-5"
+                    style={{ background: 'rgba(13,148,136,0.1)', border: '0.5px solid rgba(13,148,136,0.3)' }}
+                >
+                    <div className="w-8 h-8 rounded-full bg-[#0D9488] flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-medium text-white leading-tight">Seseorang berbagi trip ini</p>
+                        <p className="text-[12px] text-white/50">Lihat rencana perjalanan{destination ? ` ke ${destination}` : ''}</p>
+                    </div>
+                    <Link
+                        href={signUpUrl}
+                        className="bg-[#0D9488] text-white text-[12px] font-medium px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-teal-600 transition-colors flex-shrink-0"
+                    >
+                        Buat tripku ↗
+                    </Link>
                 </div>
 
-                {plan?.itinerary && plan.itinerary.length > 0 ? (
-                    plan.itinerary.map((dayPlan) => (
-                        <div key={dayPlan.day} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                            {/* Day header */}
-                            <div className="bg-gradient-to-r from-teal-600 to-emerald-600 px-5 py-3 flex items-center gap-3">
-                                <span className="bg-white/20 text-white font-black text-sm px-3 py-1 rounded-full">
-                                    Day {dayPlan.day}
-                                </span>
-                                {dayPlan.title && (
-                                    <span className="text-white/90 text-sm font-medium truncate">{dayPlan.title}</span>
-                                )}
-                            </div>
-
-                            {/* Activities */}
-                            <ul className="divide-y divide-slate-50">
-                                {(dayPlan.activities || []).map((act, i) => (
-                                    <li key={i} className="px-5 py-3.5 flex gap-4">
-                                        {/* Time pill */}
-                                        <div className="shrink-0 pt-0.5">
-                                            <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full whitespace-nowrap">
-                                                {act.time || '—'}
-                                            </span>
-                                        </div>
-                                        {/* Content */}
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-bold text-slate-900 leading-snug">{act.activity}</p>
-                                            {act.place_name && (
-                                                <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                                                    <MapPin className="w-3 h-3 shrink-0" />
-                                                    {act.place_name}
-                                                </p>
-                                            )}
-                                            {act.description && (
-                                                <p className="text-xs text-slate-600 mt-1 leading-relaxed line-clamp-2">
-                                                    {act.description}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
+                {/* ── DAY TABS + ITINERARY ── */}
+                {itinerary.length > 0 && (
+                    <div className="mb-5">
+                        <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
+                            {itinerary.map((day, idx) => (
+                                <button
+                                    key={day.day}
+                                    onClick={() => setSelectedDay(idx)}
+                                    className="flex-shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
+                                    style={
+                                        idx === selectedDay
+                                            ? { background: '#0D9488', color: 'white', border: 'none' }
+                                            : { background: '#0D2040', color: 'rgba(255,255,255,0.5)', border: '0.5px solid rgba(255,255,255,0.1)' }
+                                    }
+                                >
+                                    Hari {day.day}
+                                </button>
+                            ))}
                         </div>
-                    ))
-                ) : (
-                    <div className="text-center py-16 text-slate-400">
-                        <Sparkles className="w-8 h-8 mx-auto mb-3 opacity-40" />
-                        <p className="text-sm font-medium">Itinerary details coming soon</p>
+
+                        {currentDayPlan && (
+                            <>
+                                <p className="text-[12px] text-white/40 mb-3 tracking-[0.5px] uppercase">
+                                    {currentDayPlan.title
+                                        ? `${currentDayPlan.title} · ${currentDayPlan.activities?.length || 0} aktivitas`
+                                        : `Hari ${currentDayPlan.day} · ${currentDayPlan.activities?.length || 0} aktivitas`}
+                                </p>
+
+                                {isDayVisible ? (
+                                    <div className="flex flex-col gap-3">
+                                        {(currentDayPlan.activities || []).map((act, i) => (
+                                            <div
+                                                key={i}
+                                                className="relative flex gap-3 items-start p-4 rounded-xl"
+                                                style={{
+                                                    background: '#0A1628',
+                                                    border: '0.5px solid rgba(255,255,255,0.08)',
+                                                    opacity: act.is_hidden_gem ? 0.5 : 1,
+                                                }}
+                                            >
+                                                <div
+                                                    className="w-9 h-9 rounded-[10px] flex items-center justify-center flex-shrink-0 text-[18px]"
+                                                    style={{ background: 'rgba(13,148,136,0.2)' }}
+                                                >
+                                                    {act.type === 'food' || act.type === 'kuliner' ? '🍜'
+                                                        : act.type === 'landmark' || act.type === 'wisata' ? '🏛️'
+                                                        : act.type === 'nature' ? '🌿'
+                                                        : '📍'}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <p className="text-[14px] font-medium text-white leading-snug">{act.activity}</p>
+                                                        <span className="text-[11px] text-white/40 whitespace-nowrap flex-shrink-0">{todLabel(act.time)}</span>
+                                                    </div>
+                                                    {(act.description_short || act.description) && (
+                                                        <p className="text-[12px] text-white/50 mt-0.5 line-clamp-2">
+                                                            {act.description_short || act.description}
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                {/* Hidden gem blur overlay — always gated */}
+                                                {act.is_hidden_gem && (
+                                                    <div
+                                                        className="absolute inset-0 rounded-xl flex items-center justify-center"
+                                                        style={{ background: 'rgba(13,32,64,0.7)', backdropFilter: 'blur(2px)' }}
+                                                    >
+                                                        <div className="flex items-center gap-1.5 bg-[#0D9488] px-4 py-1.5 rounded-full">
+                                                            <Lock className="w-3 h-3 text-white" />
+                                                            <span className="text-[12px] font-medium text-white">Hidden gem · PRO</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div
+                                        className="py-8 text-center rounded-xl"
+                                        style={{ background: '#0A1628', border: '0.5px solid rgba(255,255,255,0.08)' }}
+                                    >
+                                        <Lock className="w-5 h-5 text-white/30 mx-auto mb-2" />
+                                        <p className="text-[13px] text-white/40 mb-3">
+                                            Buat akun untuk lihat hari {currentDayPlan.day}
+                                        </p>
+                                        <Link
+                                            href={signUpUrl}
+                                            className="inline-flex items-center text-[12px] font-medium text-white bg-[#0D9488] hover:bg-teal-600 px-4 py-2 rounded-lg transition-colors"
+                                        >
+                                            Daftar gratis →
+                                        </Link>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
+
+                {/* ── BUDGET SECTION ── */}
+                {budgetItems && (
+                    <div
+                        className="rounded-xl p-4 mb-4"
+                        style={{ background: '#0D2040', border: '0.5px solid rgba(255,255,255,0.08)' }}
+                    >
+                        <p className="text-[12px] text-white/40 tracking-[1.5px] uppercase mb-3">ESTIMASI BUDGET</p>
+                        <div className="grid grid-cols-2 gap-2">
+                            {budgetItems.map(item => (
+                                <div
+                                    key={item.label}
+                                    className="rounded-lg px-3 py-[10px]"
+                                    style={{ background: item.isTotal ? '#0D9488' : '#0A1628' }}
+                                >
+                                    <p className="text-[11px] mb-0.5" style={{ color: item.isTotal ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)' }}>{item.label}</p>
+                                    <p className="text-[14px] font-medium text-white">{fmtRupiah(item.value)}</p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
 
                 {/* ── CTA FOOTER ── */}
-                <div className="bg-gradient-to-br from-teal-600 to-emerald-700 rounded-3xl p-8 text-center space-y-4 shadow-xl">
-                    <Sparkles className="w-8 h-8 mx-auto text-white/70" />
-                    <h3 className="text-xl font-black text-white leading-snug">
-                        Plan your dream trip with Miru
-                    </h3>
-                    <p className="text-teal-100 text-sm max-w-xs mx-auto">
-                        AI-generated itineraries tailored to your budget, pace, and interests — in seconds.
-                    </p>
-                    <a
-                        href="/"
-                        className="inline-flex items-center gap-2 bg-white text-teal-700 font-black text-sm px-6 py-3 rounded-full shadow-lg hover:scale-105 transition-transform"
+                <div className="rounded-2xl p-6 text-center" style={{ background: '#0A1628' }}>
+                    <div className="w-10 h-10 rounded-xl bg-[#0D9488] flex items-center justify-center mx-auto mb-3">
+                        <Sparkles className="w-5 h-5 text-white" />
+                    </div>
+                    <p className="text-white text-[15px] font-medium mb-1.5">Rencanakan tripmu sendiri</p>
+                    <p className="text-white/60 text-[13px] mb-4">Miru generate itinerary lengkap dalam hitungan detik</p>
+                    <Link
+                        href={signUpUrl}
+                        className="block w-full bg-[#0D9488] hover:bg-teal-600 text-white text-[14px] font-medium py-3 rounded-[10px] transition-colors"
                     >
-                        Start Planning Free
-                        <ExternalLink className="w-4 h-4" />
-                    </a>
+                        Mulai gratis ↗
+                    </Link>
                 </div>
+
             </div>
         </div>
     );

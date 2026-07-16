@@ -35,16 +35,16 @@ export default function ItineraryLoadingState({ startTime }: { startTime?: numbe
             </div>
 
             <div className="text-center space-y-4 max-w-lg mb-12 relative z-10">
-                <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                    Curating your <span className="text-teal-600">Day-by-Day</span> Plan...
+                <h3 className="text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
+                    Curating your <span className="text-teal-400">Day-by-Day</span> Plan...
                 </h3>
-                <p className="text-slate-500 font-medium text-lg leading-relaxed px-4">
+                <p className="text-slate-300 font-medium text-lg leading-relaxed px-4">
                     We are optimizing routes and selecting the best spots for you.
-                    This usually takes about <span className="text-teal-600 font-bold">30 seconds</span>.
+                    This usually takes about <span className="text-teal-400 font-bold">30 seconds</span>.
                 </p>
 
                 {/* Progress Bar Simulation */}
-                <div className="mt-8 mx-auto w-64 h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 p-[1px]">
+                <div className="mt-8 mx-auto w-64 h-1.5 bg-white/10 rounded-full overflow-hidden border border-white/10 p-[1px]">
                     <div
                         className="h-full bg-gradient-to-r from-teal-400 via-teal-500 to-teal-400 rounded-full transition-all duration-1000 ease-linear"
                         style={{ width: `${progress}%` }}

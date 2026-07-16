@@ -1,0 +1,81 @@
+<svg id="landmark-bandung" viewBox="0 0 390 650" xmlns="http://www.w3.org/2000/svg">
+  <g id="layer-sky">
+    <defs>
+      <linearGradient id="bandung-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#060F1E"/>
+        <stop offset="40%" stop-color="#0D5463"/>
+        <stop offset="75%" stop-color="#C2500A"/>
+        <stop offset="100%" stop-color="#7A2E0A"/>
+      </linearGradient>
+    </defs>
+    <rect width="390" height="650" fill="url(#bandung-sky)"/>
+    <circle cx="48" cy="36" r="1.2" fill="#FFFFFF" opacity="0.8"/>
+    <circle cx="105" cy="24" r="1" fill="#FFFFFF" opacity="0.7"/>
+    <circle cx="168" cy="49" r="1.5" fill="#FFFFFF" opacity="0.6"/>
+    <circle cx="222" cy="19" r="1" fill="#FFFFFF" opacity="0.9"/>
+    <circle cx="282" cy="43" r="1.2" fill="#FFFFFF" opacity="0.7"/>
+    <circle cx="342" cy="31" r="1" fill="#FFFFFF" opacity="0.8"/>
+    <circle cx="66" cy="73" r="1" fill="#FFFFFF" opacity="0.6"/>
+    <path d="M62 58 Q74 46 86 58 Q74 53 62 58Z" fill="#F5E6C8" opacity="0.9"/>
+  </g>
+
+  <g id="layer-background">
+    <!-- Tangkuban Perahu — flat-topped volcanic crater (distinct silhouette) -->
+    <!-- Main flat-top mountain -->
+    <path d="M60 380 Q120 295 195 290 Q270 295 330 380" fill="#2D6A8A"/>
+    <!-- Flat crater top hint -->
+    <rect x="155" y="288" width="80" height="8" fill="#2D6A8A" opacity="0.8"/>
+    <!-- Secondary hills -->
+    <path d="M0 390 Q60 355 100 390" fill="#2D6A8A" opacity="0.6"/>
+    <path d="M290 390 Q340 360 390 390" fill="#2D6A8A" opacity="0.6"/>
+  </g>
+
+  <g id="layer-midground">
+    <!-- Art deco buildings flanking Gedung Sate -->
+    <rect x="35" y="420" width="75" height="100" fill="#1A3A5C"/>
+    <rect x="40" y="408" width="65" height="16" fill="#1A3A5C"/>
+    <polygon points="40,408 72,392 105,408" fill="#1A3A5C"/>
+    <rect x="280" y="420" width="75" height="100" fill="#1A3A5C"/>
+    <rect x="285" y="408" width="65" height="16" fill="#1A3A5C"/>
+    <polygon points="285,408 318,392 350,408" fill="#1A3A5C"/>
+    <!-- Trees -->
+    <rect x="130" y="490" width="6" height="40" fill="#1A3A5C"/>
+    <ellipse cx="133" cy="487" rx="14" ry="8" fill="#1A3A5C"/>
+    <rect x="255" y="490" width="6" height="40" fill="#1A3A5C"/>
+    <ellipse cx="258" cy="487" rx="14" ry="8" fill="#1A3A5C"/>
+    <!-- Windows with glow -->
+    <rect x="52" y="435" width="10" height="14" fill="#F97316" opacity="0.5"/>
+    <rect x="72" y="435" width="10" height="14" fill="#F97316" opacity="0.4"/>
+    <rect x="295" y="435" width="10" height="14" fill="#F97316" opacity="0.5"/>
+    <rect x="318" y="435" width="10" height="14" fill="#F97316" opacity="0.4"/>
+  </g>
+
+  <g id="layer-foreground">
+    <!-- Gedung Sate main body -->
+    <rect x="138" y="450" width="114" height="170" fill="#0A1628"/>
+    <!-- Colonnaded entrance portico -->
+    <rect x="150" y="450" width="90" height="30" fill="#0A1628"/>
+    <!-- Wing extensions -->
+    <rect x="110" y="480" width="40" height="100" fill="#0A1628"/>
+    <rect x="240" y="480" width="40" height="100" fill="#0A1628"/>
+    <!-- Roof cornice -->
+    <rect x="130" y="446" width="130" height="10" fill="#0A1628"/>
+    <!-- Attic / upper block -->
+    <rect x="155" y="400" width="80" height="50" fill="#0A1628"/>
+    <!-- Roof over attic -->
+    <rect x="150" y="393" width="90" height="10" fill="#0A1628"/>
+    <!-- The iconic sate crown spike shaft -->
+    <rect x="188" y="290" width="14" height="108" fill="#0A1628"/>
+    <!-- Sate skewers (5 balls stacked) — the signature silhouette -->
+    <circle cx="195" cy="285" r="9" fill="#0A1628"/>
+    <circle cx="195" cy="267" r="9" fill="#0A1628"/>
+    <circle cx="195" cy="249" r="9" fill="#0A1628"/>
+    <circle cx="195" cy="231" r="9" fill="#0A1628"/>
+    <circle cx="195" cy="213" r="9" fill="#0A1628"/>
+    <!-- Top spire -->
+    <polygon points="188,213 195,190 202,213" fill="#0A1628"/>
+    <circle cx="195" cy="187" r="5" fill="#0A1628"/>
+    <!-- Crown accent -->
+    <rect x="178" y="388" width="34" height="6" fill="#0D9488" opacity="0.4"/>
+  </g>
+</svg>

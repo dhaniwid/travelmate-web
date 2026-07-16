@@ -26,7 +26,7 @@ export default function KnowledgeFeedPanel() {
     const [result, setResult] = useState<IngestResult | null>(null);
 
     const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8889/api/v1').replace(/\/+$/, '');
-    const adminSecret = process.env.NEXT_PUBLIC_ADMIN_SECRET || 'travelmate_admin_secret_2026';
+    const adminSecret = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? "";
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

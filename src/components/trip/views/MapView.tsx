@@ -1,75 +1,219 @@
 'use client';
 
-import React from 'react';
-import TripMap from '@/components/business/trip-result/TripMap';
-import { Activity, Trip } from '@/types';
-import { Map as MapIcon, Layers, Maximize, Compass } from 'lucide-react';
+import React, { useRef, useState, useMemo } from 'react';
+import dynamic from 'next/dynamic';
+import { ItineraryItem, Trip } from '@/types';
+import { Map as MapIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const TripMap = dynamic(() => import('@/components/business/trip-result/TripMap'), { ssr: false });
+
+// Must match TripMap DAY_COLORS exactly
+const DAY_COLORS = [
+    '#14b8a6', // teal   — Hari 1
+    '#f97316', // orange — Hari 2
+    '#a855f7', // purple — Hari 3
+    '#ec4899', // pink   — Hari 4
+    '#f59e0b', // amber  — Hari 5
+    '#06b6d4', // cyan   — Hari 6
+    '#3b82f6', // blue   — Hari 7+
+];
+
+const TOD_EMOJI = (timeStr: string) => {
+    const h = parseInt((timeStr || '').split(':')[0]);
+    if (isNaN(h) || h < 11) return '☕';
+    if (h < 16) return '☀️';
+    if (h < 19) return '🌅';
+    return '🌙';
+};
+
+const isValidCoordinate = (lat: any, lng: any): boolean => {
+    const numLat = parseFloat(lat);
+    const numLng = parseFloat(lng);
+    return !isNaN(numLat) && !isNaN(numLng) && isFinite(numLat) && isFinite(numLng)
+        && !(numLat === 0 && numLng === 0);
+};
 
 interface MapViewProps {
     trip: Trip;
-    activities: Activity[];
+    itinerary: ItineraryItem[];
     selectedActivityId?: string | null;
     onActivitySelect?: (id: string | null) => void;
 }
 
 export default function MapView({
     trip,
-    activities,
+    itinerary,
     selectedActivityId = null,
-    onActivitySelect = () => { }
+    onActivitySelect = () => { },
 }: MapViewProps) {
+    const listRef = useRef<HTMLDivElement>(null);
+
+    // Filter state — all days visible by default
+    const allDayNumbers = useMemo(() => itinerary.map(d => d.day), [itinerary]);
+    const [activeDays, setActiveDays] = useState<Set<number>>(() => new Set(allDayNumbers));
+
+    const toggleDay = (day: number) => {
+        setActiveDays(prev => {
+            const next = new Set(prev);
+            if (next.has(day)) {
+                // Don't allow hiding all days
+                if (next.size === 1) return prev;
+                next.delete(day);
+            } else {
+                next.add(day);
+            }
+            return next;
+        });
+    };
+
+    // Count all valid pins (unfiltered) to decide empty state
+    const totalValidPins = useMemo(() =>
+        itinerary.reduce((sum, day) =>
+            sum + day.activities.filter(a => isValidCoordinate(a.latitude, a.longitude)).length, 0
+        ), [itinerary]);
+
+    // Flat list of valid pins respecting active filter (for activity list below map)
+    const visiblePins = useMemo(() =>
+        itinerary
+            .filter(d => activeDays.has(d.day))
+            .flatMap(dayItem =>
+                dayItem.activities
+                    .filter(a => isValidCoordinate(a.latitude, a.longitude))
+                    .map((act, actIdx) => ({
+                        act,
+                        day: dayItem.day,
+                        activityIndex: actIdx,
+                        id: `${dayItem.day}-${actIdx}`,
+                        color: DAY_COLORS[(dayItem.day - 1) % DAY_COLORS.length],
+                    }))
+            ),
+        [itinerary, activeDays]
+    );
+
+    const handlePinSelect = (id: string | null) => {
+        onActivitySelect(id);
+        if (id && listRef.current) {
+            const el = listRef.current.querySelector(`[data-activity-id="${id}"]`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+        }
+    };
+
+    // Trip has no coordinates at all → informative empty state
+    if (totalValidPins === 0) {
+        return (
+            <div className="py-12 flex flex-col items-center gap-4 animate-in fade-in duration-300">
+                <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/8 flex items-center justify-center">
+                    <MapIcon className="w-7 h-7 text-white/20" />
+                </div>
+                <div className="text-center max-w-[260px]">
+                    <p className="text-[15px] font-semibold text-white/50 mb-1">Peta tidak tersedia</p>
+                    <p className="text-[12px] text-white/30 leading-relaxed">
+                        Trip ini dibuat sebelum fitur koordinat tersedia. Buat trip baru untuk melihat peta interaktif.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="h-[calc(100vh-160px)] min-h-[600px] w-full relative animate-in zoom-in-95 duration-500">
-            {/* Map Header Overlay */}
-            <div className="absolute top-6 left-6 z-20 pointer-events-none">
-                <div className="bg-white/90 backdrop-blur-xl p-4 rounded-2xl shadow-xl border border-white/20 flex items-center gap-4 pointer-events-auto">
-                    <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg">
-                        <MapIcon className="w-5 h-5" />
-                    </div>
-                    <div>
-                        <h3 className="font-black text-slate-900 leading-none mb-1">Interactive Map</h3>
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">
-                            {activities.length} Points of Interest in {trip.destination}
-                        </p>
-                    </div>
+        <div className="flex flex-col gap-3 animate-in fade-in duration-300 pb-20 -mx-4 md:-mx-8">
+
+            {/* Map — full bleed */}
+            <div className="h-[calc(100vh-320px)] min-h-[360px] w-full relative">
+                <div className="w-full h-full border-y border-white/8 overflow-hidden">
+                    <TripMap
+                        itinerary={itinerary}
+                        destination={trip.destination}
+                        selectedActivityId={selectedActivityId}
+                        onActivitySelect={handlePinSelect}
+                        activeDays={activeDays}
+                    />
                 </div>
             </div>
 
-            {/* Float Actions */}
-            <div className="absolute right-6 top-6 z-20 flex flex-col gap-3">
-                <button className="w-12 h-12 rounded-2xl bg-white shadow-xl flex items-center justify-center text-slate-600 hover:text-blue-600 transition-all border border-slate-100 active:scale-95">
-                    <Layers className="w-5 h-5" />
-                </button>
-                <button className="w-12 h-12 rounded-2xl bg-white shadow-xl flex items-center justify-center text-slate-600 hover:text-blue-600 transition-all border border-slate-100 active:scale-95">
-                    <Compass className="w-5 h-5" />
-                </button>
-            </div>
-
-            {/* The Map Component */}
-            <div className="w-full h-full rounded-[40px] overflow-hidden shadow-2xl border-4 border-white">
-                <TripMap
-                    activities={activities}
-                    destination={trip.destination}
-                    selectedActivityId={selectedActivityId}
-                    onActivitySelect={onActivitySelect}
-                    activeDay={1}
-                />
-            </div>
-
-            {/* Legend / Status Overlay */}
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20">
-                <div className="bg-slate-900/90 backdrop-blur-md text-white px-6 py-3 rounded-full flex items-center gap-6 shadow-2xl border border-white/10">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                        <span className="text-xs font-black uppercase tracking-widest">Active Route</span>
-                    </div>
-                    <div className="h-4 w-px bg-white/20" />
-                    <div className="text-xs font-bold text-white/70">
-                        {trip.destination} Discovery Map
+            {/* Legend — horizontal scroll chips, clickable filter */}
+            {itinerary.length > 1 && (
+                <div className="px-4 md:px-8">
+                    <div className="flex gap-2 overflow-x-auto scrollbar-none snap-x pb-0.5">
+                        {itinerary.map(dayItem => {
+                            const color = DAY_COLORS[(dayItem.day - 1) % DAY_COLORS.length];
+                            const isActive = activeDays.has(dayItem.day);
+                            return (
+                                <button
+                                    key={dayItem.day}
+                                    onClick={() => toggleDay(dayItem.day)}
+                                    className={cn(
+                                        'snap-start flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-semibold transition-all duration-150',
+                                        isActive
+                                            ? 'border-transparent text-white'
+                                            : 'bg-transparent border-white/10 text-white/30'
+                                    )}
+                                    style={isActive ? { background: color + '22', borderColor: color + '55', color } : undefined}
+                                >
+                                    <span
+                                        className="w-2 h-2 rounded-full flex-shrink-0"
+                                        style={{ background: isActive ? color : 'rgba(255,255,255,0.15)' }}
+                                    />
+                                    Hari {dayItem.day}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
-            </div>
+            )}
+
+            {/* Activity list — horizontal scroll cards */}
+            {visiblePins.length > 0 && (
+                <div className="px-4 md:px-8">
+                    <p className="text-[11px] uppercase tracking-widest text-white/35 mb-2">
+                        {visiblePins.length} lokasi ditampilkan
+                    </p>
+                    <div
+                        ref={listRef}
+                        className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-none"
+                        style={{ scrollbarWidth: 'none' }}
+                    >
+                        {visiblePins.map(pin => {
+                            const isSelected = selectedActivityId === pin.id;
+                            return (
+                                <button
+                                    key={pin.id}
+                                    data-activity-id={pin.id}
+                                    onClick={() => handlePinSelect(isSelected ? null : pin.id)}
+                                    className={cn(
+                                        'snap-start flex-shrink-0 w-44 text-left rounded-2xl border p-3 transition-all duration-150',
+                                        isSelected
+                                            ? 'border-teal-500/40 bg-[#0D2040] ring-1 ring-teal-500/30'
+                                            : 'border-white/8 bg-[#0A1628] hover:border-white/16'
+                                    )}
+                                >
+                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                        <span
+                                            className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white"
+                                            style={{ background: pin.color }}
+                                        >
+                                            Hari {pin.day}
+                                        </span>
+                                        <span className="text-[11px]">{TOD_EMOJI(pin.act.time)}</span>
+                                    </div>
+                                    <p className={cn(
+                                        'text-[12px] font-semibold line-clamp-2 leading-snug',
+                                        isSelected ? 'text-white' : 'text-white/80'
+                                    )}>
+                                        {pin.act.activity}
+                                    </p>
+                                    {pin.act.place_name && (
+                                        <p className="text-[10px] mt-1 truncate text-white/35">
+                                            {pin.act.place_name}
+                                        </p>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

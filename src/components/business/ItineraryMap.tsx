@@ -2,7 +2,7 @@
 
 import {MapContainer, TileLayer, Marker, Popup, Polyline} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import {ItineraryItem} from '@/types';
+import {ItineraryItem, Activity} from '@/types';
 import L from 'leaflet';
 import {useEffect, useState} from 'react';
 
@@ -25,7 +25,7 @@ export default function ItineraryMap({days}: { days: ItineraryItem[] }) {
     const allPoints: { lat: number; lng: number; name: string; day: number }[] = [];
 
     days.forEach(day => {
-        day.activities.forEach(act => {
+        day.activities.forEach((act: Activity) => {
             // Filter koordinat 0 atau null (jika AI gagal generate)
             if (act.latitude && act.longitude && act.latitude !== 0) {
                 allPoints.push({

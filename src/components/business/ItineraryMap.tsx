@@ -70,8 +70,8 @@ export default function ItineraryMap({days}: { days: ItineraryItem[] }) {
                 {/* Render Garis Rute (Polyline) per Hari */}
                 {days.map((day, i) => {
                     const route = day.activities
-                        .filter(a => a.latitude && a.latitude !== 0)
-                        .map(a => [a.latitude, a.longitude] as [number, number]);
+                        .filter((a: Activity) => a.latitude && a.latitude !== 0)
+                        .map((a: Activity) => [a.latitude, a.longitude] as [number, number]);
 
                     // Warna beda tiap hari (Cycle colors)
                     const colors = ['blue', 'red', 'green', 'purple', 'orange'];

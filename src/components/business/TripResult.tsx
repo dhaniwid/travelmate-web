@@ -25,6 +25,7 @@ import MapView from '@/components/trip/views/MapView';
 import MiruChatDrawer from '@/components/trip/MiruChatDrawer'; // NEW
 import CollapsibleOverview from '@/components/business/trip-result/CollapsibleOverview';
 import ItinerarySkeleton from './ItinerarySkeleton';
+import ItineraryLoadingState from './ItineraryLoadingState';
 import ShareModal from '@/components/business/trip/ShareModal';
 import UpgradeModal from '@/components/ui/UpgradeModal';
 
@@ -456,7 +457,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     }, [currentPlan?.itinerary]);
 
     if (!currentPlan || !currentPlan.itinerary) {
-        return <ItinerarySkeleton />;
+        return <ItineraryLoadingState startTime={generationStartTime} />;
     }
 
     return (

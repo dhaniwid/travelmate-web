@@ -198,7 +198,7 @@ export default function CreateTripForm({
                         localStorage.setItem('pending_claim_trip_id', tripId);
                         localStorage.setItem('miru_guest_usage', '1');
                     }
-                    setTimeout(() => router.push(`/trips/${tripId}`), 800);
+                    router.push(`/trips/${tripId}`);
                 },
                 (tripId) => {
                     // skeleton_complete

@@ -264,7 +264,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
             if (d.day === day) {
                 return {
                     ...d,
-                    activities: d.activities.filter((_, i) => i !== index)
+                    activities: d.activities.filter((_: Activity, i: number) => i !== index)
                 };
             }
             return d;

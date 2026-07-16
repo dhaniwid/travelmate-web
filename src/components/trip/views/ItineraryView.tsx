@@ -6,7 +6,7 @@ import DayNavigator from '@/components/business/trip-result/DayNavigator';
 import ItineraryLoadingState from '@/components/business/ItineraryLoadingState';
 import EnrichmentLoadingState from '@/components/business/trip-result/EnrichmentLoadingState';
 import TripStatsGrid from '@/components/business/trip-result/TripStatsGrid';
-import { Trip, TripPlan } from '@/types';
+import { Trip, TripPlan, ItineraryItem } from '@/types';
 
 interface ItineraryViewProps {
     trip: Trip;
@@ -40,9 +40,9 @@ export default function ItineraryView({
     const isCurating =
         trip.itinerary_status === 'pending' || trip.itinerary_status === 'generating';
 
-    const dayArray = (plan?.itinerary || []).map(d => d.day);
+    const dayArray = (plan?.itinerary || []).map((d: ItineraryItem) => d.day);
     const activeDayActivities = React.useMemo(
-        () => plan.itinerary?.find(d => d.day === activeDay)?.activities || [],
+        () => plan.itinerary?.find((d: ItineraryItem) => d.day === activeDay)?.activities || [],
         [plan.itinerary, activeDay]
     );
 

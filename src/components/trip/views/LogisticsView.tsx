@@ -163,7 +163,7 @@ export default function LogisticsView({ trip, plan, isPro = false, onUpgrade }: 
     const arrival = plan.arrival_guide;
     const isInternational = trip.destination && !['bali', 'lombok', 'yogyakarta', 'solo', 'jakarta', 'bandung',
         'surabaya', 'semarang', 'malang', 'medan', 'makassar', 'manado', 'flores', 'raja ampat',
-        'komodo', 'labuan bajo'].some(d => trip.destination.toLowerCase().includes(d));
+        'komodo', 'labuan bajo'].some((d: string) => trip.destination.toLowerCase().includes(d));
 
     const essentialRows = [
         { icon: <Bus className="w-3.5 h-3.5 text-white/50" />, text: arrival?.primary_transport || `Ojek online tersedia di ${trip.destination}` },

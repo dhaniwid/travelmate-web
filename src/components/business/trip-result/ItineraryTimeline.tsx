@@ -3,7 +3,7 @@
 import React from 'react';
 import { Calendar, RefreshCw, Sparkles as SparklesIcon } from 'lucide-react';
 import { cn, formatDate } from '@/lib/utils';
-import { TripResponse, Activity } from '@/types';
+import { TripResponse, Activity, ItineraryItem } from '@/types';
 import ActivityCard from './ActivityCard';
 import EnrichmentLoadingState from './EnrichmentLoadingState';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -58,7 +58,7 @@ export default function ItineraryTimeline({
     onUpgrade,
     aiEditsUsed = 0,
 }: ItineraryTimelineProps) {
-    const dayPlan = (plan?.itinerary || []).find(d => d.day === activeDay);
+    const dayPlan = (plan?.itinerary || []).find((d: ItineraryItem) => d.day === activeDay);
     const { subscription } = useSubscription();
     const isPro = subscription?.subscription_tier === 'PRO';
 

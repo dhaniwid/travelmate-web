@@ -14,8 +14,7 @@ import {
     QrCode,
     Copy,
     Sparkles,
-    Mail,
-    Send
+    MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -47,10 +46,10 @@ export default function ManualPaymentModal({ isOpen, onClose }: ManualPaymentMod
 
     const userEmail = user?.primaryEmailAddress?.emailAddress || "[User Email]";
 
-    const handleEmailConfirm = () => {
-        const subject = encodeURIComponent(`Bukti Bayar Founder - ${userEmail}`);
-        const body = encodeURIComponent(`Halo Admin,\n\nSaya sudah mentransfer ${bankDetails.amount} untuk aktivasi paket Founder PRO.\n\nEmail Akun: ${userEmail}\nMetode: ${activeTab === 'qris' ? 'QRIS' : 'Bank Transfer'}\n\n(Mohon lampirkan screenshot bukti transfer pada email ini)`);
-        window.location.href = `mailto:support@miru.travel?subject=${subject}&body=${body}`;
+    const handleWhatsAppConfirm = () => {
+        const userName = user?.fullName || "[nama]";
+        const text = encodeURIComponent(`Halo Miru! Saya sudah bayar PRO.\nNama: ${userName}\nEmail akun: ${userEmail}\nMetode: ${activeTab === 'qris' ? 'QRIS' : 'Transfer Bank'}`);
+        window.open(`https://wa.me/6281122288852?text=${text}`, '_blank');
     };
 
 
@@ -168,11 +167,11 @@ export default function ManualPaymentModal({ isOpen, onClose }: ManualPaymentMod
                 {/* Sticky Footer Buttons */}
                 <div className="p-6 pt-2 border-t border-slate-50 bg-white/80 backdrop-blur-md shrink-0 space-y-3">
                     <Button
-                        onClick={handleEmailConfirm}
-                        className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-md shadow-lg flex items-center justify-center gap-3 transition-all active:scale-95"
+                        onClick={handleWhatsAppConfirm}
+                        className="w-full h-14 rounded-2xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-black text-md shadow-lg flex items-center justify-center gap-3 transition-all active:scale-95"
                     >
-                        <Mail className="w-5 h-5 text-teal-400" />
-                        Konfirmasi via Email
+                        <MessageCircle className="w-5 h-5" />
+                        Konfirmasi via WhatsApp
                     </Button>
 
 

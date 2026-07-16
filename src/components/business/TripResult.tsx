@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useTransition, useEffect } from 'react';
-import { TripResponse, Activity, ActivityAlternative } from '@/types';
+import { TripResponse, Activity, ActivityAlternative, ItineraryItem } from '@/types';
 import { tripService } from '@/services/trip';
 import ScrollAwareNavbar from './trip-result/ScrollAwareNavbar';
 import TripHeader from './trip-result/TripHeader';
@@ -79,7 +79,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     const [generationStartTime] = React.useState(() => Date.now());
 
     // Default to 'generating' if no status provided AND no activities exist yet
-    const hasActivities = plan?.itinerary && plan.itinerary.some(d => d.activities && d.activities.length > 0);
+    const hasActivities = plan?.itinerary && plan.itinerary.some((d: ItineraryItem) => d.activities && d.activities.length > 0);
     const initialStatus = hasActivities ? 'completed' : 'generating';
 
     const [itineraryStatus, setItineraryStatus] = React.useState(trip.itinerary_status || initialStatus);
@@ -132,7 +132,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                     // We don't wait for enrichment anymore because it's lazy-loaded on-demand (M-126)
                     if (freshTrip.itinerary_status === 'completed') {
                         const hasActivities = freshData.plan?.itinerary &&
-                            freshData.plan.itinerary.some(d => d.activities && d.activities.length > 0);
+                            freshData.plan.itinerary.some((d: ItineraryItem) => d.activities && d.activities.length > 0);
 
                         if (hasActivities) {
                             clearInterval(interval);
@@ -193,7 +193,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
         // Guard: Ensure plan exists
         if (!currentPlan?.itinerary) return;
 
-        const dayPlan = currentPlan.itinerary.find(d => d.day === activeDay);
+        const dayPlan = currentPlan.itinerary.find((d: ItineraryItem) => d.day === activeDay);
 
         // Guard: Ensure day has activities
         if (dayPlan?.activities && dayPlan.activities.length > 0) {
@@ -248,7 +248,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
             return;
         }
 
-        const dayPlan = currentPlan.itinerary.find(d => d.day === day);
+        const dayPlan = currentPlan.itinerary.find((d: ItineraryItem) => d.day === day);
         if (dayPlan && dayPlan.activities[index]) {
             setActiveActivity({ day, index, data: dayPlan.activities[index] });
             setIsReplaceOpen(true);
@@ -260,7 +260,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
 
         // 1. Optimistic Update
         const oldItinerary = currentPlan.itinerary;
-        const newItinerary = (currentPlan.itinerary || []).map(d => {
+        const newItinerary = (currentPlan.itinerary || []).map((d: ItineraryItem) => {
             if (d.day === day) {
                 return {
                     ...d,
@@ -340,7 +340,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                     };
 
                     setCurrentPlan(prev => {
-                        const newItinerary = (prev?.itinerary || []).map(d => {
+                        const newItinerary = (prev?.itinerary || []).map((d: ItineraryItem) => {
                             if (d.day === addTarget!.day) {
                                 const newActivities = [...d.activities];
                                 newActivities.splice(addTarget!.index + 1, 0, newActivity);
@@ -374,7 +374,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
 
         // 1. Optimistic Update (UI)
         const oldItinerary = currentPlan.itinerary;
-        const newItinerary = (currentPlan.itinerary || []).map(d => {
+        const newItinerary = (currentPlan.itinerary || []).map((d: ItineraryItem) => {
             if (d.day === activeActivity.day) {
                 const newActivities = [...d.activities];
                 newActivities[activeActivity.index] = newActivity;
@@ -448,10 +448,10 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
         }
     };
 
-    const dayArray = (currentPlan?.itinerary || []).map(d => d.day);
+    const dayArray = (currentPlan?.itinerary || []).map((d: ItineraryItem) => d.day);
 
     const activeDayActivities = React.useMemo(() => {
-        return currentPlan?.itinerary?.find(d => d.day === activeDay)?.activities || [];
+        return currentPlan?.itinerary?.find((d: ItineraryItem) => d.day === activeDay)?.activities || [];
     }, [currentPlan?.itinerary, activeDay]);
 
     const allActivities = React.useMemo(() => {

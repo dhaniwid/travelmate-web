@@ -50,7 +50,7 @@ export default function MapView({
     const listRef = useRef<HTMLDivElement>(null);
 
     // Filter state — all days visible by default
-    const allDayNumbers = useMemo(() => itinerary.map(d => d.day), [itinerary]);
+    const allDayNumbers = useMemo(() => itinerary.map((d: ItineraryItem) => d.day), [itinerary]);
     const [activeDays, setActiveDays] = useState<Set<number>>(() => new Set(allDayNumbers));
 
     const toggleDay = (day: number) => {
@@ -76,7 +76,7 @@ export default function MapView({
     // Flat list of valid pins respecting active filter (for activity list below map)
     const visiblePins = useMemo(() =>
         itinerary
-            .filter(d => activeDays.has(d.day))
+            .filter((d: ItineraryItem) => activeDays.has(d.day))
             .flatMap(dayItem =>
                 dayItem.activities
                     .filter(a => isValidCoordinate(a.latitude, a.longitude))

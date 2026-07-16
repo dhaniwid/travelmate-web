@@ -66,7 +66,7 @@ export default function EssentialsView({ trip, plan }: EssentialsViewProps) {
     const isInternational = trip.destination &&
         !['bali', 'lombok', 'yogyakarta', 'solo', 'jakarta', 'bandung', 'surabaya',
           'semarang', 'malang', 'medan', 'makassar', 'manado', 'flores', 'raja ampat',
-          'komodo', 'labuan bajo'].some(d => trip.destination.toLowerCase().includes(d));
+          'komodo', 'labuan bajo'].some((d: string) => trip.destination.toLowerCase().includes(d));
 
     const visaInfo = plan.arrival_guide?.visa_info;
     const localTransport = plan.arrival_guide?.primary_transport;

@@ -96,7 +96,7 @@ export default function ExplorePage() {
                                     <h3 className="text-white font-bold text-sm md:text-base leading-tight">{dest.name}</h3>
                                     <div className="flex items-center gap-1 mt-1">
                                         <div className="flex gap-0.5">
-                                            {[...Array(5)].map((_, i) => (
+                                            {[...Array(5)].map((_: unknown, i: number) => (
                                                 <div key={i} className={cn("w-1.5 h-1.5 rounded-full", i < 4 ? "bg-teal-400" : "bg-white/30")} />
                                             ))}
                                         </div>

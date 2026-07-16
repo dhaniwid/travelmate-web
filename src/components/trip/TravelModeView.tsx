@@ -155,7 +155,7 @@ export default function TravelModeView({ data }: Props) {
 
     // Progress
     const totalActs = activities.length;
-    const doneActs = activities.filter((_, i) => checkedIn.has(actKey(activeDayIdx, i))).length;
+    const doneActs = activities.filter((_: Activity, i: number) => checkedIn.has(actKey(activeDayIdx, i))).length;
     const progressPct = totalActs > 0 ? Math.round((doneActs / totalActs) * 100) : 0;
 
     // Date label

@@ -22,7 +22,7 @@ export default function LogisticsDashboard({ trip, plan }: LogisticsDashboardPro
     }
 
     // 1. ARRIVAL LOGIC
-    const arrival = plan.logistics?.arrival_guide || plan.arrival_guide || {
+    const arrival = (plan as any).logistics?.arrival_guide || plan.arrival_guide || {
         primary_transport: 'Flight',
         travel_time: 'Calculated in background...',
         estimated_price_range: ''

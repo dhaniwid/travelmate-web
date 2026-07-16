@@ -6,6 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Users, Map, TrendingUp, Activity, Lock, UserPlus, BarChart2 } from "lucide-react";
 import KnowledgeFeedPanel from "./KnowledgeFeedPanel";
 import UserSubscriptionPanel from "./UserSubscriptionPanel";
+import LandmarkConfigPanel from "./LandmarkConfigPanel";
+import ValidationQueuePanel from "./ValidationQueuePanel";
 
 // FORCE DYNAMIC: Always fetch fresh stats
 export const dynamic = "force-dynamic";
@@ -227,6 +229,12 @@ export default async function AdminDashboard() {
                     </Card>
                 </div>
 
+                {/* 🔍 Landmark Validation Queue */}
+                <ValidationQueuePanel />
+
+                {/* 🏛️ Landmark Configs */}
+                <LandmarkConfigPanel />
+
                 {/* PRO Subscription Management */}
                 <Card>
                     <CardHeader>
@@ -238,7 +246,7 @@ export default async function AdminDashboard() {
                         </p>
                     </CardHeader>
                     <CardContent>
-                        <UserSubscriptionPanel adminToken={process.env.ADMIN_SECRET ?? ''} />
+                        <UserSubscriptionPanel />
                     </CardContent>
                 </Card>
 

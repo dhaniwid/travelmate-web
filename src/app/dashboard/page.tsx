@@ -127,7 +127,7 @@ function DashboardContent() {
     const todayTime = today.getTime();
 
     const sortedTrips = [...trips].sort((a, b) =>
-        new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+        new Date(a.start_date ?? 0).getTime() - new Date(b.start_date ?? 0).getTime()
     );
 
     // Handle Delete
@@ -248,7 +248,7 @@ function DashboardContent() {
                         </div>
                         <div className="flex flex-col gap-2">
                             {sortedTrips.slice(0, 3).map(trip => {
-                                const tripDate = new Date(trip.start_date);
+                                const tripDate = new Date(trip.start_date ?? 0);
                                 tripDate.setHours(0, 0, 0, 0);
                                 const isUpcoming = tripDate.getTime() >= todayTime;
                                 return (

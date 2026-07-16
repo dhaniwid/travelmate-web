@@ -1,11 +1,17 @@
 'use client';
 
 import { useState } from "react";
-import { PassportStamp } from "./PassportStamp";
 import { StampReveal } from "./StampReveal";
 import PageHeader from "@/components/layout/PageHeader";
 import { Stamp as StampIcon, Loader2 } from "lucide-react";
 import { usePassportStamps } from "@/hooks/usePassportStamps";
+import LandmarkImage from "@/components/business/landmark/LandmarkImage";
+
+const STAMP_MOOD_MAP = {
+    morning: 'crisp_morning',
+    rain: 'mood_rain',
+    night: 'neon_night',
+} as const;
 
 export function SumiView() {
     const { stamps, loading, error } = usePassportStamps();
@@ -63,16 +69,20 @@ export function SumiView() {
                         {!loading && !error && stamps.map((stamp, idx) => (
                             <div
                                 key={stamp.id}
-                                className="relative group mix-blend-multiply opacity-90 hover:opacity-100 transition-opacity duration-500 cursor-pointer"
+                                className="relative group flex flex-col items-center gap-2 cursor-pointer opacity-90 hover:opacity-100 transition-opacity duration-500"
                                 onClick={() => { setRevealStampIdx(idx); setIsRevealOpen(true); }}
                             >
-                                <PassportStamp
-                                    imageSrc={stamp.image_url}
-                                    city={stamp.city}
-                                    date={stamp.date}
-                                    serialCode={stamp.serial}
-                                    rotation={stamp.rotation}
-                                />
+                                <div style={{ transform: `rotate(${stamp.rotation}deg)` }} className="mix-blend-multiply w-full">
+                                    <LandmarkImage
+                                        slug={stamp.city_slug}
+                                        mood={STAMP_MOOD_MAP[stamp.mood] ?? 'crisp_morning'}
+                                        size="stamp"
+                                        alt={`Stamp ${stamp.city}`}
+                                        dark={false}
+                                        className="!w-full !h-auto aspect-square mx-auto"
+                                    />
+                                </div>
+                                <p className="text-[11px] font-bold text-stone-600 uppercase tracking-wide text-center">{stamp.city}</p>
                             </div>
                         ))}
 

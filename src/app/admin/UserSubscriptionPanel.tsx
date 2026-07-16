@@ -22,33 +22,28 @@ interface ActionLog {
     ts: string;
 }
 
-function makeAdminFetch(token: string) {
-    return async (path: string, options?: RequestInit) => {
-        const res = await fetch(`/api/admin${path}`, {
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Admin-Token': token,
-                ...(options?.headers ?? {}),
-            },
-        });
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({ error: 'Unknown error' }));
-            throw new Error(err.error ?? `HTTP ${res.status}`);
-        }
-        return res.json();
-    };
+async function adminFetch(path: string, options?: RequestInit) {
+    const res = await fetch(`/api/admin${path}`, {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...(options?.headers ?? {}),
+        },
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(err.error ?? `HTTP ${res.status}`);
+    }
+    return res.json();
 }
 
-export default function UserSubscriptionPanel({ adminToken }: { adminToken: string }) {
+export default function UserSubscriptionPanel() {
     const [search, setSearch] = useState('');
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [loading, setLoading] = useState(false);
     const [actioning, setActioning] = useState<string | null>(null);
     const [logs, setLogs] = useState<ActionLog[]>([]);
     const [confirm, setConfirm] = useState<{ userId: string; email: string; tier: string; days: number } | null>(null);
-
-    const adminFetch = makeAdminFetch(adminToken);
 
     const addLog = (message: string, type: 'success' | 'error') => {
         const ts = new Date().toLocaleTimeString('id-ID');

@@ -11,6 +11,11 @@ import { formatDate } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { generateTripPDF } from '@/lib/pdfGenerator';
 import { tripService } from '@/services/trip';
+import LandmarkImage from '@/components/business/landmark/LandmarkImage';
+
+function toSlug(destination: string): string {
+    return destination.split(',')[0].trim().toLowerCase().replace(/\s+/g, '-');
+}
 
 interface TripHeaderProps {
     data: TripResponse;
@@ -240,6 +245,15 @@ export default function TripHeader({
                     )}
                 </div>
             </div>
+
+            {/* Landmark image */}
+            <LandmarkImage
+                slug={toSlug(trip.destination)}
+                mood="auto"
+                size="card"
+                alt={`Landmark ${trip.destination}`}
+                className="!w-full !h-48 !rounded-xl mb-4"
+            />
 
             {/* Eyebrow */}
             <p className="text-[11px] uppercase tracking-widest text-white/45 mb-1">

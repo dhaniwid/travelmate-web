@@ -39,6 +39,8 @@ interface TripResultProps {
 
 export default function TripResult({ data, isSavedView = false }: TripResultProps) {
     const { trip, plan, is_saved } = data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tripAny = trip as any;
     const [isPending, startTransition] = useTransition();
     const [currentPlan, setCurrentPlan] = React.useState(plan);
     const [currentTrip, setCurrentTrip] = React.useState(trip);
@@ -58,7 +60,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
 
     // Determine Role
     const isOwner = currentTrip.user_id === userId;
-    const collaborator = currentTrip.collaborators?.find(c => c.user_id === userId);
+    const collaborator = (currentTrip as any).collaborators?.find((c: any) => c.user_id === userId);
     const currentUserRole = isOwner ? 'owner' : (collaborator?.role || (userId ? 'viewer' : 'guest'));
 
     const [isCustomizeOpen, setIsCustomizeOpen] = React.useState(false);
@@ -161,10 +163,10 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
 
     // Initial State from Trip Data
     const [preferences, setPreferences] = React.useState({
-        dietary: trip.user_preferences?.dietary || [] as string[],
-        interests: trip.user_preferences?.interests || (trip.style ? trip.style.split(',').map(s => s.trim()) : []),
-        budgetTier: trip.user_preferences?.budgetTier || 'moderate',
-        pace: trip.user_preferences?.pace || 'Balanced'
+        dietary: tripAny.user_preferences?.dietary || [] as string[],
+        interests: tripAny.user_preferences?.interests || (trip.style ? trip.style.split(',').map((s: string) => s.trim()) : []),
+        budgetTier: tripAny.user_preferences?.budgetTier || 'moderate',
+        pace: tripAny.user_preferences?.pace || 'Balanced'
     });
 
     // Tab Management — map legacy tab values to new 3-tab structure
@@ -233,7 +235,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     };
 
     const handleReplace = (day: number, index: number) => {
-        const aiEditsUsed = currentTrip.ai_edits_used || 0;
+        const aiEditsUsed = (currentTrip as any).ai_edits_used || 0;
         const isPro = subscription?.subscription_tier === 'PRO';
 
         if (!isPro && aiEditsUsed >= 3) {
@@ -404,7 +406,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
 
                     // Quota Notification for FREE users
                     const isPro = subscription?.subscription_tier === 'PRO';
-                    const nextQuota = (currentTrip.ai_edits_used || 0) + 1;
+                    const nextQuota = ((currentTrip as any).ai_edits_used || 0) + 1;
                     if (!isPro) {
                         if (nextQuota < 3) {
                             toast.info(`${3 - nextQuota} Free AI Edits left`, { icon: '✨' });
@@ -476,7 +478,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
             <TripHeader
                 data={data}
                 planState={currentPlan}
-                totalBudget={currentPlan.total || 0}
+                totalBudget={(currentPlan as any).total || 0}
                 isHistoryView={isSavedView}
                 onSaveSuccess={() => setIsSaved(true)}
                 onShare={() => setIsShareOpen(true)}

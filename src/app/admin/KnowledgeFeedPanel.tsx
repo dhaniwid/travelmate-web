@@ -25,9 +25,6 @@ export default function KnowledgeFeedPanel() {
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [result, setResult] = useState<IngestResult | null>(null);
 
-    const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8889/api/v1').replace(/\/+$/, '');
-    const adminSecret = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? "";
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.name || !form.description || !form.city) return;
@@ -36,12 +33,9 @@ export default function KnowledgeFeedPanel() {
         setResult(null);
 
         try {
-            const res = await fetch(`${apiBase}/admin/knowledge`, {
+            const res = await fetch('/api/admin/knowledge', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Admin-Secret': adminSecret,
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(form),
             });
 

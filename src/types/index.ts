@@ -1,6 +1,7 @@
 // All core types are defined in ./trip and re-exported here.
 // DiscoveryResponse and types unique to the discovery API live here.
 export * from './trip';
+import type { CulinarySignature, HiddenGem } from './trip';
 
 export interface UserPreferences {
     dietary: string[];

@@ -17,12 +17,14 @@ const CATEGORIES = [
     { id: 'all', name: 'More', icon: ArrowRight, color: 'text-slate-500', bg: 'bg-slate-50' },
 ];
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8891';
+
 const POPULAR_DESTINATIONS = [
-    { id: 1, slug: 'bali', name: 'Bali', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80', rating: '4.8' },
-    { id: 2, slug: 'yogyakarta', name: 'Yogyakarta', image: 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=600&q=80', rating: '4.9' },
-    { id: 3, slug: 'semarang', name: 'Semarang', image: 'https://images.unsplash.com/photo-1555899434-94d1368aa7af?auto=format&fit=crop&w=600&q=80', rating: '4.7' },
-    { id: 4, slug: 'jakarta', name: 'Jakarta', image: 'https://images.unsplash.com/photo-1555899434-94d1368aa7af?auto=format&fit=crop&w=600&q=80', rating: '4.6' },
-    { id: 5, slug: 'bandung', name: 'Bandung', image: 'https://images.unsplash.com/photo-1555899434-94d1368aa7af?auto=format&fit=crop&w=600&q=80', rating: '4.7' },
+    { id: 1, slug: 'bali',        name: 'Bali',        rating: '4.8' },
+    { id: 2, slug: 'yogyakarta',  name: 'Yogyakarta',  rating: '4.9' },
+    { id: 3, slug: 'semarang',    name: 'Semarang',    rating: '4.7' },
+    { id: 4, slug: 'jakarta',     name: 'Jakarta',     rating: '4.6' },
+    { id: 5, slug: 'bandung',     name: 'Bandung',     rating: '4.7' },
 ];
 
 export default function ExplorePage() {
@@ -85,7 +87,7 @@ export default function ExplorePage() {
                         {POPULAR_DESTINATIONS.map((dest) => (
                             <Link key={dest.id} href={`/explore/${dest.slug}`} className="break-inside-avoid relative group rounded-2xl overflow-hidden cursor-pointer block">
                                 <img
-                                    src={dest.image}
+                                    src={`${API_BASE}/landmark-images/${dest.slug}_landscape.webp`}
                                     alt={dest.name}
                                     className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
                                 />
@@ -113,12 +115,8 @@ export default function ExplorePage() {
                     </div>
                     <div className="space-y-4">
                         <div className="relative h-40 rounded-3xl overflow-hidden cursor-pointer group">
-                            <img
-                                src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80"
-                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                alt="Switzerland"
-                            />
-                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-teal-500 via-teal-600 to-slate-800 transition-opacity duration-700 group-hover:opacity-90" />
+                            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
                                 <h3 className="text-white font-black text-2xl drop-shadow-lg">Hidden Gems in Europe</h3>
                                 <Button size="sm" className="mt-4 bg-white/20 backdrop-blur-md border-white/40 hover:bg-white hover:text-slate-900 text-white rounded-full">

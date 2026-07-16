@@ -124,7 +124,6 @@ export async function generateTripAction(request: TripRequest & { user_id: strin
             },
             decision_notes: aiResult.decision_notes || [],
             arrival_guide: aiResult.arrival_guide,
-            total: aiResult.total || 0,
             transport_options: [], // Initially empty
             strategic_accommodation: [], // Initially empty
             highlights: aiResult.highlights || []
@@ -257,7 +256,7 @@ export async function addActivity(
                     newActivity.place_name = enhanced.place_name;
                     newActivity.latitude = enhanced.latitude;
                     newActivity.longitude = enhanced.longitude;
-                    newActivity.location_type = enhanced.location_type || 'specific';
+                    (newActivity as any).location_type = enhanced.location_type || 'specific';
                     newActivity.type = enhanced.category ? enhanced.category.charAt(0).toUpperCase() + enhanced.category.slice(1).toLowerCase() : "Activity";
                 }
             } catch (aiError) {

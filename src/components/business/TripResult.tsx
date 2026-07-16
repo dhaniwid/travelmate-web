@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useTransition, useEffect } from 'react';
-import { TripResponse, Activity, ActivityAlternative, ItineraryItem } from '@/types';
+import { TripResponse, Trip, TripPlan, Activity, ActivityAlternative, ItineraryItem } from '@/types';
 import { tripService } from '@/services/trip';
 import ScrollAwareNavbar from './trip-result/ScrollAwareNavbar';
 import TripHeader from './trip-result/TripHeader';
@@ -42,8 +42,8 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tripAny = trip as any;
     const [isPending, startTransition] = useTransition();
-    const [currentPlan, setCurrentPlan] = React.useState(plan);
-    const [currentTrip, setCurrentTrip] = React.useState(trip);
+    const [currentPlan, setCurrentPlan] = React.useState<TripPlan>(plan);
+    const [currentTrip, setCurrentTrip] = React.useState<Trip>(trip);
     const { userId, getToken } = useAuth();
     const { subscription } = useSubscription();
     const router = useRouter();
@@ -416,7 +416,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                     }
 
                     // Update local trip state to reflect new quota
-                    setCurrentTrip(prev => ({ ...prev, ai_edits_used: nextQuota }));
+                    setCurrentTrip(prev => ({ ...(prev as any), ai_edits_used: nextQuota } as Trip));
                 } else {
                     toast.success(`Switched to ${alt.activity}! (Local only for draft)`);
                 }

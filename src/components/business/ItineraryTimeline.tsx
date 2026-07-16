@@ -69,7 +69,7 @@ export default function ItineraryTimeline({ days, startDate }: ItineraryTimeline
                                 {/* Garis Vertikal Utama */}
                                 <div className="absolute left-[39px] top-2 bottom-6 w-0.5 bg-slate-100" />
 
-                                {day.activities.map((act, i) => (
+                                {day.activities.map((act: Activity, i: number) => (
                                     <TimelineItem
                                         key={i}
                                         activity={act}

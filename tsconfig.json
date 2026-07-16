@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@miru/types": ["../packages/miru-types/index.ts"]
+      "@miru/types": ["./src/types/miru-types.ts"]
     }
   },
   "include": [
@@ -29,8 +29,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts",
-    "../packages/miru-types/**/*.ts"
+    "**/*.mts"
   ],
   "exclude": ["node_modules"]
 }

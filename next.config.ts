@@ -17,14 +17,14 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // script-src: allow Clerk (prod + dev), PostHog (both subdomains), Stripe
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.miru.travel https://*.clerk.accounts.dev https://us.i.posthog.com https://us-assets.i.posthog.com https://js.stripe.com https://maps.googleapis.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.miru.travel https://*.clerk.accounts.dev https://us.i.posthog.com https://us-assets.i.posthog.com https://js.stripe.com https://maps.googleapis.com https://hcaptcha.com https://*.hcaptcha.com https://challenges.cloudflare.com",
       "worker-src 'self' blob:",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://hcaptcha.com https://*.hcaptcha.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://image.pollinations.ai https://images.unsplash.com https://img.clerk.com https://*.googleapis.com https://*.gstatic.com https://maps.gstatic.com",
-      "connect-src 'self' http://localhost:8889 http://localhost:8080 https://clerk.miru.travel https://*.clerk.accounts.dev https://clerk-telemetry.com https://us.i.posthog.com https://us-assets.i.posthog.com https://api.amadeus.com https://api.unsplash.com https://travelmate-mvp-production.up.railway.app https://maps.googleapis.com",
+      "img-src 'self' data: blob: https://image.pollinations.ai https://images.unsplash.com https://img.clerk.com https://*.googleapis.com https://*.gstatic.com https://maps.gstatic.com https://hcaptcha.com https://*.hcaptcha.com",
+      "connect-src 'self' http://localhost:8889 http://localhost:8080 https://clerk.miru.travel https://*.clerk.accounts.dev https://clerk-telemetry.com https://us.i.posthog.com https://us-assets.i.posthog.com https://api.amadeus.com https://api.unsplash.com https://travelmate-mvp-production.up.railway.app https://maps.googleapis.com https://hcaptcha.com https://*.hcaptcha.com https://challenges.cloudflare.com",
 
-      "frame-src https://js.stripe.com https://www.google.com",
+      "frame-src https://js.stripe.com https://www.google.com https://hcaptcha.com https://*.hcaptcha.com https://challenges.cloudflare.com https://accounts.google.com",
     ].join('; '),
   },
 

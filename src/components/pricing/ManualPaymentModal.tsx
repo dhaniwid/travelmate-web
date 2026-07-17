@@ -49,7 +49,7 @@ export default function ManualPaymentModal({ isOpen, onClose }: ManualPaymentMod
     const handleWhatsAppConfirm = () => {
         const userName = user?.fullName || "[nama]";
         const text = encodeURIComponent(`Halo Miru! Saya sudah bayar PRO.\nNama: ${userName}\nEmail akun: ${userEmail}\nMetode: ${activeTab === 'qris' ? 'QRIS' : 'Transfer Bank'}`);
-        window.open(`https://wa.me/6281122288852?text=${text}`, '_blank');
+        window.open(`https://wa.me/628112228852?text=${text}`, '_blank');
     };
 
 

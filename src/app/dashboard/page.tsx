@@ -321,7 +321,7 @@ function DashboardContent() {
 
             {/* EXTENDED FAB */}
             {!isPlannerOpen && (
-                <div className="fixed bottom-6 right-4 z-[60]">
+                <div className="fixed bottom-28 right-4 z-[60]">
                     <Button
                         onClick={() => handleCreateTrip()}
                         className="h-12 px-5 rounded-full bg-teal-500 hover:bg-teal-400 shadow-lg shadow-teal-900/40 text-white transition-all active:scale-95 gap-2"

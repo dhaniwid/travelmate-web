@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { generateTripPDF } from '@/lib/pdfGenerator';
 import { tripService } from '@/services/trip';
 import LandmarkImage from '@/components/business/landmark/LandmarkImage';
+import UpgradeModal from '@/components/ui/UpgradeModal';
 
 function toSlug(destination: string): string {
     return destination.split(',')[0].trim().toLowerCase().replace(/\s+/g, '-');
@@ -47,6 +48,7 @@ export default function TripHeader({
     React.useEffect(() => { setMounted(true); }, []);
 
     const [isSaving, setIsSaving] = useState(false);
+    const [showUpgrade, setShowUpgrade] = useState(false);
     const [isSaved, setIsSaved] = useState(data.is_saved || isHistoryView || false);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -124,7 +126,7 @@ export default function TripHeader({
                 trackEventAction('paywall_shown', { trigger: 'pdf_export' });
                 toast.error('Premium Feature 💎', {
                     description: 'Upgrade to Miru PRO to export PDF!',
-                    action: { label: 'Upgrade', onClick: () => router.push('/pricing') },
+                    action: { label: 'Upgrade', onClick: () => setShowUpgrade(true) },
                 });
                 return;
             }
@@ -169,6 +171,7 @@ export default function TripHeader({
     const isOwner = trip.user_id === userId;
 
     return (
+        <>
         <div className="bg-[#0A1628] px-5 pt-14 pb-4">
             {/* Top bar */}
             <div className="flex items-center justify-between mb-3">
@@ -279,5 +282,7 @@ export default function TripHeader({
                 </div>
             )}
         </div>
+        <UpgradeModal isOpen={showUpgrade} onClose={() => setShowUpgrade(false)} />
+        </>
     );
 }

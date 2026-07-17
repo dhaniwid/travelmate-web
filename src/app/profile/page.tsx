@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import TravelDNAEditor from '@/components/profile/TravelDNAEditor';
 import { useSubscription } from '@/hooks/useSubscription';
 import Link from 'next/link';
+import UpgradeModal from '@/components/ui/UpgradeModal';
 import { getUserImpactStats, UserImpactStats } from '@/actions/user-stats';
 import ReferralCard from '@/components/business/profile/ReferralCard';
 import { useReferral } from '@/hooks/useReferral';
@@ -47,6 +48,7 @@ export default function ProfilePage() {
     const router = useRouter();
 
     const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [showUpgrade, setShowUpgrade] = useState(false);
     const [stats, setStats] = useState<UserImpactStats | null>(null);
     const [selectedBadge, setSelectedBadge] = useState<BadgeModalData | null>(null);
 
@@ -98,6 +100,7 @@ export default function ProfilePage() {
         ?.sort((a, b) => a.remaining - b.remaining)?.[0] ?? null;
 
     return (
+        <>
         <div className="min-h-screen bg-[#060F1E] pb-32 safe-area-bottom">
             <TravelDNAEditor
                 isOpen={isEditorOpen}
@@ -220,12 +223,12 @@ export default function ProfilePage() {
                             <p className="text-[11px] text-white/50 uppercase tracking-[0.8px] leading-none mb-0.5">TIER SAAT INI</p>
                             <p className="text-[14px] font-medium text-white">EXPLORER</p>
                         </div>
-                        <Link
-                            href="/pricing"
+                        <button
+                            onClick={() => setShowUpgrade(true)}
                             className="text-[12px] font-medium text-white bg-[#0D9488] hover:bg-teal-600 px-3 py-2 rounded-lg transition-colors whitespace-nowrap"
                         >
                             Upgrade ke PRO →
-                        </Link>
+                        </button>
                     </div>
                 )}
             </div>{/* max-w-2xl inner */}
@@ -452,5 +455,7 @@ export default function ProfilePage() {
                 <p className="text-center text-[11px] text-white/20 py-2">Miru v1.0.0</p>
             </div>
         </div>
+        <UpgradeModal isOpen={showUpgrade} onClose={() => setShowUpgrade(false)} />
+        </>
     );
 }

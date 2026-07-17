@@ -25,7 +25,7 @@ export default function CancelPage() {
                 </CardContent>
                 <CardFooter className="flex justify-center flex-col gap-3">
                     <Button asChild className="w-full" variant="default">
-                        <Link href="/pricing">Try Again</Link>
+                        <Link href="/dashboard">Try Again</Link>
                     </Button>
                     <Button asChild className="w-full" variant="ghost">
                         <Link href="/dashboard">Return to Dashboard</Link>

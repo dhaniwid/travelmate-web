@@ -9,7 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import TypewriterText from '@/components/ui/TypewriterText';
 import QuickPrompts from '@/components/trip/chat/QuickPrompts';
-import Link from 'next/link';
+import UpgradeModal from '@/components/ui/UpgradeModal';
 
 // Shared markdown styles — dark theme
 const markdownComponents: Components = {
@@ -62,6 +62,7 @@ const CHAT_LIMIT = 5;
 export default function ChatFab({ tripId }: ChatFabProps) {
     const { getToken } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
+    const [showUpgrade, setShowUpgrade] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         {
             id: 0,
@@ -302,12 +303,12 @@ export default function ChatFab({ tripId }: ChatFabProps) {
                                 <p className="text-sm font-bold text-amber-900">Batas chat harian tercapai 💬</p>
                                 <p className="text-xs text-amber-700 mt-0.5">Reset besok, atau upgrade PRO untuk unlimited.</p>
                             </div>
-                            <Link
-                                href="/pricing"
+                            <button
+                                onClick={() => setShowUpgrade(true)}
                                 className="flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-900 whitespace-nowrap underline underline-offset-2"
                             >
                                 <Zap className="w-3 h-3" /> Upgrade PRO
-                            </Link>
+                            </button>
                         </div>
                     )}
 
@@ -348,6 +349,7 @@ export default function ChatFab({ tripId }: ChatFabProps) {
                 {isOpen ? <X className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
                 <span>{isOpen ? 'Tutup' : 'Tanya Miru'}</span>
             </button>
+            <UpgradeModal isOpen={showUpgrade} onClose={() => setShowUpgrade(false)} />
         </>
     );
 }

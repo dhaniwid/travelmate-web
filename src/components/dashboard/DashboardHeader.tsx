@@ -10,9 +10,10 @@ import { UserSubscription } from "@/types/subscription";
 interface DashboardHeaderProps {
     subscription: UserSubscription | undefined;
     isSubLoading: boolean;
+    onUpgradeClick?: () => void;
 }
 
-export default function DashboardHeader({ subscription, isSubLoading }: DashboardHeaderProps) {
+export default function DashboardHeader({ subscription, isSubLoading, onUpgradeClick }: DashboardHeaderProps) {
     const { user } = useUser();
     const initial = user?.firstName?.[0]?.toUpperCase() || user?.lastName?.[0]?.toUpperCase() || '?';
 
@@ -34,8 +35,8 @@ export default function DashboardHeader({ subscription, isSubLoading }: Dashboar
                 {/* RIGHT: ACTIONS */}
                 <div className="flex items-center gap-3">
                     {!isSubLoading && subscription?.subscription_tier === 'FREE' && (
-                        <Button asChild size="sm" variant="ghost" className="text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 h-9 px-3 text-xs">
-                            <Link href="/pricing"><Zap className="w-3 h-3 mr-1" /> PRO</Link>
+                        <Button size="sm" variant="ghost" className="text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 h-9 px-3 text-xs" onClick={onUpgradeClick}>
+                            <Zap className="w-3 h-3 mr-1" /> PRO
                         </Button>
                     )}
                     {/* Desktop: avatar → /profile */}

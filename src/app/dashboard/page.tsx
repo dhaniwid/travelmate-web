@@ -15,6 +15,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import TrendingDestinations from "@/components/dashboard/TrendingDestinations";
 import EmptyState from "@/components/ui/EmptyState";
+import UpgradeModal from "@/components/ui/UpgradeModal";
 import TripContextBanner from "@/components/dashboard/TripContextBanner";
 import MiruRadarCard from "@/components/dashboard/MiruRadarCard";
 
@@ -34,6 +35,7 @@ function DashboardContent() {
     const [trips, setTrips] = useState<Trip[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isPlannerOpen, setIsPlannerOpen] = useState(false);
+    const [showUpgrade, setShowUpgrade] = useState(false);
     const [isSurpriseMode, setIsSurpriseMode] = useState(false);
     const [plannerDestination, setPlannerDestination] = useState('');
     const [plannerSocialVal, setPlannerSocialVal] = useState(50);
@@ -191,7 +193,7 @@ function DashboardContent() {
             />
 
             {/* HEADER */}
-            <DashboardHeader subscription={subscription ?? undefined} isSubLoading={isSubLoading} />
+            <DashboardHeader subscription={subscription ?? undefined} isSubLoading={isSubLoading} onUpgradeClick={() => setShowUpgrade(true)} />
 
             <main className="max-w-[480px] md:max-w-2xl lg:max-w-3xl mx-auto px-4 pt-5 space-y-5">
 
@@ -331,6 +333,7 @@ function DashboardContent() {
                     </Button>
                 </div>
             )}
+            <UpgradeModal isOpen={showUpgrade} onClose={() => setShowUpgrade(false)} />
         </div>
     );
 }

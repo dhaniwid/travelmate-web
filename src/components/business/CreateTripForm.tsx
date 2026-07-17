@@ -17,6 +17,7 @@ import { trackEventAction } from '@/actions/analytics';
 import DiscoveryTeaser from './create-trip/DiscoveryTeaser';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useRouter } from 'next/navigation';
+import UpgradeModal from '@/components/ui/UpgradeModal';
 
 interface CreateTripFormProps {
     onSuccess: (data: any) => void;
@@ -50,6 +51,7 @@ export default function CreateTripForm({
     const [isStreaming, setIsStreaming] = useState(false);
     const [isDone, setIsDone] = useState(false);
     const [showDurationUpgrade, setShowDurationUpgrade] = useState(false);
+    const [showUpgrade, setShowUpgrade] = useState(false);
     const [pax, setPax] = useState(2);
 
     // socialVal retained for backwards-compat with callers but not shown in UI
@@ -238,6 +240,7 @@ export default function CreateTripForm({
         : (formData.destination || initialDestination || '');
 
     return (
+        <>
         <div className="bg-[#0A1628] rounded-t-3xl md:rounded-3xl w-full overflow-hidden shadow-2xl">
             {/* DRAG HANDLE (mobile only) — larger tap zone */}
             <div className="flex justify-center py-3 md:hidden">
@@ -339,12 +342,12 @@ export default function CreateTripForm({
                             <p className="text-[13px] font-semibold text-amber-300">Trip lebih dari 3 hari tersedia di PRO</p>
                             <p className="text-[11px] text-amber-400/70 mt-0.5">Unlock 4–7 hari dan semua fitur premium.</p>
                         </div>
-                        <a
-                            href={process.env.NEXT_PUBLIC_MAYAR_CHECKOUT_URL || '/pricing'}
+                        <button
+                            onClick={() => setShowUpgrade(true)}
                             className="text-[11px] font-semibold text-amber-400 hover:text-amber-300 whitespace-nowrap underline underline-offset-2"
                         >
                             Upgrade →
-                        </a>
+                        </button>
                     </div>
                 )}
 
@@ -421,5 +424,7 @@ export default function CreateTripForm({
                 <div className="h-safe-bottom" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} />
             </form>
         </div>
+        <UpgradeModal isOpen={showUpgrade} onClose={() => setShowUpgrade(false)} />
+        </>
     );
 }

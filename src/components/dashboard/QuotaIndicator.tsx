@@ -1,14 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { UserSubscription } from "@/types/subscription";
-import Link from "next/link";
 import { Sparkles, Zap } from "lucide-react";
 
 interface QuotaIndicatorProps {
     subscription: UserSubscription | undefined;
     isLoading: boolean;
+    onUpgradeClick?: () => void;
 }
 
-export default function QuotaIndicator({ subscription, isLoading }: QuotaIndicatorProps) {
+export default function QuotaIndicator({ subscription, isLoading, onUpgradeClick }: QuotaIndicatorProps) {
     if (isLoading) return <div className="h-8 w-48 bg-slate-200 animate-pulse rounded-full" />;
 
     const isPro = subscription?.subscription_tier === 'PRO';
@@ -27,10 +27,8 @@ export default function QuotaIndicator({ subscription, isLoading }: QuotaIndicat
             <span className="text-xs text-slate-500 font-medium hidden sm:block">
                 Rencanakan trip hingga 3 hari · <span className="text-amber-600 font-semibold">Upgrade untuk trip lebih panjang</span>
             </span>
-            <Button asChild size="sm" variant="outline" className="border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-700 hover:text-amber-800 gap-1">
-                <Link href="/pricing">
-                    <Zap className="w-3 h-3 fill-amber-500" /> Upgrade
-                </Link>
+            <Button size="sm" variant="outline" className="border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-700 hover:text-amber-800 gap-1" onClick={onUpgradeClick}>
+                <Zap className="w-3 h-3 fill-amber-500" /> Upgrade
             </Button>
         </div>
     );

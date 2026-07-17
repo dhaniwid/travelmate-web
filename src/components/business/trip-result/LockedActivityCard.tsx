@@ -9,10 +9,11 @@ import { trackEventAction } from '@/actions/analytics';
 
 interface LockedActivityCardProps {
     onClick?: () => void;
+    onUpgradeClick?: () => void;
     className?: string;
 }
 
-export default function LockedActivityCard({ onClick, className }: LockedActivityCardProps) {
+export default function LockedActivityCard({ onClick, onUpgradeClick, className }: LockedActivityCardProps) {
     return (
         <div
             onClick={onClick}
@@ -52,7 +53,7 @@ export default function LockedActivityCard({ onClick, className }: LockedActivit
                             onClick={(e) => {
                                 e.stopPropagation();
                                 trackEventAction('upgrade_clicked', { source: 'hidden_gem_locked' });
-                                window.location.href = '/pricing';
+                                onUpgradeClick?.();
                             }}
                             className="relative z-20 bg-white border-teal-200 text-teal-600 hover:bg-teal-600 hover:text-white rounded-full px-4 text-xs font-bold transition-all shadow-sm"
                         >

@@ -138,16 +138,7 @@ export function PricingCard({
                             ? "bg-gradient-to-tr from-teal-600 to-blue-700 hover:from-teal-700 hover:to-blue-800 text-white shadow-lg shadow-teal-600/20 border-0"
                             : "bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
                     )}
-                    onClick={() => {
-                        if (isPopular && !onButtonClick) {
-                            const checkoutUrl = process.env.NEXT_PUBLIC_MAYAR_CHECKOUT_URL;
-                            if (checkoutUrl) {
-                                window.location.href = checkoutUrl;
-                                return;
-                            }
-                        }
-                        onButtonClick?.();
-                    }}
+                    onClick={() => onButtonClick?.()}
                     disabled={isLoading || isCurrent}
                 >
                     {isCurrent ? (isIDR ? "Paket Aktif" : "Active Plan") :

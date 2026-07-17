@@ -199,7 +199,7 @@ export default function LogisticsView({ trip, plan, isPro = false, onUpgrade }: 
                                 placeholder="Kota asal (mis. Jakarta, Bandung...)"
                                 maxLength={100}
                                 disabled={transportLoading}
-                                className="flex-1 px-3 py-2 rounded-xl border border-white/20 bg-white text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-teal-500/50 disabled:opacity-50"
+                                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-teal-500/50 disabled:opacity-50"
                             />
                             <button
                                 onClick={handleSearchTransport}

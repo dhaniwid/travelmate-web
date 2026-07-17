@@ -94,7 +94,7 @@ export default function AirportSearch({ value, onChange, placeholder = "Search a
                         if ((results?.length ?? 0) > 0) setOpen(true);
                     }}
                     placeholder={placeholder}
-                    className="pl-9 pr-8"
+                    className="pl-9 pr-8 text-slate-900 placeholder:text-slate-400"
                 />
                 {query && (
                     <button

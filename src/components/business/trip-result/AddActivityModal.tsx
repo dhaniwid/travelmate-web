@@ -122,7 +122,7 @@ export default function AddActivityModal({
                                 placeholder="What's the plan?"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                className="h-[4.2rem] rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-teal-500/10 transition-all text-lg font-bold pl-6 pr-6 shadow-sm placeholder:text-slate-300"
+                                className="h-[4.2rem] rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-teal-500/10 transition-all text-lg font-bold text-slate-900 pl-6 pr-6 shadow-sm placeholder:text-slate-300"
                             />
                         </div>
 
@@ -192,7 +192,7 @@ export default function AddActivityModal({
                                     type="time"
                                     value={time}
                                     onChange={(e) => setTime(e.target.value)}
-                                    className="h-[3.8rem] rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-teal-500/10 transition-all text-lg font-bold pl-14 shadow-sm"
+                                    className="h-[3.8rem] rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-teal-500/10 transition-all text-lg font-bold text-slate-900 pl-14 shadow-sm"
                                 />
                             </div>
                         </div>

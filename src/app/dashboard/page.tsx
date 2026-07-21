@@ -7,14 +7,14 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from "next/navigation";
 import { Trip } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, Plane, MapPin, Sparkles, Compass, Waves, TreePine, Utensils, Landmark, Flower2, ChevronRight } from 'lucide-react';
+import { Plus, Loader2, MapPin, Sparkles, Compass, Waves, TreePine, Utensils, Landmark, Flower2, ChevronRight } from 'lucide-react';
 import { toast } from "sonner";
 import TripPlannerModal from '@/components/business/create-trip/TripPlannerModal';
 import { cn, formatDate } from '@/lib/utils';
 import { useSubscription } from "@/hooks/useSubscription";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import TrendingDestinations from "@/components/dashboard/TrendingDestinations";
-import EmptyState from "@/components/ui/EmptyState";
+import EmptyStateNoTrip from "@/components/ui/empty-states/EmptyStateNoTrip";
 import UpgradeModal from "@/components/ui/UpgradeModal";
 import TripContextBanner from "@/components/dashboard/TripContextBanner";
 import MiruRadarCard from "@/components/dashboard/MiruRadarCard";
@@ -284,14 +284,8 @@ function DashboardContent() {
 
                 {trips.length === 0 && (
                     <div className="py-4">
-                        <EmptyState
-                            icon={Plane}
-                            title="Belum ada petualangan nih! 🌍"
-                            description="Trip yang kamu buat akan muncul di sini. Siap mulai perjalanan pertamamu?"
-                            actionLabel="Buat Trip Pertamaku"
-                            onAction={() => handleCreateTrip()}
-                        />
-                        <div className="mt-8">
+                        <EmptyStateNoTrip onCreateTrip={handleCreateTrip} />
+                        <div className="mt-4">
                             <TrendingDestinations onCreateTrip={() => handleCreateTrip()} />
                         </div>
                     </div>

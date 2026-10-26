@@ -17,6 +17,60 @@ interface Props {
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8889/api/v1').replace(/\/+$/, '');
 
+// Pre-bundled static WebP landmarks shipped in /public/assets/landmarks/
+const STATIC_LANDMARK_SLUGS = new Set([
+    'bali',
+    'bandung',
+    'jakarta',
+    'semarang',
+    'yogyakarta',
+]);
+
+// Alias mapping so regional sub-cities resolve to their pre-bundled landmark
+const SLUG_ALIASES: Record<string, string> = {
+    'denpasar': 'bali',
+    'ubud': 'bali',
+    'kuta': 'bali',
+    'canggu': 'bali',
+    'sanur': 'bali',
+    'seminyak': 'bali',
+    'nusa-dua': 'bali',
+    'jogja': 'yogyakarta',
+    'jogjakarta': 'yogyakarta',
+    'sleman': 'yogyakarta',
+    'bantul': 'yogyakarta',
+    'dki-jakarta': 'jakarta',
+    'jakarta-selatan': 'jakarta',
+    'jakarta-pusat': 'jakarta',
+};
+
+// Curated scenic fallbacks for destinations not yet pre-bundled as 3D renders
+const CURATED_LANDMARK_URLS: Record<string, string> = {
+    'lombok': 'https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=1200&q=80',
+    'labuan-bajo': 'https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?w=1200&q=80',
+    'medan': 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=1200&q=80',
+    'makassar': 'https://images.unsplash.com/photo-1559628233-100c798642d4?w=1200&q=80',
+    'surabaya': 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?w=1200&q=80',
+};
+
+const DEFAULT_FALLBACK_URL = 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200&q=80';
+
+function normalizeLandmarkSlug(rawSlug: string): string {
+    const clean = rawSlug.trim().toLowerCase().replace(/\s+/g, '-');
+    return SLUG_ALIASES[clean] ?? clean;
+}
+
+function getStaticLandmarkPath(rawSlug: string, variant: Exclude<Mood, 'auto'>): string | null {
+    const normalized = normalizeLandmarkSlug(rawSlug);
+    if (STATIC_LANDMARK_SLUGS.has(normalized)) {
+        return `/assets/landmarks/${normalized}_${variant}.webp`;
+    }
+    if (CURATED_LANDMARK_URLS[normalized]) {
+        return CURATED_LANDMARK_URLS[normalized];
+    }
+    return null;
+}
+
 function resolveMood(mood: Mood): Exclude<Mood, 'auto'> {
     if (mood !== 'auto') return mood;
     const hour = new Date().getHours();
@@ -34,18 +88,27 @@ const SIZE_STYLES: Record<Size, string> = {
 export default function LandmarkImage({ slug, mood = 'auto', size = 'card', alt, className = '', dark = true }: Props) {
     const resolvedMood = resolveMood(mood);
     const variant = resolvedMood; // variant = mood for the backend
+    const staticPath = getStaticLandmarkPath(slug, variant);
 
-    const [status, setStatus] = useState<Status>('loading');
+    const [status, setStatus] = useState<Status>(staticPath ? 'ready' : 'loading');
     const [pollCount, setPollCount] = useState(0);
-    const [imagePath, setImagePath] = useState<string | null>(null);
+    const [imagePath, setImagePath] = useState<string | null>(staticPath);
 
     useEffect(() => {
+        const directPath = getStaticLandmarkPath(slug, variant);
+        if (directPath) {
+            setImagePath(directPath);
+            setStatus('ready');
+            return;
+        }
+
         let cancelled = false;
         let pollTimer: ReturnType<typeof setTimeout> | null = null;
+        const normalizedSlug = normalizeLandmarkSlug(slug);
 
         async function check() {
             try {
-                const res = await fetch(`${API_BASE}/landmarks/${encodeURIComponent(slug)}/${encodeURIComponent(variant)}`, {
+                const res = await fetch(`${API_BASE}/landmarks/${encodeURIComponent(normalizedSlug)}/${encodeURIComponent(variant)}`, {
                     cache: 'no-store',
                 });
 
@@ -92,6 +155,13 @@ export default function LandmarkImage({ slug, mood = 'auto', size = 'card', alt,
                     className="w-full h-full object-cover"
                     style={size === 'header' ? { objectPosition: 'center 20%' } : undefined}
                     loading="lazy"
+                    onError={() => {
+                        if (imagePath !== DEFAULT_FALLBACK_URL) {
+                            setImagePath(DEFAULT_FALLBACK_URL);
+                        } else {
+                            setStatus('error');
+                        }
+                    }}
                 />
             </div>
         );

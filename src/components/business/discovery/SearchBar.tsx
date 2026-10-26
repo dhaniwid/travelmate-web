@@ -31,6 +31,9 @@ interface SearchBarProps {
     city?: string;
     setCity?: (v: string) => void;
     onSearch?: () => void;
+    onSelectDestination?: (destinationName: string) => void;
+    placeholder?: string;
+    buttonLabel?: string;
     isLoading?: boolean;
     isCompact?: boolean;
 }
@@ -38,6 +41,9 @@ interface SearchBarProps {
 export default function SearchBar({
     city: externalCity,
     setCity: setExternalCity,
+    onSelectDestination,
+    placeholder = 'Mau ke mana?',
+    buttonLabel = 'Eksplor →',
     isLoading = false,
     isCompact = false,
 }: SearchBarProps) {
@@ -77,32 +83,49 @@ export default function SearchBar({
         });
 
         setSuggestions(matched);
-        setOpen(matched.length > 0);
+        setOpen(true);
     }
 
-    function navigate(slug: string) {
+    function navigate(slugOrName: string, isSlug = true) {
         setOpen(false);
-        const dest = getDestination(slug);
-        const displayName = dest?.name ?? slug;
+        const dest = isSlug ? getDestination(slugOrName) : undefined;
+        const displayName = dest?.name ?? slugOrName.trim();
         setQuery(displayName);
         setExternalCity?.(displayName);
-        router.push(`/explore/${slug}`);
+
+        if (onSelectDestination) {
+            onSelectDestination(displayName);
+            return;
+        }
+
+        const targetSlug = dest?.slug ?? slugify(displayName);
+        router.push(`/explore/${targetSlug}`);
     }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (!query.trim()) return;
-
-        if (activeIndex >= 0 && suggestions[activeIndex]) {
-            navigate(suggestions[activeIndex]);
+        if (!query.trim()) {
+            if (onSelectDestination) {
+                onSelectDestination('');
+            }
             return;
         }
 
-        // Match first suggestion or slugify unknown input
-        if (suggestions.length > 0) {
-            navigate(suggestions[0]);
+        if (activeIndex >= 0 && suggestions[activeIndex]) {
+            navigate(suggestions[activeIndex], true);
+            return;
+        }
+
+        // Exact match with a curated suggestion or use custom typed destination
+        const exactSlug = suggestions.find((s) => {
+            const d = getDestination(s);
+            return d?.name.toLowerCase() === query.trim().toLowerCase() || s === slugify(query);
+        });
+
+        if (exactSlug) {
+            navigate(exactSlug, true);
         } else {
-            router.push(`/explore/${slugify(query)}`);
+            navigate(query.trim(), false);
         }
     }
 
@@ -132,25 +155,25 @@ export default function SearchBar({
     }, []);
 
     return (
-        <div ref={containerRef} className={`relative w-full ${isCompact ? 'max-w-md ml-auto md:ml-0' : 'max-w-lg mx-auto'}`}>
+        <div ref={containerRef} className={`relative w-full ${isCompact ? 'max-w-md ml-auto md:ml-0' : 'w-full'}`}>
             <form onSubmit={handleSubmit} className="relative group">
                 {/* Search icon */}
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                    <Search className={`w-5 h-5 ${isLoading ? 'text-teal-600' : 'text-slate-400'}`} />
+                    <Search className={`w-5 h-5 ${isLoading ? 'text-teal-600' : 'text-zinc-900'}`} />
                 </div>
 
                 <Input
                     ref={inputRef}
                     type="text"
-                    placeholder="Mau ke mana?"
+                    placeholder={placeholder}
                     autoComplete="off"
-                    className={`pl-12 pr-24 rounded-full shadow-lg shadow-teal-900/5 border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-teal-600 transition-all ${
-                        isCompact ? 'h-10 text-sm' : 'h-14 text-lg bg-white/80 backdrop-blur-sm'
-                    } ${open ? 'rounded-b-none ring-teal-600' : ''}`}
+                    className={`pl-12 pr-32 rounded-xl border-0 bg-zinc-100 text-zinc-950 placeholder:text-zinc-500 font-medium ring-1 ring-zinc-200/80 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-zinc-950 transition-all ${
+                        isCompact ? 'h-11 text-sm' : 'h-14 text-base md:text-lg'
+                    } ${open ? 'rounded-b-none bg-white ring-2 ring-zinc-950' : ''}`}
                     value={query}
                     onChange={(e) => updateQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    onFocus={() => suggestions.length > 0 && setOpen(true)}
+                    onFocus={() => query.trim().length >= 2 && setOpen(true)}
                     disabled={isLoading}
                 />
 
@@ -159,31 +182,31 @@ export default function SearchBar({
                     <button
                         type="button"
                         onClick={() => { setQuery(''); setExternalCity?.(''); setSuggestions([]); setOpen(false); inputRef.current?.focus(); }}
-                        className="absolute right-24 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors z-10"
+                        className="absolute right-28 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-zinc-900 transition-colors z-10"
                     >
                         <X className="w-4 h-4" />
                     </button>
                 )}
 
                 {/* Submit button */}
-                <div className="absolute inset-y-1 right-1 z-10">
+                <div className="absolute inset-y-1.5 right-1.5 z-10">
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className={`rounded-full bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-semibold shadow-md shadow-teal-900/10 transition-colors ${
-                            isCompact ? 'h-8 px-4 text-sm' : 'h-12 px-8 text-base'
+                        className={`rounded-lg bg-zinc-950 hover:bg-zinc-800 active:bg-black text-white font-semibold transition-colors ${
+                            isCompact ? 'h-8 px-4 text-xs' : 'h-11 px-5 text-sm'
                         }`}
                     >
-                        Explore →
+                        {buttonLabel}
                     </button>
                 </div>
             </form>
 
             {/* Autocomplete dropdown */}
-            {open && suggestions.length > 0 && (
+            {open && query.trim().length >= 2 && (
                 <ul
                     role="listbox"
-                    className="absolute left-0 right-0 bg-white border border-teal-200 border-t-0 rounded-b-2xl shadow-xl z-50 overflow-hidden"
+                    className="absolute left-0 right-0 bg-white border-2 border-zinc-950 border-t border-t-zinc-200 rounded-b-xl shadow-xl z-50 overflow-hidden"
                 >
                     {suggestions.map((slug, i) => {
                         const dest = getDestination(slug);
@@ -193,22 +216,45 @@ export default function SearchBar({
                                 key={slug}
                                 role="option"
                                 aria-selected={i === activeIndex}
-                                onMouseDown={() => navigate(slug)}
+                                onMouseDown={() => navigate(slug, true)}
                                 onMouseEnter={() => setActiveIndex(i)}
-                                className={`flex items-center gap-3 px-5 py-3 cursor-pointer transition-colors ${
+                                className={`flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-colors border-b border-zinc-100 last:border-b-0 ${
                                     i === activeIndex
-                                        ? 'bg-teal-50 text-teal-700'
-                                        : 'text-slate-700 hover:bg-slate-50'
+                                        ? 'bg-zinc-100 text-zinc-950'
+                                        : 'text-zinc-800 hover:bg-zinc-50'
                                 }`}
                             >
-                                <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                <div>
-                                    <span className="font-semibold text-sm">{dest.name}</span>
-                                    <span className="text-slate-400 text-xs ml-2 italic line-clamp-1">{dest.tagline}</span>
+                                <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center flex-shrink-0">
+                                    <Search className="w-4 h-4 text-zinc-700" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <span className="font-bold text-sm text-zinc-950 block">{dest.name}</span>
+                                    <span className="text-zinc-500 text-xs line-clamp-1">{dest.tagline}</span>
                                 </div>
                             </li>
                         );
                     })}
+                    {/* Always allow custom destination planning for any typed city */}
+                    {!suggestions.some((s) => getDestination(s)?.name.toLowerCase() === query.trim().toLowerCase()) && (
+                        <li
+                            role="option"
+                            aria-selected={ false }
+                            onMouseDown={() => navigate(query.trim(), false)}
+                            className="flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-colors bg-zinc-50 hover:bg-zinc-100 text-zinc-950"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-zinc-950 text-white flex items-center justify-center flex-shrink-0">
+                                <Search className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <span className="font-bold text-sm text-zinc-950 block">
+                                    Eksplor &ldquo;{query.trim()}&rdquo;
+                                </span>
+                                <span className="text-teal-700 text-xs font-medium">
+                                    Lihat tempat eksotis, kuliner & susun itinerary →
+                                </span>
+                            </div>
+                        </li>
+                    )}
                 </ul>
             )}
         </div>

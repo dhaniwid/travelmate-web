@@ -65,9 +65,9 @@ export default function DateDurationSection({
     return (
         <div className="space-y-3">
             <div className="flex justify-between items-center">
-                <Label className="text-sm font-normal text-white/40">Kapan?</Label>
+                <Label className="text-[13px] font-bold text-zinc-900">Kapan?</Label>
                 <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-white/40 cursor-pointer" onClick={() => setFlexible(!isFlexible)}>
+                    <span className="text-xs font-semibold text-zinc-600 cursor-pointer" onClick={() => setFlexible(!isFlexible)}>
                         Saya fleksibel
                     </span>
                     <Switch checked={isFlexible} onCheckedChange={setFlexible} />
@@ -78,11 +78,11 @@ export default function DateDurationSection({
                 {/* Start Date */}
                 {!isFlexible ? (
                     <div className="space-y-1">
-                        <span className="text-xs text-white/40 font-medium ml-1">Tanggal mulai</span>
+                        <span className="text-xs text-zinc-500 font-medium ml-1">Tanggal mulai</span>
                         <div className="relative">
                             <Input
                                 type="date"
-                                className="bg-white/10 h-14 border-white/20 text-white focus:border-teal-500 rounded-xl [color-scheme:dark]"
+                                className="bg-zinc-100 h-12 border-zinc-200 text-zinc-950 font-medium focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-zinc-950 rounded-xl"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
                             />
@@ -91,15 +91,15 @@ export default function DateDurationSection({
                 ) : (
                     <div className="space-y-1">
                         <span className="text-xs text-transparent select-none hidden sm:block">.</span>
-                        <div className="flex items-center h-14 px-4 rounded-xl bg-teal-500/15 text-teal-300 text-sm font-bold border border-teal-500/20 w-full animate-in fade-in select-none">
-                            <CalendarDays className="w-4 h-4 mr-2" /> Anytime soon
+                        <div className="flex items-center h-12 px-4 rounded-xl bg-teal-50 text-teal-800 text-sm font-bold border border-teal-200 w-full animate-in fade-in select-none">
+                            <CalendarDays className="w-4 h-4 mr-2 text-teal-600" /> Anytime soon
                         </div>
                     </div>
                 )}
 
                 {/* Duration pill selector */}
                 <div className="space-y-1">
-                    <span className="text-xs text-white/40 font-medium ml-1">Durasi (Hari)</span>
+                    <span className="text-xs text-zinc-500 font-medium ml-1">Durasi (Hari)</span>
                     <div className="flex flex-wrap gap-1.5">
                         {/* Fleksibel pill */}
                         <button
@@ -109,11 +109,11 @@ export default function DateDurationSection({
                             className={cn(
                                 'h-10 px-3 rounded-xl text-xs font-bold transition-all border select-none flex items-center gap-1',
                                 isDurationFlexible
-                                    ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
-                                    : 'bg-white/8 text-white/60 border-white/15 hover:border-teal-400 hover:text-teal-400'
+                                    ? 'bg-zinc-950 text-white border-zinc-950 shadow-sm'
+                                    : 'bg-zinc-100 text-zinc-700 border-zinc-200 hover:border-zinc-950 hover:text-zinc-950'
                             )}
                         >
-                            <Sparkles className="w-3 h-3" />
+                            <Sparkles className="w-3 h-3 text-teal-500" />
                             Fleksibel
                         </button>
 
@@ -130,16 +130,16 @@ export default function DateDurationSection({
                                     className={cn(
                                         'relative h-10 w-10 rounded-xl text-sm font-bold transition-all border select-none',
                                         selected
-                                            ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
+                                            ? 'bg-zinc-950 text-white border-zinc-950 shadow-sm'
                                             : locked
-                                            ? 'bg-white/5 text-white/20 border-white/10 cursor-pointer'
-                                            : 'bg-white/8 text-white/60 border-white/15 hover:border-teal-400 hover:text-teal-400'
+                                            ? 'bg-zinc-50 text-zinc-300 border-zinc-200 cursor-pointer'
+                                            : 'bg-zinc-100 text-zinc-700 border-zinc-200 hover:border-zinc-950 hover:text-zinc-950'
                                     )}
                                 >
                                     {locked ? (
                                         <>
                                             <span>{day}</span>
-                                            <Lock className="absolute top-0.5 right-0.5 w-2.5 h-2.5 text-white/25" />
+                                            <Lock className="absolute top-0.5 right-0.5 w-2.5 h-2.5 text-zinc-400" />
                                         </>
                                     ) : (
                                         day
@@ -156,10 +156,10 @@ export default function DateDurationSection({
                             className={cn(
                                 'h-10 px-3 rounded-xl text-xs font-bold transition-all border select-none flex items-center gap-1',
                                 showCustomInput
-                                    ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
+                                    ? 'bg-zinc-950 text-white border-zinc-950 shadow-sm'
                                     : isPro
-                                    ? 'bg-white/8 text-white/60 border-white/15 hover:border-teal-400 hover:text-teal-400'
-                                    : 'bg-white/5 text-white/30 border-white/10 hover:border-amber-400 hover:text-amber-400'
+                                    ? 'bg-zinc-100 text-zinc-700 border-zinc-200 hover:border-zinc-950 hover:text-zinc-950'
+                                    : 'bg-zinc-50 text-zinc-400 border-zinc-200 hover:border-zinc-950 hover:text-zinc-950'
                             )}
                         >
                             <Plus className="w-3 h-3" />
@@ -179,21 +179,21 @@ export default function DateDurationSection({
                                 value={customDaysStr}
                                 onChange={(e) => setCustomDaysStr(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleCustomConfirm()}
-                                className="h-9 w-28 rounded-xl bg-white/10 border-white/20 text-white placeholder:text-white/35 focus:border-teal-500 text-sm text-center font-bold"
+                                className="h-9 w-28 rounded-xl bg-zinc-100 border-zinc-200 text-zinc-950 placeholder:text-zinc-400 focus-visible:ring-2 focus-visible:ring-zinc-950 text-sm text-center font-bold"
                                 autoFocus
                             />
                             <button
                                 type="button"
                                 onClick={handleCustomConfirm}
                                 disabled={!customDaysStr || parseInt(customDaysStr) < CUSTOM_MIN || parseInt(customDaysStr) > CUSTOM_MAX}
-                                className="h-9 px-4 rounded-xl bg-teal-600 text-white text-xs font-bold disabled:opacity-40 hover:bg-teal-700 transition-colors"
+                                className="h-9 px-4 rounded-xl bg-zinc-950 text-white text-xs font-bold disabled:opacity-40 hover:bg-zinc-800 transition-colors"
                             >
                                 OK
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setShowCustomInput(false)}
-                                className="h-9 px-3 rounded-xl border border-white/15 text-white/40 text-xs font-bold hover:bg-white/8 transition-colors"
+                                className="h-9 px-3 rounded-xl border border-zinc-200 text-zinc-600 text-xs font-bold hover:bg-zinc-100 transition-colors"
                             >
                                 Batal
                             </button>
@@ -201,14 +201,14 @@ export default function DateDurationSection({
                     )}
 
                     {isDurationFlexible && (
-                        <p className="text-xs text-teal-400 font-medium mt-1">
+                        <p className="text-xs text-teal-700 font-semibold mt-1">
                             ✨ Miru akan menentukan durasi optimal untuk destinasimu
                         </p>
                     )}
 
                     {!isPro && !isDurationFlexible && (
-                        <p className="text-xs text-white/35 mt-1">
-                            Hari 4–7 & custom tersedia di <span className="text-amber-400 font-semibold">PRO ✨</span>
+                        <p className="text-xs text-zinc-500 mt-1">
+                            Hari 4–7 & custom tersedia di <span className="text-teal-700 font-bold">PRO ✨</span>
                         </p>
                     )}
                 </div>

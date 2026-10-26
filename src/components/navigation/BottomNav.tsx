@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Map, User, Radio } from 'lucide-react';
+import { Home, Compass, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@clerk/nextjs';
 
@@ -10,22 +10,25 @@ export default function BottomNav() {
     const pathname = usePathname();
     const { isSignedIn } = useAuth();
 
-    // Only show on top-level screens — Dashboard and Profile
-    const ALLOWED_PATHS = ['/dashboard', '/profile'];
-    if (!isSignedIn || !ALLOWED_PATHS.includes(pathname || '')) return null;
+    // Show on top-level screens — Dashboard, Explore index, and Profile
+    const isAllowedPath =
+        pathname === '/dashboard' ||
+        pathname === '/explore' ||
+        pathname === '/profile';
+
+    if (!isSignedIn || !isAllowedPath) return null;
 
     const navItems = [
-        { href: '/dashboard', icon: Home, label: 'Beranda', pulse: false },
-        { href: '/dashboard', icon: Map, label: 'Trip Saya', pulse: false },
-        { href: '/radar', icon: Radio, label: 'Radar', pulse: true },
-        { href: '/profile', icon: User, label: 'Profil', pulse: false },
+        { href: '/dashboard', icon: Home, label: 'Beranda', match: (p: string) => p === '/dashboard' },
+        { href: '/explore', icon: Compass, label: 'Eksplor', match: (p: string) => p === '/explore' || p.startsWith('/explore/') },
+        { href: '/profile', icon: User, label: 'Profil', match: (p: string) => p === '/profile' },
     ];
 
     return (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200 shadow-[0_-5px_10px_rgba(0,0,0,0.03)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-200" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
             <div className="flex items-center justify-around h-16 relative">
                 {navItems.map((item) => {
-                    const isActive = pathname === item.href;
+                    const isActive = item.match(pathname || '');
                     const Icon = item.icon;
 
                     return (
@@ -33,37 +36,25 @@ export default function BottomNav() {
                             key={item.label}
                             href={item.href}
                             className={cn(
-                                "flex flex-col items-center justify-center gap-1 transition-all duration-300 w-full h-full",
-                                isActive ? "text-teal-600" : "text-slate-400 hover:text-slate-600"
+                                "flex flex-col items-center justify-center gap-1 transition-colors duration-200 w-full h-full",
+                                isActive ? "text-zinc-950" : "text-zinc-400 hover:text-zinc-700"
                             )}
                         >
-                            <div className={cn(
-                                "relative p-1.5 rounded-full transition-all duration-300",
-                                isActive ? "bg-teal-50" : "bg-transparent"
-                            )}>
-                                {item.pulse && !isActive && (
-                                    <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-teal-500 animate-ping opacity-75" />
-                                )}
+                            <div className="relative p-1">
                                 <Icon className={cn(
-                                    "w-6 h-6 transition-all duration-300",
-                                    isActive && "fill-current"
+                                    "w-5 h-5 transition-all duration-200",
+                                    isActive ? "stroke-[2.5px] text-zinc-950" : "stroke-[1.75px]"
                                 )} />
                             </div>
                             <span className={cn(
-                                "text-[10px] font-bold transition-all duration-300",
-                                isActive ? "scale-105" : "scale-100 opacity-80"
+                                "text-[11px] tracking-tight transition-all duration-200",
+                                isActive ? "font-bold text-zinc-950" : "font-medium text-zinc-500"
                             )}>
                                 {item.label}
                             </span>
                         </Link>
                     );
                 })}
-            </div>
-            {/* Legal footer links — visible on desktop only */}
-            <div className="hidden md:flex items-center justify-center gap-4 py-2 border-t border-slate-100">
-                <Link href="/privacy" className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors">Privacy Policy</Link>
-                <span className="text-slate-200 text-[11px]">·</span>
-                <Link href="/terms" className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors">Terms of Service</Link>
             </div>
         </nav>
     );

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import { Toaster } from "@/components/ui/sonner";
@@ -8,7 +8,17 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import PostHogPageView from "@/components/providers/PostHogPageView";
 
-const inter = Inter({ subsets: ["latin"] });
+const plusJakarta = Plus_Jakarta_Sans({
+    subsets: ["latin"],
+    variable: "--font-sans",
+    weight: ["400", "500", "600", "700", "800"],
+});
+
+const outfit = Outfit({
+    subsets: ["latin"],
+    variable: "--font-display",
+    weight: ["500", "600", "700", "800"],
+});
 
 export const metadata: Metadata = {
     title: {
@@ -36,7 +46,7 @@ export const metadata: Metadata = {
 
 
 export const viewport = {
-    themeColor: "#0d9488",
+    themeColor: "#ffffff",
 };
 
 import BottomNav from "@/components/navigation/BottomNav";
@@ -48,14 +58,14 @@ export default function RootLayout({
 }>) {
     return (
         <ClerkProvider>
-            <html lang="en" suppressHydrationWarning>
-                <body className={inter.className}>
+            <html lang="en" suppressHydrationWarning className={`${plusJakarta.variable} ${outfit.variable}`}>
+                <body className="font-sans bg-white text-zinc-950 antialiased selection:bg-teal-600 selection:text-white">
                     <PostHogProvider>
                         <Providers>
                             <ThemeProvider
                                 attribute="class"
                                 defaultTheme="light"
-                                enableSystem
+                                forcedTheme="light"
                                 disableTransitionOnChange
                             >
                                 <PostHogPageView />

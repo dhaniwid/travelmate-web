@@ -29,9 +29,9 @@ interface CreateTripFormProps {
 }
 
 const BUDGET_OPTIONS = [
-    { value: 1, label: 'Backpacker', icon: Backpack, color: 'text-emerald-400', bg: 'bg-emerald-400/10', border: 'border-emerald-400/40' },
-    { value: 2, label: 'Comfort', icon: Scale, color: 'text-teal-400', bg: 'bg-teal-400/10', border: 'border-teal-400/40' },
-    { value: 3, label: 'Premium', icon: Gem, color: 'text-violet-400', bg: 'bg-violet-400/10', border: 'border-violet-400/40' },
+    { value: 1, label: 'Backpacker', icon: Backpack },
+    { value: 2, label: 'Comfort', icon: Scale },
+    { value: 3, label: 'Premium', icon: Gem },
 ];
 
 export default function CreateTripForm({
@@ -241,26 +241,26 @@ export default function CreateTripForm({
 
     return (
         <>
-        <div className="bg-[#0A1628] rounded-t-3xl md:rounded-3xl w-full overflow-hidden shadow-2xl">
+        <div className="bg-white border border-zinc-200 rounded-t-3xl md:rounded-3xl w-full overflow-hidden shadow-2xl">
             {/* DRAG HANDLE (mobile only) — larger tap zone */}
             <div className="flex justify-center py-3 md:hidden">
-                <div className="w-10 h-1 rounded-full bg-white/20" />
+                <div className="w-10 h-1 rounded-full bg-zinc-300" />
             </div>
 
             {/* HEADER */}
-            <div className="flex items-center justify-between px-5 pt-4 pb-4 border-b border-white/10">
+            <div className="flex items-center justify-between px-5 pt-4 pb-4 border-b border-zinc-200">
                 <div>
-                    <p className="text-[11px] text-white/40 tracking-[0.8px]">Rencanakan trip</p>
-                    <p className="text-[17px] font-medium text-white mt-0.5">Buat itinerary baru</p>
+                    <p className="text-[11px] font-bold uppercase text-teal-600 tracking-wider">Rencanakan trip</p>
+                    <p className="text-[18px] font-bold text-zinc-950 mt-0.5">Buat itinerary baru</p>
                 </div>
                 {onClose && (
                     <button
                         type="button"
                         onClick={onClose}
                         aria-label="Tutup"
-                        className="w-8 h-8 rounded-full bg-white/8 border border-white/8 flex items-center justify-center hover:bg-white/12 transition-colors"
+                        className="w-8 h-8 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center hover:bg-zinc-200 transition-colors"
                     >
-                        <X className="w-4 h-4 text-slate-400" />
+                        <X className="w-4 h-4 text-zinc-700" />
                     </button>
                 )}
             </div>
@@ -273,9 +273,9 @@ export default function CreateTripForm({
             >
                 {/* GUEST BANNER */}
                 {!user && (
-                    <div className="flex items-start gap-3 px-4 py-3 bg-teal-500/8 border border-teal-500/20 rounded-xl">
-                        <Sparkles className="w-4 h-4 text-teal-400 mt-0.5 flex-shrink-0" />
-                        <p className="text-[12px] text-teal-300 leading-relaxed">
+                    <div className="flex items-start gap-3 px-4 py-3 bg-teal-50 border border-teal-200/80 rounded-xl">
+                        <Sparkles className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" />
+                        <p className="text-[12px] font-medium text-teal-900 leading-relaxed">
                             Coba Miru gratis — sign in setelah selesai untuk menyimpan trip.
                         </p>
                     </div>
@@ -284,19 +284,19 @@ export default function CreateTripForm({
                 {/* DESTINATION */}
                 <div>
                     <div className="flex items-center justify-between mb-2">
-                        <p className="text-[13px] text-white/70 font-medium">Destinasi</p>
+                        <p className="text-[13px] text-zinc-900 font-bold">Destinasi</p>
                         {initialDestination && (
-                            <a href="/explore" className="text-[11px] text-teal-400 hover:text-teal-300 transition-colors">
+                            <a href="/explore" className="text-[12px] font-semibold text-teal-600 hover:text-teal-700 transition-colors">
                                 Ganti →
                             </a>
                         )}
                     </div>
 
                     {(initialDestination || isAutoDest) ? (
-                        <div className="flex items-center gap-3 px-4 py-3 bg-[#060F1E] border border-teal-500/40 rounded-xl">
-                            <MapPin className="w-4 h-4 text-teal-400 flex-shrink-0" />
-                            <span className="text-[14px] font-medium text-white flex-1">{destLabel}</span>
-                            {initialDestination && <Lock className="w-3.5 h-3.5 text-slate-600" />}
+                        <div className="flex items-center gap-3 px-4 py-3.5 bg-zinc-100 border border-zinc-200 rounded-xl">
+                            <MapPin className="w-4 h-4 text-teal-600 flex-shrink-0" />
+                            <span className="text-[14px] font-bold text-zinc-950 flex-1">{destLabel}</span>
+                            {initialDestination && <Lock className="w-3.5 h-3.5 text-zinc-400" />}
                         </div>
                     ) : (
                         <DestinationSection
@@ -336,25 +336,26 @@ export default function CreateTripForm({
 
                 {/* DURATION UPGRADE NUDGE */}
                 {showDurationUpgrade && !isPro && (
-                    <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-400/8 border border-amber-400/20">
-                        <Sparkles className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-zinc-950 text-white">
+                        <Sparkles className="w-4 h-4 text-teal-400 mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-semibold text-amber-300">Trip lebih dari 3 hari tersedia di PRO</p>
-                            <p className="text-[11px] text-amber-400/70 mt-0.5">Unlock 4–7 hari dan semua fitur premium.</p>
+                            <p className="text-[13px] font-bold text-white">Trip lebih dari 3 hari tersedia di PRO</p>
+                            <p className="text-[11px] text-zinc-400 mt-0.5">Unlock 4–7 hari dan semua fitur premium.</p>
                         </div>
                         <button
+                            type="button"
                             onClick={() => setShowUpgrade(true)}
-                            className="text-[11px] font-semibold text-amber-400 hover:text-amber-300 whitespace-nowrap underline underline-offset-2"
+                            className="text-[11px] font-bold text-teal-400 hover:text-teal-300 whitespace-nowrap underline underline-offset-2"
                         >
                             Upgrade →
                         </button>
                     </div>
                 )}
 
-                {/* BUDGET VIBE */}
+                {/* BUDGET VIBE — UberX / Comfort / Black tier selection style */}
                 <div>
-                    <p className="text-[13px] text-white/70 font-medium mb-2">Budget</p>
-                    <div className="grid grid-cols-3 gap-2">
+                    <p className="text-[13px] text-zinc-900 font-bold mb-2">Gaya Budget</p>
+                    <div className="grid grid-cols-3 gap-2.5">
                         {BUDGET_OPTIONS.map((opt) => {
                             const selected = formData.budget === opt.value;
                             const Icon = opt.icon;
@@ -364,14 +365,14 @@ export default function CreateTripForm({
                                     type="button"
                                     onClick={() => setFormData({ ...formData, budget: opt.value })}
                                     className={cn(
-                                        'flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border transition-all',
+                                        'flex flex-col items-center gap-1.5 px-3 py-3.5 rounded-xl transition-all',
                                         selected
-                                            ? `${opt.bg} ${opt.border} ${opt.color}`
-                                            : 'bg-[#060F1E] border-white/8 text-slate-500 hover:border-white/20'
+                                            ? 'bg-zinc-50 border-2 border-zinc-950 text-zinc-950 shadow-sm'
+                                            : 'bg-white border border-zinc-200 text-zinc-500 hover:border-zinc-400 hover:text-zinc-800'
                                     )}
                                 >
-                                    <Icon className="w-5 h-5" />
-                                    <span className="text-[11px] font-medium">{opt.label}</span>
+                                    <Icon className={cn("w-5 h-5", selected ? "text-teal-600" : "text-zinc-500")} />
+                                    <span className="text-[12px] font-bold">{opt.label}</span>
                                 </button>
                             );
                         })}
@@ -380,22 +381,22 @@ export default function CreateTripForm({
 
                 {/* PAX STEPPER */}
                 <div>
-                    <p className="text-[13px] text-white/70 font-medium mb-2">Jumlah orang</p>
-                    <div className="flex items-center gap-3 px-4 py-3 bg-[#060F1E] border border-white/8 rounded-xl">
+                    <p className="text-[13px] text-zinc-900 font-bold mb-2">Jumlah orang</p>
+                    <div className="flex items-center gap-3 px-4 py-2.5 bg-zinc-100 border border-zinc-200 rounded-xl">
                         <button
                             type="button"
                             onClick={() => setPax(p => Math.max(1, p - 1))}
                             aria-label="Kurangi"
-                            className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-white/8 border border-white/10 text-white flex items-center justify-center hover:bg-white/12 active:scale-95 transition-all"
+                            className="min-w-[40px] min-h-[40px] w-10 h-10 rounded-full bg-white border border-zinc-200 text-zinc-950 flex items-center justify-center hover:bg-zinc-50 active:scale-95 transition-all shadow-sm"
                         >
                             <Minus className="w-4 h-4" />
                         </button>
-                        <span className="flex-1 text-center text-[15px] font-medium text-white">{pax} orang</span>
+                        <span className="flex-1 text-center text-[15px] font-bold text-zinc-950">{pax} orang</span>
                         <button
                             type="button"
                             onClick={() => setPax(p => Math.min(20, p + 1))}
                             aria-label="Tambah"
-                            className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-white/8 border border-white/10 text-white flex items-center justify-center hover:bg-white/12 active:scale-95 transition-all"
+                            className="min-w-[40px] min-h-[40px] w-10 h-10 rounded-full bg-white border border-zinc-200 text-zinc-950 flex items-center justify-center hover:bg-zinc-50 active:scale-95 transition-all shadow-sm"
                         >
                             <Plus className="w-3.5 h-3.5" />
                         </button>
@@ -406,14 +407,14 @@ export default function CreateTripForm({
                 <button
                     type="submit"
                     disabled={isSubmitting || isStreaming}
-                    className="w-full bg-[#0D9488] hover:bg-[#0B8275] text-white rounded-[14px] py-4 flex items-center justify-center gap-2 active:scale-[0.99] transition-all disabled:opacity-50"
+                    className="w-full bg-zinc-950 hover:bg-zinc-800 text-white rounded-xl py-4 flex items-center justify-center gap-2 active:scale-[0.99] transition-all disabled:opacity-50"
                 >
                     {isSubmitting || isStreaming ? (
                         <Loader2 className="w-4 h-4 animate-spin text-white" />
                     ) : (
                         <>
-                            <Sparkles className="w-4 h-4 text-white" />
-                            <span className="text-[15px] font-medium truncate max-w-[220px]">
+                            <Sparkles className="w-4 h-4 text-teal-400" />
+                            <span className="text-[15px] font-bold truncate max-w-[260px]">
                                 {destLabel ? `Buat itinerary ke ${destLabel}` : 'Buat itinerary'}
                             </span>
                         </>

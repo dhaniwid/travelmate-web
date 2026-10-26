@@ -18,14 +18,14 @@ interface DiscoveryTeaserProps {
 
 // ─── Category → visual config ─────────────────────────────────────────────────
 
-const CATEGORY_CONFIG: Record<string, { emoji: string; gradient: string; ring: string; pill: string }> = {
-    food: { emoji: '🍜', gradient: 'from-orange-900/60 via-slate-900 to-slate-900', ring: 'ring-orange-500/20', pill: 'bg-orange-500/15 text-orange-300 border-orange-500/20' },
-    culture: { emoji: '🎭', gradient: 'from-purple-900/60 via-slate-900 to-slate-900', ring: 'ring-purple-500/20', pill: 'bg-purple-500/15 text-purple-300 border-purple-500/20' },
-    nature: { emoji: '🌿', gradient: 'from-emerald-900/60 via-slate-900 to-slate-900', ring: 'ring-emerald-500/20', pill: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' },
-    attraction: { emoji: '🏛️', gradient: 'from-teal-900/60 via-slate-900 to-slate-900', ring: 'ring-teal-500/20', pill: 'bg-teal-500/15 text-teal-300 border-teal-500/20' },
-    accommodation: { emoji: '🏨', gradient: 'from-blue-900/60 via-slate-900 to-slate-900', ring: 'ring-blue-500/20', pill: 'bg-blue-500/15 text-blue-300 border-blue-500/20' },
-    transport: { emoji: '🚄', gradient: 'from-cyan-900/60 via-slate-900 to-slate-900', ring: 'ring-cyan-500/20', pill: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/20' },
-    default: { emoji: '✦', gradient: 'from-slate-800/80 via-slate-900 to-slate-900', ring: 'ring-slate-500/20', pill: 'bg-slate-500/15 text-slate-300 border-slate-500/20' },
+const CATEGORY_CONFIG: Record<string, { emoji: string; pill: string }> = {
+    food: { emoji: '🍜', pill: 'bg-zinc-100 text-zinc-800 border-zinc-200' },
+    culture: { emoji: '🎭', pill: 'bg-zinc-100 text-zinc-800 border-zinc-200' },
+    nature: { emoji: '🌿', pill: 'bg-teal-50 text-teal-800 border-teal-200' },
+    attraction: { emoji: '🏛️', pill: 'bg-teal-50 text-teal-800 border-teal-200' },
+    accommodation: { emoji: '🏨', pill: 'bg-zinc-100 text-zinc-800 border-zinc-200' },
+    transport: { emoji: '🚄', pill: 'bg-zinc-100 text-zinc-800 border-zinc-200' },
+    default: { emoji: '✦', pill: 'bg-zinc-100 text-zinc-800 border-zinc-200' },
 };
 
 function getCategoryConfig(category: string) {
@@ -40,12 +40,12 @@ function getCategoryConfig(category: string) {
 
 function SkeletonCard() {
     return (
-        <div className="min-w-[220px] max-w-[220px] h-[168px] rounded-2xl bg-slate-800/60 ring-1 ring-white/5 animate-pulse flex flex-col justify-between p-4">
-            <div className="h-4 w-16 bg-slate-700 rounded-full" />
+        <div className="min-w-[220px] max-w-[220px] h-[156px] rounded-xl bg-zinc-100 border border-zinc-200 animate-pulse flex flex-col justify-between p-4">
+            <div className="h-4 w-16 bg-zinc-200 rounded-full" />
             <div className="space-y-2">
-                <div className="h-5 w-3/4 bg-slate-700 rounded" />
-                <div className="h-3 w-full bg-slate-700/60 rounded" />
-                <div className="h-3 w-2/3 bg-slate-700/60 rounded" />
+                <div className="h-5 w-3/4 bg-zinc-200 rounded" />
+                <div className="h-3 w-full bg-zinc-200/70 rounded" />
+                <div className="h-3 w-2/3 bg-zinc-200/70 rounded" />
             </div>
         </div>
     );
@@ -61,30 +61,22 @@ function InsightCard({ insight }: { insight: Insight }) {
 
     return (
         <div
-            className={cn(
-                'min-w-[220px] max-w-[220px] h-[168px] rounded-2xl overflow-hidden',
-                'ring-1 shadow-lg shadow-black/40 flex flex-col',
-                'transition-transform duration-200 hover:scale-[1.02] cursor-default select-none',
-                config.ring
-            )}
+            className="min-w-[220px] max-w-[220px] h-[156px] rounded-xl bg-zinc-50 border border-zinc-200 p-4 flex flex-col justify-between transition-all duration-200 hover:border-zinc-950 cursor-default select-none"
         >
-            {/* Gradient header band */}
-            <div className={cn('bg-gradient-to-br h-full flex flex-col justify-between p-4', config.gradient)}>
-                {/* Category pill */}
-                <div className={cn('self-start flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-widest', config.pill)}>
-                    <span>{config.emoji}</span>
-                    <span>{insight.category}</span>
-                </div>
+            {/* Category pill */}
+            <div className={cn('self-start flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider', config.pill)}>
+                <span>{config.emoji}</span>
+                <span>{insight.category}</span>
+            </div>
 
-                {/* Place name + snippet */}
-                <div className="space-y-1.5">
-                    <p className="text-white font-black text-base leading-tight tracking-tight line-clamp-2">
-                        {insight.name}
-                    </p>
-                    <p className="text-slate-400 text-[11px] font-medium leading-relaxed line-clamp-2">
-                        {snippet}
-                    </p>
-                </div>
+            {/* Place name + snippet */}
+            <div className="space-y-1">
+                <p className="text-zinc-950 font-bold text-sm leading-tight tracking-tight line-clamp-2">
+                    {insight.name}
+                </p>
+                <p className="text-zinc-500 text-[11px] font-medium leading-relaxed line-clamp-2">
+                    {snippet}
+                </p>
             </div>
         </div>
     );

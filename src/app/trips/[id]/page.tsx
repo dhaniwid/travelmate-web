@@ -52,7 +52,7 @@ export default async function TripPage({ params, searchParams }: TripPageProps) 
     }
 
     return (
-        <main className="min-h-screen bg-[#060F1E] relative">
+        <main className="min-h-screen bg-white relative">
 
             <Suspense fallback={<ItinerarySkeleton />}>
                 <TripResult data={data} isSavedView={true} />

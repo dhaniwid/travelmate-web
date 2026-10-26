@@ -90,59 +90,50 @@ export default function PublicTripView({ data }: PublicTripViewProps) {
     const isDayVisible = (currentDayPlan?.day ?? 1) === 1 || isDay1Window;
 
     return (
-        <div className="min-h-screen bg-[#060F1E] font-sans pb-16">
+        <div className="min-h-screen bg-zinc-50 font-sans pb-16">
             <div className="max-w-[480px] mx-auto px-4">
 
                 {/* ── HERO HEADER ── */}
-                <div
-                    className="relative rounded-2xl overflow-hidden mb-5 mt-4"
-                    style={{ background: '#0A1628', minHeight: 220, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '1.5rem' }}
-                >
-                    <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(10,22,40,0.2) 0%, rgba(10,22,40,0.85) 100%)', zIndex: 1 }} />
-
+                <div className="relative rounded-2xl overflow-hidden mb-5 mt-4 bg-zinc-950 min-h-[220px] flex flex-col justify-end p-6">
                     {/* MIRU pill top-right */}
-                    <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 bg-white/15 backdrop-blur-md rounded-full px-3 py-1" style={{ border: '0.5px solid rgba(255,255,255,0.2)' }}>
+                    <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 bg-white/15 backdrop-blur-md rounded-full px-3 py-1 border border-white/20">
                         <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                        <span className="text-white text-[11px] font-medium tracking-[1.5px]">MIRU</span>
+                        <span className="text-white text-[11px] font-bold tracking-[1.5px]">MIRU</span>
                     </div>
 
                     {/* Share button top-left */}
                     <button
                         onClick={handleShare}
-                        className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-white/15 backdrop-blur-md rounded-full px-3 py-1 text-white text-[11px] font-medium hover:bg-white/25 transition-colors"
-                        style={{ border: '0.5px solid rgba(255,255,255,0.2)' }}
+                        className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-white/15 backdrop-blur-md rounded-full px-3 py-1 text-white text-[11px] font-semibold hover:bg-white/25 transition-colors border border-white/20"
                     >
                         <Share2 className="w-3 h-3" />
                         Bagikan
                     </button>
 
                     <div className="relative z-10">
-                        <p className="text-white/60 text-[11px] tracking-[1.5px] uppercase mb-1.5">Trip itinerary</p>
-                        <h1 className="text-white text-[28px] font-medium leading-tight mb-2">{destination || 'Destinasi'}</h1>
+                        <p className="text-zinc-400 text-[11px] font-semibold tracking-[1.5px] uppercase mb-1.5">Trip itinerary</p>
+                        <h1 className="text-white text-[28px] font-bold tracking-tight leading-tight mb-2">{destination || 'Destinasi'}</h1>
                         <div className="flex items-center gap-3 flex-wrap">
-                            {dateChip && <span className="text-white/75 text-[13px]">{dateChip}</span>}
-                            {dateChip && trip.trip_days > 0 && <span className="text-white/30">·</span>}
-                            {trip.trip_days > 0 && <span className="text-white/75 text-[13px]">{trip.trip_days} hari</span>}
-                            {styleLabel && <><span className="text-white/30">·</span><span className="text-white/75 text-[13px]">{styleLabel}</span></>}
+                            {dateChip && <span className="text-zinc-300 text-[13px]">{dateChip}</span>}
+                            {dateChip && trip.trip_days > 0 && <span className="text-zinc-600">·</span>}
+                            {trip.trip_days > 0 && <span className="text-zinc-300 text-[13px]">{trip.trip_days} hari</span>}
+                            {styleLabel && <><span className="text-zinc-600">·</span><span className="text-zinc-300 text-[13px]">{styleLabel}</span></>}
                         </div>
                     </div>
                 </div>
 
                 {/* ── INVITATION BANNER ── */}
-                <div
-                    className="flex items-center gap-[10px] px-4 py-3 rounded-xl mb-5"
-                    style={{ background: 'rgba(13,148,136,0.1)', border: '0.5px solid rgba(13,148,136,0.3)' }}
-                >
-                    <div className="w-8 h-8 rounded-full bg-[#0D9488] flex items-center justify-center flex-shrink-0">
+                <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl mb-5 bg-white border border-zinc-200 shadow-sm">
+                    <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center flex-shrink-0">
                         <Sparkles className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-white leading-tight">Seseorang berbagi trip ini</p>
-                        <p className="text-[12px] text-white/50">Lihat rencana perjalanan{destination ? ` ke ${destination}` : ''}</p>
+                        <p className="text-[13px] font-bold text-zinc-950 leading-tight">Seseorang berbagi trip ini</p>
+                        <p className="text-[12px] text-zinc-500">Lihat rencana perjalanan{destination ? ` ke ${destination}` : ''}</p>
                     </div>
                     <Link
                         href={signUpUrl}
-                        className="bg-[#0D9488] text-white text-[12px] font-medium px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-teal-600 transition-colors flex-shrink-0"
+                        className="bg-zinc-950 text-white text-[12px] font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-zinc-800 transition-colors flex-shrink-0"
                     >
                         Buat tripku ↗
                     </Link>
@@ -156,12 +147,11 @@ export default function PublicTripView({ data }: PublicTripViewProps) {
                                 <button
                                     key={day.day}
                                     onClick={() => setSelectedDay(idx)}
-                                    className="flex-shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
-                                    style={
+                                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[13px] font-semibold transition-colors ${
                                         idx === selectedDay
-                                            ? { background: '#0D9488', color: 'white', border: 'none' }
-                                            : { background: '#0D2040', color: 'rgba(255,255,255,0.5)', border: '0.5px solid rgba(255,255,255,0.1)' }
-                                    }
+                                            ? 'bg-zinc-950 text-white'
+                                            : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100'
+                                    }`}
                                 >
                                     Hari {day.day}
                                 </button>
@@ -170,28 +160,20 @@ export default function PublicTripView({ data }: PublicTripViewProps) {
 
                         {currentDayPlan && (
                             <>
-                                <p className="text-[12px] text-white/40 mb-3 tracking-[0.5px] uppercase">
+                                <p className="text-[11px] font-bold text-zinc-400 mb-3 tracking-[0.5px] uppercase">
                                     {currentDayPlan.title
                                         ? `${currentDayPlan.title} · ${currentDayPlan.activities?.length || 0} aktivitas`
                                         : `Hari ${currentDayPlan.day} · ${currentDayPlan.activities?.length || 0} aktivitas`}
                                 </p>
 
                                 {isDayVisible ? (
-                                    <div className="flex flex-col gap-3">
+                                    <div className="flex flex-col gap-2.5">
                                         {(currentDayPlan.activities || []).map((act, i) => (
                                             <div
                                                 key={i}
-                                                className="relative flex gap-3 items-start p-4 rounded-xl"
-                                                style={{
-                                                    background: '#0A1628',
-                                                    border: '0.5px solid rgba(255,255,255,0.08)',
-                                                    opacity: act.is_hidden_gem ? 0.5 : 1,
-                                                }}
+                                                className="relative flex gap-3 items-start p-4 rounded-xl bg-white border border-zinc-200 shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
                                             >
-                                                <div
-                                                    className="w-9 h-9 rounded-[10px] flex items-center justify-center flex-shrink-0 text-[18px]"
-                                                    style={{ background: 'rgba(13,148,136,0.2)' }}
-                                                >
+                                                <div className="w-9 h-9 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center flex-shrink-0 text-[18px]">
                                                     {act.type === 'food' || act.type === 'kuliner' ? '🍜'
                                                         : act.type === 'landmark' || act.type === 'wisata' ? '🏛️'
                                                         : act.type === 'nature' ? '🌿'
@@ -199,11 +181,11 @@ export default function PublicTripView({ data }: PublicTripViewProps) {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex justify-between items-start gap-2">
-                                                        <p className="text-[14px] font-medium text-white leading-snug">{act.activity}</p>
-                                                        <span className="text-[11px] text-white/40 whitespace-nowrap flex-shrink-0">{todLabel(act.time)}</span>
+                                                        <p className="text-[14px] font-bold text-zinc-950 leading-snug">{act.activity}</p>
+                                                        <span className="text-[11px] font-medium text-zinc-400 whitespace-nowrap flex-shrink-0">{todLabel(act.time)}</span>
                                                     </div>
                                                     {(act.description_short || act.description) && (
-                                                        <p className="text-[12px] text-white/50 mt-0.5 line-clamp-2">
+                                                        <p className="text-[12px] text-zinc-500 mt-0.5 line-clamp-2">
                                                             {act.description_short || act.description}
                                                         </p>
                                                     )}
@@ -211,13 +193,10 @@ export default function PublicTripView({ data }: PublicTripViewProps) {
 
                                                 {/* Hidden gem blur overlay — always gated */}
                                                 {act.is_hidden_gem && (
-                                                    <div
-                                                        className="absolute inset-0 rounded-xl flex items-center justify-center"
-                                                        style={{ background: 'rgba(13,32,64,0.7)', backdropFilter: 'blur(2px)' }}
-                                                    >
-                                                        <div className="flex items-center gap-1.5 bg-[#0D9488] px-4 py-1.5 rounded-full">
-                                                            <Lock className="w-3 h-3 text-white" />
-                                                            <span className="text-[12px] font-medium text-white">Hidden gem · PRO</span>
+                                                    <div className="absolute inset-0 rounded-xl flex items-center justify-center bg-white/80 backdrop-blur-[2px]">
+                                                        <div className="flex items-center gap-1.5 bg-zinc-950 px-4 py-1.5 rounded-full shadow-sm">
+                                                            <Lock className="w-3 h-3 text-teal-400" />
+                                                            <span className="text-[12px] font-semibold text-white">Hidden gem · PRO</span>
                                                         </div>
                                                     </div>
                                                 )}
@@ -225,17 +204,14 @@ export default function PublicTripView({ data }: PublicTripViewProps) {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div
-                                        className="py-8 text-center rounded-xl"
-                                        style={{ background: '#0A1628', border: '0.5px solid rgba(255,255,255,0.08)' }}
-                                    >
-                                        <Lock className="w-5 h-5 text-white/30 mx-auto mb-2" />
-                                        <p className="text-[13px] text-white/40 mb-3">
+                                    <div className="py-8 text-center rounded-xl bg-white border border-zinc-200">
+                                        <Lock className="w-5 h-5 text-zinc-400 mx-auto mb-2" />
+                                        <p className="text-[13px] text-zinc-500 mb-3">
                                             Buat akun untuk lihat hari {currentDayPlan.day}
                                         </p>
                                         <Link
                                             href={signUpUrl}
-                                            className="inline-flex items-center text-[12px] font-medium text-white bg-[#0D9488] hover:bg-teal-600 px-4 py-2 rounded-lg transition-colors"
+                                            className="inline-flex items-center text-[12px] font-semibold text-white bg-zinc-950 hover:bg-zinc-800 px-4 py-2 rounded-lg transition-colors"
                                         >
                                             Daftar gratis →
                                         </Link>
@@ -248,20 +224,20 @@ export default function PublicTripView({ data }: PublicTripViewProps) {
 
                 {/* ── BUDGET SECTION ── */}
                 {budgetItems && (
-                    <div
-                        className="rounded-xl p-4 mb-4"
-                        style={{ background: '#0D2040', border: '0.5px solid rgba(255,255,255,0.08)' }}
-                    >
-                        <p className="text-[12px] text-white/40 tracking-[1.5px] uppercase mb-3">ESTIMASI BUDGET</p>
+                    <div className="rounded-xl p-4 mb-4 bg-white border border-zinc-200">
+                        <p className="text-[11px] font-bold text-zinc-400 tracking-[1.5px] uppercase mb-3">ESTIMASI BUDGET</p>
                         <div className="grid grid-cols-2 gap-2">
                             {budgetItems.map(item => (
                                 <div
                                     key={item.label}
-                                    className="rounded-lg px-3 py-[10px]"
-                                    style={{ background: item.isTotal ? '#0D9488' : '#0A1628' }}
+                                    className={`rounded-lg px-3 py-2.5 ${
+                                        item.isTotal
+                                            ? 'bg-zinc-950 text-white'
+                                            : 'bg-zinc-50 border border-zinc-200 text-zinc-950'
+                                    }`}
                                 >
-                                    <p className="text-[11px] mb-0.5" style={{ color: item.isTotal ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)' }}>{item.label}</p>
-                                    <p className="text-[14px] font-medium text-white">{fmtRupiah(item.value)}</p>
+                                    <p className={`text-[11px] mb-0.5 ${item.isTotal ? 'text-zinc-400' : 'text-zinc-500'}`}>{item.label}</p>
+                                    <p className="text-[14px] font-bold">{fmtRupiah(item.value)}</p>
                                 </div>
                             ))}
                         </div>
@@ -269,15 +245,15 @@ export default function PublicTripView({ data }: PublicTripViewProps) {
                 )}
 
                 {/* ── CTA FOOTER ── */}
-                <div className="rounded-2xl p-6 text-center" style={{ background: '#0A1628' }}>
-                    <div className="w-10 h-10 rounded-xl bg-[#0D9488] flex items-center justify-center mx-auto mb-3">
+                <div className="rounded-2xl p-6 text-center bg-zinc-950 text-white">
+                    <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center mx-auto mb-3">
                         <Sparkles className="w-5 h-5 text-white" />
                     </div>
-                    <p className="text-white text-[15px] font-medium mb-1.5">Rencanakan tripmu sendiri</p>
-                    <p className="text-white/60 text-[13px] mb-4">Miru generate itinerary lengkap dalam hitungan detik</p>
+                    <p className="text-white text-[15px] font-bold mb-1.5">Rencanakan tripmu sendiri</p>
+                    <p className="text-zinc-400 text-[13px] mb-4">Miru generate itinerary lengkap dalam hitungan detik</p>
                     <Link
                         href={signUpUrl}
-                        className="block w-full bg-[#0D9488] hover:bg-teal-600 text-white text-[14px] font-medium py-3 rounded-[10px] transition-colors"
+                        className="block w-full bg-white hover:bg-zinc-100 text-zinc-950 text-[14px] font-bold py-3 rounded-xl transition-colors"
                     >
                         Mulai gratis ↗
                     </Link>

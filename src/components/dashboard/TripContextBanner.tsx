@@ -98,24 +98,25 @@ export default function TripContextBanner({ trips, onTripUpdated }: Props) {
             ? new Date(trip.start_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
             : '';
         return (
-            <div className="relative bg-[#0A1628] rounded-2xl p-5 overflow-hidden border border-white/5">
-                {/* Decorative circle */}
-                <div className="absolute top-0 right-0 w-28 h-28 rounded-full bg-teal-500/10 translate-x-8 -translate-y-8" />
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-[0.8px] mb-1">Trip berikutnya</p>
-                <p className="text-white text-[17px] font-medium leading-tight mb-1">{trip!.destination}</p>
-                <p className="text-slate-400 text-[13px] mb-4">
+            <div className="relative bg-white rounded-2xl p-5 overflow-hidden border border-zinc-200 shadow-sm">
+                <div className="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200/60 rounded-full px-2.5 py-0.5 mb-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-teal-600" />
+                    <span className="text-[10px] font-bold text-teal-800 uppercase tracking-wider">Trip berikutnya</span>
+                </div>
+                <p className="text-zinc-950 text-xl font-bold leading-tight mb-1">{trip!.destination}</p>
+                <p className="text-zinc-600 text-[13px] font-medium mb-4">
                     {startLabel} · {daysUntil} hari lagi
                 </p>
-                <div className="flex gap-2">
+                <div className="flex gap-2.5">
                     <Link
                         href={`/trips/${trip!.id}`}
-                        className="flex-1 bg-teal-500 hover:bg-teal-400 text-white text-[13px] font-medium rounded-xl py-3 text-center transition-colors"
+                        className="flex-1 bg-zinc-950 hover:bg-zinc-800 text-white text-[13px] font-semibold rounded-xl py-3 text-center transition-colors"
                     >
                         Lihat rencana
                     </Link>
                     <button
                         onClick={handleShare}
-                        className="bg-white/8 hover:bg-white/12 text-white text-[13px] rounded-xl px-4 py-3 border border-white/8 transition-colors"
+                        className="bg-zinc-100 hover:bg-zinc-200 text-zinc-900 text-[13px] font-semibold rounded-xl px-4 py-3 border border-zinc-200 transition-colors"
                     >
                         Bagikan
                     </button>
@@ -127,22 +128,21 @@ export default function TripContextBanner({ trips, onTripUpdated }: Props) {
     // ── State: EVE (H-1) ─────────────────────────────────────────────────────
     if (state === 'eve') {
         return (
-            <div className="relative bg-[#1A0A28] rounded-2xl p-5 overflow-hidden border border-orange-500/15">
-                <div className="absolute top-0 right-0 w-28 h-28 rounded-full bg-orange-500/10 translate-x-8 -translate-y-8" />
-                <p className="text-[11px] font-semibold text-orange-400 uppercase tracking-[0.8px] mb-1">Besok berangkat</p>
-                <p className="text-white text-[17px] font-medium leading-tight mb-1">{trip!.destination}</p>
-                <p className="text-slate-400 text-[13px] mb-4">Aktifkan Travel Mode untuk hari H</p>
-                <div className="flex gap-2">
+            <div className="relative bg-zinc-950 rounded-2xl p-5 overflow-hidden border border-zinc-900">
+                <p className="text-[11px] font-bold text-teal-400 uppercase tracking-wider mb-1">Besok berangkat</p>
+                <p className="text-white text-xl font-bold leading-tight mb-1">{trip!.destination}</p>
+                <p className="text-zinc-400 text-[13px] mb-4">Aktifkan Travel Mode untuk hari H</p>
+                <div className="flex gap-2.5">
                     <button
                         onClick={() => router.push(`/trips/${trip!.id}?mode=travel`)}
-                        className="flex-1 bg-orange-500 hover:bg-orange-400 text-white text-[13px] font-medium rounded-xl py-3 flex items-center justify-center gap-1.5 transition-colors"
+                        className="flex-1 bg-white hover:bg-zinc-100 text-zinc-950 text-[13px] font-bold rounded-xl py-3 flex items-center justify-center gap-1.5 transition-colors"
                     >
-                        <Plane className="w-3.5 h-3.5" />
+                        <Plane className="w-4 h-4" />
                         Aktifkan Travel Mode
                     </button>
                     <Link
                         href={`/trips/${trip!.id}`}
-                        className="bg-white/8 hover:bg-white/12 text-white text-[13px] rounded-xl px-4 py-3 border border-white/8 transition-colors"
+                        className="bg-white/10 hover:bg-white/15 text-white text-[13px] font-semibold rounded-xl px-4 py-3 border border-white/15 transition-colors"
                     >
                         Cek rencana
                     </Link>
@@ -154,24 +154,20 @@ export default function TripContextBanner({ trips, onTripUpdated }: Props) {
     // ── State: HARI H ────────────────────────────────────────────────────────
     if (state === 'today') {
         return (
-            <div className="relative bg-[#0A2818] rounded-2xl p-5 overflow-hidden border border-teal-500/20">
-                <div className="absolute top-0 right-0 w-28 h-28 rounded-full bg-teal-500/10 translate-x-8 -translate-y-8" />
-                <p className="text-[11px] font-semibold text-teal-400 uppercase tracking-[0.8px] mb-1">Sedang berjalan</p>
-                <p className="text-white text-[17px] font-medium leading-tight mb-1">{trip!.destination}</p>
-                <p className="text-slate-400 text-[13px] mb-4">Perjalananmu dimulai hari ini!</p>
-                <div className="flex gap-2">
+            <div className="relative bg-zinc-950 rounded-2xl p-5 overflow-hidden border border-zinc-900">
+                <div className="inline-flex items-center gap-1.5 bg-teal-500/20 border border-teal-500/30 rounded-full px-2.5 py-0.5 mb-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+                    <span className="text-[10px] font-bold text-teal-300 uppercase tracking-wider">Sedang berjalan</span>
+                </div>
+                <p className="text-white text-xl font-bold leading-tight mb-1">{trip!.destination}</p>
+                <p className="text-zinc-400 text-[13px] mb-4">Perjalananmu dimulai hari ini!</p>
+                <div className="flex gap-2.5">
                     <Link
                         href={`/trips/${trip!.id}?mode=travel`}
-                        className="flex-1 bg-teal-500 hover:bg-teal-400 text-white text-[13px] font-medium rounded-xl py-3 flex items-center justify-center gap-1.5 transition-colors"
+                        className="flex-1 bg-teal-600 hover:bg-teal-500 text-white text-[13px] font-bold rounded-xl py-3 flex items-center justify-center gap-1.5 transition-colors"
                     >
-                        <MapPin className="w-3.5 h-3.5" />
+                        <MapPin className="w-4 h-4" />
                         Buka Travel Mode
-                    </Link>
-                    <Link
-                        href="/sumi"
-                        className="bg-white/8 hover:bg-white/12 text-white text-[13px] rounded-xl px-4 py-3 border border-white/8 transition-colors"
-                    >
-                        Claim stamp
                     </Link>
                 </div>
             </div>
@@ -181,24 +177,22 @@ export default function TripContextBanner({ trips, onTripUpdated }: Props) {
     // ── State: POST-TRIP ─────────────────────────────────────────────────────
     if (state === 'post_trip') {
         return (
-            <div className="relative bg-[#0A1628] rounded-2xl p-5 overflow-hidden border border-violet-500/15">
-                <div className="absolute top-0 right-0 w-28 h-28 rounded-full bg-violet-500/10 translate-x-8 -translate-y-8" />
-                <p className="text-[11px] font-semibold text-violet-400 uppercase tracking-[0.8px] mb-1">Perjalanan selesai</p>
-                <p className="text-white text-[17px] font-medium leading-tight mb-1">{trip!.destination}</p>
-                <p className="text-slate-400 text-[13px] mb-4">Bagikan kenangan atau buat trip baru</p>
-                <div className="flex gap-2">
-                    <Link
-                        href="/sumi"
-                        className="flex-1 bg-violet-500 hover:bg-violet-400 text-white text-[13px] font-medium rounded-xl py-3 flex items-center justify-center gap-1.5 transition-colors"
-                    >
-                        <Trophy className="w-3.5 h-3.5" />
-                        Lihat Passport Sumi
-                    </Link>
+            <div className="relative bg-white rounded-2xl p-5 overflow-hidden border border-zinc-200 shadow-sm">
+                <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Perjalanan selesai</p>
+                <p className="text-zinc-950 text-xl font-bold leading-tight mb-1">{trip!.destination}</p>
+                <p className="text-zinc-600 text-[13px] mb-4">Lihat kembali rute perjalananmu atau mulai petualangan baru</p>
+                <div className="flex gap-2.5">
                     <Link
                         href={`/trips/${trip!.id}`}
-                        className="bg-white/8 hover:bg-white/12 text-white text-[13px] rounded-xl px-4 py-3 border border-white/8 transition-colors"
+                        className="flex-1 bg-zinc-950 hover:bg-zinc-800 text-white text-[13px] font-semibold rounded-xl py-3 flex items-center justify-center gap-1.5 transition-colors"
                     >
-                        Kenangan
+                        Lihat Detail Trip
+                    </Link>
+                    <Link
+                        href="/explore"
+                        className="bg-zinc-100 hover:bg-zinc-200 text-zinc-900 text-[13px] font-semibold rounded-xl px-4 py-3 border border-zinc-200 transition-colors"
+                    >
+                        Eksplor Lagi
                     </Link>
                 </div>
             </div>

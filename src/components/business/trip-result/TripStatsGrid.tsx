@@ -39,17 +39,17 @@ export default function TripStatsGrid({ plan, destination }: TripStatsGridProps)
     ];
 
     return (
-        <div className="grid grid-cols-3 gap-2 px-4 md:px-8 py-3">
+        <div className="grid grid-cols-3 gap-2.5 px-4 md:px-8 py-3">
             {stats.map((stat) => (
                 <div
                     key={stat.label}
-                    className="bg-[#0A1628] rounded-xl border border-white/8 p-3 flex flex-col gap-1"
+                    className="bg-zinc-50 rounded-xl border border-zinc-200 p-3 flex flex-col gap-1"
                 >
-                    <span className="text-[10px] uppercase tracking-wider text-white/40">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
                         {stat.label}
                     </span>
                     <span
-                        className="text-[12px] font-semibold text-white leading-snug line-clamp-2"
+                        className="text-[13px] font-bold text-zinc-950 leading-snug line-clamp-2"
                         title={stat.value}
                     >
                         {stat.value}

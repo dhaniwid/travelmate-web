@@ -17,22 +17,21 @@ export default function MiruRadarCard({ onCreateTrip, onClaimStamp }: MiruRadarC
     // ── IDLE: not yet requested ──────────────────────────────────────────────
     if (geoState === 'idle') {
         return (
-            <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 border border-teal-800/40 p-6 shadow-xl relative overflow-hidden">
-                <div className="absolute -top-12 -right-12 w-48 h-48 bg-teal-500/10 rounded-full blur-2xl" />
+            <div className="rounded-2xl bg-zinc-100 border border-zinc-200 p-5 relative overflow-hidden">
                 <div className="relative z-10 flex items-start gap-4">
                     <div className="relative flex-shrink-0">
-                        <div className="w-12 h-12 rounded-full bg-teal-500/20 border border-teal-500/40 flex items-center justify-center">
-                            <Radio className="w-5 h-5 text-teal-400" />
+                        <div className="w-11 h-11 rounded-xl bg-white border border-zinc-200 flex items-center justify-center shadow-sm">
+                            <Radio className="w-5 h-5 text-teal-600" />
                         </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-bold text-teal-400 uppercase tracking-widest mb-1">Miru Radar</p>
-                        <h3 className="text-white font-bold text-lg leading-tight mb-1">Temukan sekitarmu</h3>
-                        <p className="text-slate-400 text-sm mb-4">Aktifkan lokasi untuk melihat tempat menarik di sekitarmu.</p>
+                        <p className="text-[10px] font-bold text-teal-700 uppercase tracking-widest mb-1">Miru Radar</p>
+                        <h3 className="text-zinc-950 font-bold text-base leading-tight mb-1">Temukan sekitarmu</h3>
+                        <p className="text-zinc-600 text-xs mb-3.5">Aktifkan lokasi untuk melihat tempat menarik di sekitarmu.</p>
                         <Button
                             onClick={requestLocation}
                             size="sm"
-                            className="bg-teal-600 hover:bg-teal-700 text-white rounded-full text-xs font-bold px-4"
+                            className="bg-zinc-950 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold px-4 h-9"
                         >
                             <Navigation className="w-3.5 h-3.5 mr-1.5" />
                             Aktifkan Radar
@@ -46,20 +45,18 @@ export default function MiruRadarCard({ onCreateTrip, onClaimStamp }: MiruRadarC
     // ── REQUESTING / LOADING ─────────────────────────────────────────────────
     if (geoState === 'requesting' || loading) {
         return (
-            <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 border border-teal-800/40 p-6 shadow-xl relative overflow-hidden">
-                <div className="absolute -top-12 -right-12 w-48 h-48 bg-teal-500/10 rounded-full blur-2xl" />
+            <div className="rounded-2xl bg-zinc-100 border border-zinc-200 p-5 relative overflow-hidden">
                 <div className="relative z-10 flex items-center gap-4">
-                    {/* Pulse animation */}
                     <div className="relative flex-shrink-0">
-                        <span className="absolute inset-0 rounded-full bg-teal-500/30 animate-ping" />
-                        <div className="relative w-12 h-12 rounded-full bg-teal-500/20 border border-teal-500/40 flex items-center justify-center">
-                            <Radio className="w-5 h-5 text-teal-400" />
+                        <span className="absolute inset-0 rounded-xl bg-teal-500/20 animate-ping" />
+                        <div className="relative w-11 h-11 rounded-xl bg-white border border-zinc-200 flex items-center justify-center">
+                            <Radio className="w-5 h-5 text-teal-600" />
                         </div>
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold text-teal-400 uppercase tracking-widest mb-1">Miru Radar</p>
-                        <p className="text-white font-semibold text-sm">Memindai area sekitar...</p>
-                        <p className="text-slate-400 text-xs mt-0.5">Harap tunggu sebentar</p>
+                        <p className="text-[10px] font-bold text-teal-700 uppercase tracking-widest mb-1">Miru Radar</p>
+                        <p className="text-zinc-950 font-bold text-sm">Memindai area sekitar...</p>
+                        <p className="text-zinc-500 text-xs mt-0.5">Harap tunggu sebentar</p>
                     </div>
                 </div>
             </div>
@@ -69,13 +66,13 @@ export default function MiruRadarCard({ onCreateTrip, onClaimStamp }: MiruRadarC
     // ── ERROR ────────────────────────────────────────────────────────────────
     if (error) {
         return (
-            <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 border border-teal-800/40 p-6 shadow-xl relative overflow-hidden">
+            <div className="rounded-2xl bg-zinc-100 border border-zinc-200 p-5 relative overflow-hidden">
                 <div className="relative z-10 flex items-center justify-between">
                     <div>
-                        <p className="text-[10px] font-bold text-teal-400 uppercase tracking-widest mb-1">Miru Radar</p>
-                        <p className="text-slate-300 text-sm">{error}</p>
+                        <p className="text-[10px] font-bold text-teal-700 uppercase tracking-widest mb-1">Miru Radar</p>
+                        <p className="text-zinc-700 text-sm font-medium">{error}</p>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={refresh} className="text-teal-400 hover:text-teal-300 hover:bg-teal-900/50 rounded-full">
+                    <Button variant="ghost" size="icon" onClick={refresh} className="text-zinc-700 hover:text-zinc-950 hover:bg-zinc-200 rounded-full">
                         <RefreshCw className="w-4 h-4" />
                     </Button>
                 </div>
@@ -86,11 +83,11 @@ export default function MiruRadarCard({ onCreateTrip, onClaimStamp }: MiruRadarC
     // ── NO DATA ──────────────────────────────────────────────────────────────
     if (!data || !nearest) {
         return (
-            <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 border border-teal-800/40 p-6 shadow-xl">
-                <p className="text-[10px] font-bold text-teal-400 uppercase tracking-widest mb-1">Miru Radar</p>
+            <div className="rounded-2xl bg-zinc-100 border border-zinc-200 p-5">
+                <p className="text-[10px] font-bold text-teal-700 uppercase tracking-widest mb-1">Miru Radar</p>
                 <div className="flex items-center justify-between">
-                    <p className="text-slate-400 text-sm">Belum ada landmark di area ini.</p>
-                    <Button variant="ghost" size="icon" onClick={refresh} className="text-teal-400 hover:text-teal-300 hover:bg-teal-900/50 rounded-full">
+                    <p className="text-zinc-600 text-sm">Belum ada landmark di area ini.</p>
+                    <Button variant="ghost" size="icon" onClick={refresh} className="text-zinc-700 hover:text-zinc-950 hover:bg-zinc-200 rounded-full">
                         <RefreshCw className="w-4 h-4" />
                     </Button>
                 </div>
@@ -105,57 +102,53 @@ export default function MiruRadarCard({ onCreateTrip, onClaimStamp }: MiruRadarC
         : `${(nearest.distance_meters / 1000).toFixed(1)} km`;
 
     return (
-        <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 border border-teal-800/40 p-6 shadow-xl relative overflow-hidden">
-            {/* Ambient glow */}
-            <div className="absolute -top-16 -right-16 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-600/10 rounded-full blur-2xl pointer-events-none" />
-
+        <div className="rounded-2xl bg-white border border-zinc-200 p-5 shadow-sm relative overflow-hidden">
             <div className="relative z-10 space-y-4">
                 {/* Header */}
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                         <div className="relative">
-                            <span className="absolute inset-0 rounded-full bg-teal-500/40 animate-ping" style={{ animationDuration: '2s' }} />
-                            <div className="relative w-7 h-7 rounded-full bg-teal-500/20 border border-teal-500/40 flex items-center justify-center">
-                                <Radio className="w-3.5 h-3.5 text-teal-400" />
+                            <span className="absolute inset-0 rounded-full bg-teal-500/30 animate-ping" style={{ animationDuration: '2s' }} />
+                            <div className="relative w-8 h-8 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center">
+                                <Radio className="w-4 h-4 text-teal-600" />
                             </div>
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-teal-400 uppercase tracking-widest leading-none">Miru Radar</p>
+                            <p className="text-[10px] font-bold text-teal-700 uppercase tracking-widest leading-none">Miru Radar</p>
                             {locationLabel && (
-                                <p className="text-slate-300 text-xs mt-0.5 flex items-center gap-1">
-                                    <MapPin className="w-3 h-3 text-teal-500" />
+                                <p className="text-zinc-700 text-xs font-medium mt-0.5 flex items-center gap-1">
+                                    <MapPin className="w-3 h-3 text-teal-600" />
                                     {locationLabel}
                                 </p>
                             )}
                         </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={refresh} className="text-slate-500 hover:text-teal-400 hover:bg-teal-900/50 rounded-full w-8 h-8">
+                    <Button variant="ghost" size="icon" onClick={refresh} className="text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100 rounded-full w-8 h-8">
                         <RefreshCw className="w-3.5 h-3.5" />
                     </Button>
                 </div>
 
                 {/* Nearest POI */}
-                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                    <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="bg-zinc-50 rounded-xl p-4 border border-zinc-200/80">
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
                         <div className="min-w-0">
-                            <p className="text-white font-bold text-base leading-tight truncate">{nearest.name}</p>
-                            <p className="text-teal-400 text-xs font-semibold mt-0.5 capitalize">{nearest.category} · {distanceLabel}</p>
+                            <p className="text-zinc-950 font-bold text-base leading-tight truncate">{nearest.name}</p>
+                            <p className="text-teal-700 text-xs font-semibold mt-0.5 capitalize">{nearest.category} · {distanceLabel}</p>
                         </div>
                         {nearest.has_stamp && (
-                            <span className="flex-shrink-0 text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full px-2 py-0.5">
+                            <span className="flex-shrink-0 text-[10px] font-bold bg-zinc-950 text-white rounded-full px-2.5 py-0.5">
                                 🏛️ Stamp
                             </span>
                         )}
                     </div>
                     {nearest.description && (
-                        <p className="text-slate-400 text-xs line-clamp-2 leading-relaxed">{nearest.description}</p>
+                        <p className="text-zinc-600 text-xs line-clamp-2 leading-relaxed">{nearest.description}</p>
                     )}
                 </div>
 
                 {/* More nearby count */}
                 {data.nearby.length > 1 && (
-                    <p className="text-slate-500 text-xs text-center">
+                    <p className="text-zinc-500 text-xs font-medium text-center">
                         +{data.nearby.length - 1} tempat lainnya dalam {geoState === 'denied' ? 'area' : '1 km'}
                     </p>
                 )}
@@ -165,7 +158,7 @@ export default function MiruRadarCard({ onCreateTrip, onClaimStamp }: MiruRadarC
                     <Button
                         onClick={() => onCreateTrip(data.location.city || nearest.name)}
                         size="sm"
-                        className="flex-1 bg-teal-600 hover:bg-teal-700 text-white rounded-full text-xs font-bold h-9"
+                        className="flex-1 bg-zinc-950 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold h-10"
                     >
                         Buat itinerary dari sini
                         <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
@@ -175,9 +168,9 @@ export default function MiruRadarCard({ onCreateTrip, onClaimStamp }: MiruRadarC
                             onClick={() => onClaimStamp(nearest.slug || nearest.landmark_slug || nearest.name, data.location.city)}
                             size="sm"
                             variant="outline"
-                            className="flex-shrink-0 border-amber-500/40 text-amber-300 hover:bg-amber-500/10 rounded-full text-xs font-bold h-9 px-3"
+                            className="flex-shrink-0 border-zinc-300 text-zinc-900 hover:bg-zinc-100 rounded-xl text-xs font-bold h-10 px-3.5"
                         >
-                            <Stamp className="w-3.5 h-3.5 mr-1" />
+                            <Stamp className="w-3.5 h-3.5 mr-1 text-teal-600" />
                             Claim {data.location.city}
                         </Button>
                     )}

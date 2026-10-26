@@ -13,21 +13,40 @@ export default function Navbar() {
     }, []);
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-[#060F1E]/80 backdrop-blur-md flex items-center justify-between px-5 py-4 max-w-[480px] md:max-w-2xl lg:max-w-3xl mx-auto w-full">
-            {/* LOGO — always visible */}
-            <Link href="/" className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-teal-500 flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">M</span>
-                </div>
-                <span className="text-[17px] font-medium text-white">
-                    Miru<span className="text-orange-400">.</span>
-                </span>
-            </Link>
+        <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-zinc-200">
+            <div className="flex items-center justify-between px-5 h-16 max-w-[480px] md:max-w-2xl lg:max-w-3xl mx-auto w-full">
+                {/* LOGO — always visible */}
+                <Link href="/" className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-zinc-950 flex items-center justify-center">
+                        <span className="text-white text-sm font-black tracking-tight">M</span>
+                    </div>
+                    <span className="text-[19px] font-bold tracking-tight text-zinc-950">
+                        Miru<span className="text-teal-600">.</span>
+                    </span>
+                </Link>
 
-            {/* RIGHT: only shown when signed in */}
-            {mounted && isSignedIn && (
-                <UserButton afterSignOutUrl="/" />
-            )}
+                {/* RIGHT: shown when signed in, or clean sign-in button */}
+                {mounted && (
+                    isSignedIn ? (
+                        <div className="flex items-center gap-3">
+                            <Link
+                                href="/dashboard"
+                                className="text-xs font-semibold text-zinc-900 bg-zinc-100 hover:bg-zinc-200 px-3.5 py-2 rounded-full transition-colors"
+                            >
+                                Dashboard
+                            </Link>
+                            <UserButton afterSignOutUrl="/" />
+                        </div>
+                    ) : (
+                        <Link
+                            href="/sign-in"
+                            className="text-xs font-semibold text-white bg-zinc-950 hover:bg-zinc-800 px-4 py-2 rounded-full transition-colors"
+                        >
+                            Masuk
+                        </Link>
+                    )
+                )}
+            </div>
         </nav>
     );
 }

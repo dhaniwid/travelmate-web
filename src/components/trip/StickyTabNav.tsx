@@ -18,17 +18,17 @@ const TABS: { id: TabType; label: string }[] = [
 
 export default function StickyTabNav({ activeTab, onTabChange }: StickyTabNavProps) {
     return (
-        <nav className="sticky top-0 z-40 bg-[#0A1628] backdrop-blur-md border-b border-white/8">
+        <nav className="sticky top-0 z-40 bg-white border-b border-zinc-200 max-w-[480px] md:max-w-2xl lg:max-w-3xl mx-auto">
             <div className="flex items-center h-12">
                 {TABS.map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => onTabChange(tab.id)}
                         className={cn(
-                            "flex items-center justify-center flex-1 h-full text-[13px] font-medium transition-all relative border-b-2",
+                            "flex items-center justify-center flex-1 h-full text-[13px] font-bold transition-all relative border-b-2",
                             activeTab === tab.id
-                                ? "text-teal-600 border-teal-600"
-                                : "text-white/40 border-transparent hover:text-white/70"
+                                ? "text-zinc-950 border-zinc-950"
+                                : "text-zinc-400 border-transparent hover:text-zinc-700"
                         )}
                     >
                         {tab.label}

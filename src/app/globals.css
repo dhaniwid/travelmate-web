@@ -7,39 +7,39 @@
 @layer base {
     :root {
         --background: 0 0% 100%;
-        --foreground: 222.2 84% 4.9%;
+        --foreground: 240 10% 3.9%;
 
         --card: 0 0% 100%;
-        --card-foreground: 222.2 84% 4.9%;
+        --card-foreground: 240 10% 3.9%;
 
         --popover: 0 0% 100%;
-        --popover-foreground: 222.2 84% 4.9%;
+        --popover-foreground: 240 10% 3.9%;
 
-        --primary: 173 80% 40%;
-        /* Miru Teal */
-        --primary-foreground: 0 0% 100%;
+        --primary: 240 5.9% 10%;
+        /* Uber Solid Black */
+        --primary-foreground: 0 0% 98%;
 
-        --secondary: 271 91% 65%;
-        /* Miru Purple */
-        --secondary-foreground: 0 0% 100%;
+        --secondary: 240 4.8% 95.9%;
+        /* Uber Solid Light Gray Surface */
+        --secondary-foreground: 240 5.9% 10%;
 
-        --accent: 0 91% 71%;
-        /* Miru Coral */
+        --accent: 173 80% 32%;
+        /* Miru Teal Accent (#0D9488) */
         --accent-foreground: 0 0% 100%;
 
-        --muted: 210 40% 96.1%;
-        --muted-foreground: 215.4 16.3% 46.9%;
+        --muted: 240 4.8% 95.9%;
+        --muted-foreground: 240 3.8% 46.1%;
 
         --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 210 40% 98%;
+        --destructive-foreground: 0 0% 98%;
 
-        --border: 214.3 31.8% 91.4%;
-        --input: 214.3 31.8% 91.4%;
-        --ring: 173 80% 40%;
+        --border: 240 5.9% 90%;
+        --input: 240 5.9% 90%;
+        --ring: 240 5.9% 10%;
 
-        --radius: 0.5rem;
+        --radius: 0.75rem;
 
-        --miru-gradient: linear-gradient(135deg, #14b8a6, #a855f7, #f87171);
+        --miru-gradient: linear-gradient(135deg, #09090b, #0d9488);
     }
 
     /* --- THEME 2: MODERN EXPLORER (TEAL/ORANGE) --- */
@@ -115,5 +115,9 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+
+    h1, h2, h3 {
+        font-family: var(--font-display), var(--font-sans), sans-serif;
     }
 }

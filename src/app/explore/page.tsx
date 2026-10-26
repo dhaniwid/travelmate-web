@@ -1,132 +1,184 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, MapPin, Umbrella, Building2, Mountain, Palette, Coffee, ArrowRight, ArrowLeft } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { useState, useMemo } from 'react';
+import { Sparkles, Clock, Wallet, ChevronRight, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
+import { getAllDestinationSlugs, getDestination, DestinationData } from '@/data/destinations';
+import LandmarkImage from '@/components/business/landmark/LandmarkImage';
+import SearchBar from '@/components/business/discovery/SearchBar';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import Navbar from '@/components/layout/Navbar';
+import { useSubscription } from '@/hooks/useSubscription';
 
-// Static Data for MVP
-const CATEGORIES = [
-    { id: 'beach', name: 'Beach', icon: Umbrella, color: 'text-blue-500', bg: 'bg-blue-50' },
-    { id: 'city', name: 'City', icon: Building2, color: 'text-purple-500', bg: 'bg-purple-50' },
-    { id: 'nature', name: 'Nature', icon: Mountain, color: 'text-green-500', bg: 'bg-green-50' },
-    { id: 'art', name: 'Art', icon: Palette, color: 'text-pink-500', bg: 'bg-pink-50' },
-    { id: 'cafe', name: 'Cafe', icon: Coffee, color: 'text-amber-500', bg: 'bg-amber-50' },
-    { id: 'all', name: 'More', icon: ArrowRight, color: 'text-slate-500', bg: 'bg-slate-50' },
-];
+const CATEGORY_MAP: Record<string, { label: string; group: string }> = {
+    bali: { label: 'Pantai & Spiritual', group: 'alam' },
+    yogyakarta: { label: 'Budaya & Sejarah', group: 'budaya' },
+    semarang: { label: 'Kolonial & Kuliner', group: 'budaya' },
+    jakarta: { label: 'Urban & Kuliner', group: 'kota' },
+    bandung: { label: 'Kreatif & Sejuk', group: 'kota' },
+    lombok: { label: 'Pantai & Alam', group: 'alam' },
+    'labuan-bajo': { label: 'Bahari & Komodo', group: 'alam' },
+    medan: { label: 'Kuliner & Danau Toba', group: 'kota' },
+    makassar: { label: 'Pesisir & Kuliner', group: 'kota' },
+    surabaya: { label: 'Sejarah & Kota', group: 'budaya' },
+};
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8891';
-
-const POPULAR_DESTINATIONS = [
-    { id: 1, slug: 'bali',        name: 'Bali',        rating: '4.8' },
-    { id: 2, slug: 'yogyakarta',  name: 'Yogyakarta',  rating: '4.9' },
-    { id: 3, slug: 'semarang',    name: 'Semarang',    rating: '4.7' },
-    { id: 4, slug: 'jakarta',     name: 'Jakarta',     rating: '4.6' },
-    { id: 5, slug: 'bandung',     name: 'Bandung',     rating: '4.7' },
+const FILTER_TABS = [
+    { id: 'all', label: 'Semua' },
+    { id: 'alam', label: 'Alam & Pantai' },
+    { id: 'budaya', label: 'Budaya & Sejarah' },
+    { id: 'kota', label: 'Kota & Kuliner' },
 ];
 
 export default function ExplorePage() {
-    const [searchQuery, setSearchQuery] = useState('');
+    const [activeFilter, setActiveFilter] = useState('all');
+    const { isSignedIn } = useAuth();
+    const { subscription, isLoading: isSubLoading } = useSubscription();
+    const router = useRouter();
+
+    const allDestinations = useMemo<DestinationData[]>(() => {
+        return getAllDestinationSlugs()
+            .map((slug) => getDestination(slug))
+            .filter((d): d is DestinationData => d !== null);
+    }, []);
+
+    const filteredDestinations = useMemo(() => {
+        if (activeFilter === 'all') return allDestinations;
+        return allDestinations.filter((d) => CATEGORY_MAP[d.slug]?.group === activeFilter);
+    }, [allDestinations, activeFilter]);
+
+    const handleCustomPlan = () => {
+        if (isSignedIn) {
+            router.push('/dashboard?open=planner');
+        } else {
+            router.push('/sign-in?redirect_url=%2Fdashboard%3Fopen%3Dplanner');
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-24">
-            {/* Header / Search */}
-            <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-4 safe-area-top">
-                <div className="flex items-center gap-3 mb-4 px-1">
-                    <Link href="/" className="flex items-center gap-1.5 text-slate-500 hover:text-teal-600 transition-colors text-sm font-medium">
-                        <ArrowLeft className="w-4 h-4" />
-                        Home
-                    </Link>
-                    <h1 className="text-2xl font-black text-slate-900">Explore</h1>
+        <div className="min-h-screen bg-white text-zinc-950 pb-24">
+            {isSignedIn ? (
+                <DashboardHeader subscription={subscription ?? undefined} isSubLoading={isSubLoading} />
+            ) : (
+                <Navbar />
+            )}
+
+            <main className={`max-w-[480px] md:max-w-2xl lg:max-w-3xl mx-auto px-4 space-y-6 ${isSignedIn ? 'pt-6' : 'pt-24'}`}>
+                {/* Page Header */}
+                <div>
+                    {!isSignedIn && (
+                        <Link href="/" className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-950 text-xs font-semibold mb-2">
+                            <ArrowLeft className="w-3.5 h-3.5" />
+                            Kembali ke Beranda
+                        </Link>
+                    )}
+                    <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-zinc-950 leading-snug">
+                        Eksplor Destinasi
+                    </h1>
+                    <p className="text-sm text-zinc-500 mt-1">
+                        Pilih panduan kota kurasi Miru atau ketik kota mana saja untuk mulai membuat itinerary.
+                    </p>
                 </div>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                        placeholder="Search destinations, vibes..."
-                        className="pl-10 h-11 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-teal-500/20"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+
+                {/* Search Bar */}
+                <SearchBar
+                    placeholder="Cari kota (mis. Bali, Malang, Tokyo)..."
+                    buttonLabel="Cari →"
+                />
+
+                {/* Category Filter Pills */}
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4">
+                    {FILTER_TABS.map((tab) => {
+                        const isActive = activeFilter === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveFilter(tab.id)}
+                                className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${
+                                    isActive
+                                        ? 'bg-zinc-950 text-white'
+                                        : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-950'
+                                }`}
+                            >
+                                {tab.label}
+                            </button>
+                        );
+                    })}
                 </div>
-            </div>
 
-            <div className="max-w-7xl mx-auto px-4 py-6 space-y-10">
-
-                {/* Categories */}
-                <section>
-                    <div className="flex items-center justify-between mb-4 px-1">
-                        <h2 className="font-bold text-slate-900 text-lg">Categories</h2>
-                    </div>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-                        {CATEGORIES.map((cat) => (
-                            <div key={cat.id} className="flex flex-col items-center gap-2 group cursor-pointer">
-                                <div className={cn(
-                                    "w-16 h-16 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105",
-                                    cat.bg
-                                )}>
-                                    <cat.icon className={cn("w-6 h-6", cat.color)} />
-                                </div>
-                                <span className="text-xs font-medium text-slate-600">{cat.name}</span>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Popular Destinations */}
-                <section>
-                    <div className="flex items-center justify-between mb-4 px-1">
-                        <h2 className="font-bold text-slate-900 text-lg">Popular Destinations</h2>
-                        <Button variant="ghost" size="sm" className="text-teal-600 font-bold hover:text-teal-700 hover:bg-teal-50">
-                            See All
-                        </Button>
-                    </div>
-
-                    <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-                        {POPULAR_DESTINATIONS.map((dest) => (
-                            <Link key={dest.id} href={`/explore/${dest.slug}`} className="break-inside-avoid relative group rounded-2xl overflow-hidden cursor-pointer block">
-                                <img
-                                    src={`${API_BASE}/landmark-images/${dest.slug}_landscape.webp`}
-                                    alt={dest.name}
-                                    className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
-                                <div className="absolute bottom-0 left-0 p-3">
-                                    <h3 className="text-white font-bold text-sm md:text-base leading-tight">{dest.name}</h3>
-                                    <div className="flex items-center gap-1 mt-1">
-                                        <div className="flex gap-0.5">
-                                            {[...Array(5)].map((_: unknown, i: number) => (
-                                                <div key={i} className={cn("w-1.5 h-1.5 rounded-full", i < 4 ? "bg-teal-400" : "bg-white/30")} />
-                                            ))}
+                {/* Destination Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {filteredDestinations.map((dest) => {
+                        const meta = CATEGORY_MAP[dest.slug] ?? { label: 'Destinasi', group: 'all' };
+                        return (
+                            <Link
+                                key={dest.slug}
+                                href={`/explore/${dest.slug}`}
+                                className="group bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:border-zinc-950 transition-all flex flex-col"
+                            >
+                                <div className="relative h-36 bg-zinc-950 overflow-hidden">
+                                    <LandmarkImage
+                                        slug={dest.slug}
+                                        mood="landscape"
+                                        size="card"
+                                        alt={dest.name}
+                                        className="!absolute inset-0 !aspect-auto !h-full !rounded-none group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-zinc-950/20 to-transparent" />
+                                    <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider bg-white/95 text-zinc-950 px-2.5 py-1 rounded-full">
+                                        {meta.label}
+                                    </span>
+                                    <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+                                        <h2 className="text-lg font-bold text-white leading-tight">{dest.name}</h2>
+                                        <div className="w-7 h-7 rounded-full bg-white/90 flex items-center justify-center group-hover:bg-teal-500 group-hover:text-white transition-colors">
+                                            <ChevronRight className="w-4 h-4 text-zinc-950 group-hover:text-white" />
                                         </div>
-                                        <span className="text-white/80 text-[10px] ml-1">{dest.rating}</span>
+                                    </div>
+                                </div>
+
+                                <div className="p-3.5 flex-1 flex flex-col justify-between gap-3">
+                                    <p className="text-xs text-zinc-600 line-clamp-2 leading-relaxed">
+                                        {dest.tagline}
+                                    </p>
+                                    <div className="flex items-center justify-between pt-2 border-t border-zinc-100 text-[11px] font-semibold text-zinc-500">
+                                        <span className="inline-flex items-center gap-1">
+                                            <Clock className="w-3 h-3 text-teal-600" />
+                                            {dest.quickFacts.duration}
+                                        </span>
+                                        <span className="inline-flex items-center gap-1 text-zinc-900">
+                                            <Wallet className="w-3 h-3 text-teal-600" />
+                                            {dest.quickFacts.budget}
+                                        </span>
                                     </div>
                                 </div>
                             </Link>
-                        ))}
-                    </div>
-                </section>
+                        );
+                    })}
+                </div>
 
-                {/* Collections / Vibes */}
-                <section>
-                    <div className="flex items-center justify-between mb-4 px-1">
-                        <h2 className="font-bold text-slate-900 text-lg">Curated For You</h2>
-                    </div>
-                    <div className="space-y-4">
-                        <div className="relative h-40 rounded-3xl overflow-hidden cursor-pointer group">
-                            <div className="absolute inset-0 bg-gradient-to-br from-teal-500 via-teal-600 to-slate-800 transition-opacity duration-700 group-hover:opacity-90" />
-                            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                                <h3 className="text-white font-black text-2xl drop-shadow-lg">Hidden Gems in Europe</h3>
-                                <Button size="sm" className="mt-4 bg-white/20 backdrop-blur-md border-white/40 hover:bg-white hover:text-slate-900 text-white rounded-full">
-                                    Browse Collection
-                                </Button>
-                            </div>
+                {/* Custom Destination Banner */}
+                <div className="bg-zinc-950 text-white rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3.5">
+                        <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                            <Sparkles className="w-5 h-5 text-teal-400" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-white">Tujuanmu tidak ada di katalog di atas?</p>
+                            <p className="text-xs text-zinc-400 mt-0.5">
+                                Miru bisa membuat itinerary ke kota mana saja di Indonesia maupun luar negeri.
+                            </p>
                         </div>
                     </div>
-                </section>
-            </div>
+                    <button
+                        onClick={handleCustomPlan}
+                        className="w-full sm:w-auto shrink-0 px-4 py-2.5 bg-white hover:bg-zinc-100 text-zinc-950 text-xs font-bold rounded-xl transition-colors"
+                    >
+                        Buat Trip Kustom →
+                    </button>
+                </div>
+            </main>
         </div>
     );
 }

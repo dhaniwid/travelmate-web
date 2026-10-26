@@ -30,6 +30,9 @@ export interface TripRequest {
     trip_days: number;
     style: string;
     budget: number;
+    budget_range?: string;
+    user_id?: string;
+    plan_data?: any;
 }
 
 export interface User {

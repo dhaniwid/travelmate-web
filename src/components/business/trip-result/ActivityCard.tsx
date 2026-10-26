@@ -30,16 +30,16 @@ interface ActivityCardProps {
 
 const TIME_OF_DAY = (timeStr: string) => {
     const hour = parseInt((timeStr || '').split(':')[0]);
-    if (isNaN(hour)) return { icon: '☕', label: 'Pagi', color: 'text-orange-400' };
-    if (hour < 11) return { icon: '☕', label: 'Pagi', color: 'text-orange-400' };
-    if (hour < 16) return { icon: '☀️', label: 'Siang', color: 'text-yellow-400' };
-    if (hour < 19) return { icon: '🌅', label: 'Sore', color: 'text-rose-400' };
-    return { icon: '🌙', label: 'Malam', color: 'text-indigo-400' };
+    if (isNaN(hour)) return { icon: '☕', label: 'Pagi', color: 'text-zinc-600' };
+    if (hour < 11) return { icon: '☕', label: 'Pagi', color: 'text-zinc-600' };
+    if (hour < 16) return { icon: '☀️', label: 'Siang', color: 'text-zinc-600' };
+    if (hour < 19) return { icon: '🌅', label: 'Sore', color: 'text-zinc-600' };
+    return { icon: '🌙', label: 'Malam', color: 'text-zinc-600' };
 };
 
-// Skeleton block for dark bg
+// Skeleton block for light bg
 function DarkSkeleton({ className }: { className?: string }) {
-    return <div className={cn('bg-white/8 animate-pulse rounded-lg', className)} />;
+    return <div className={cn('bg-zinc-100 animate-pulse rounded-lg', className)} />;
 }
 
 export default function ActivityCard({
@@ -150,21 +150,20 @@ export default function ActivityCard({
     return (
         <div
             onClick={isLoading ? undefined : onClick}
-            style={{ borderWidth: '0.5px' }}
             className={cn(
                 'group relative rounded-xl border transition-all duration-200',
                 !isLoading && 'cursor-pointer active:scale-[0.99]',
                 isSelected
-                    ? 'bg-[#0D2040] border-teal-500/40 ring-1 ring-teal-500/30'
-                    : 'bg-[#0A1628] border-white/8 hover:border-white/16',
-                isHiddenGem && 'border-teal-500/30 bg-teal-500/5',
+                    ? 'bg-zinc-50 border-zinc-950 ring-1 ring-zinc-950 shadow-sm'
+                    : 'bg-white border-zinc-200 hover:border-zinc-400 shadow-[0_1px_2px_rgba(0,0,0,0.03)]',
+                isHiddenGem && !isSelected && 'border-teal-300 bg-teal-50/30',
                 className
             )}
         >
             {/* Hidden Gem badge */}
             {isHiddenGem && !isLoading && (
                 <div className="absolute -top-2.5 right-4 z-10">
-                    <span className="inline-flex items-center gap-1 bg-teal-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">
+                    <span className="inline-flex items-center gap-1 bg-teal-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">
                         <Sparkles className="w-2.5 h-2.5" /> Hidden Gem
                     </span>
                 </div>
@@ -194,26 +193,26 @@ export default function ActivityCard({
                             {/* Time of day */}
                             <div className="flex items-center gap-1.5 mb-1.5">
                                 <span className="text-[13px] leading-none">{tod.icon}</span>
-                                <span className={cn('text-[11px] font-semibold uppercase tracking-wide', tod.color)}>
+                                <span className={cn('text-[11px] font-bold uppercase tracking-wide', tod.color)}>
                                     {tod.label}
                                 </span>
                                 {userSetTime && (
                                     <>
-                                        <span className="text-white/20 text-xs">·</span>
-                                        <span className="flex items-center gap-0.5 text-[11px] text-white/40">
+                                        <span className="text-zinc-300 text-xs">·</span>
+                                        <span className="flex items-center gap-0.5 text-[11px] font-semibold text-zinc-700">
                                             <Clock className="w-2.5 h-2.5" /> {userSetTime}
                                         </span>
                                     </>
                                 )}
                                 {activity.type && (
-                                    <span className="ml-auto text-[10px] text-white/30 bg-white/6 px-2 py-0.5 rounded-full">
+                                    <span className="ml-auto text-[10px] font-semibold text-zinc-600 bg-zinc-100 border border-zinc-200/80 px-2 py-0.5 rounded-md">
                                         {activity.type}
                                     </span>
                                 )}
                             </div>
 
                             {/* Activity name */}
-                            <h4 className="text-[15px] font-semibold text-white leading-snug line-clamp-2 pr-6">
+                            <h4 className="text-[15px] font-bold text-zinc-950 leading-snug line-clamp-2 pr-6">
                                 {activity.activity}
                             </h4>
 
@@ -222,15 +221,15 @@ export default function ActivityCard({
                                 {isGeneric ? (
                                     <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">{getGenericIcon()}</div>
                                 ) : (
-                                    <MapPin className="w-3 h-3 text-teal-400 flex-shrink-0 mt-px" />
+                                    <MapPin className="w-3.5 h-3.5 text-teal-600 flex-shrink-0 mt-px" />
                                 )}
-                                <span className="text-[12px] text-white/45 truncate">{locationLabel}</span>
+                                <span className="text-[12px] font-medium text-zinc-500 truncate">{locationLabel}</span>
                             </div>
                         </div>
 
                         {/* Thumbnail — always visible if image exists */}
                         {imageUrl && (
-                            <div className="w-14 h-14 flex-shrink-0 rounded-xl overflow-hidden border border-white/8">
+                            <div className="w-14 h-14 flex-shrink-0 rounded-xl overflow-hidden border border-zinc-200">
                                 <img
                                     src={imageUrl}
                                     alt={activity.place_name || activity.activity}
@@ -243,16 +242,16 @@ export default function ActivityCard({
                         {/* Chevron */}
                         <ChevronRight className={cn(
                             'absolute top-4 right-4 w-4 h-4 transition-transform duration-200 flex-shrink-0',
-                            isExpanded ? 'rotate-90 text-teal-400' : 'text-white/20'
+                            isExpanded ? 'rotate-90 text-zinc-950' : 'text-zinc-400'
                         )} />
                     </div>
 
                     {/* Expanded content */}
                     {isExpanded && (
-                        <div className="mt-3 pt-3 border-t border-white/8 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="mt-3 pt-3 border-t border-zinc-200 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
                             {/* Full description */}
                             {activity.description || activity.description_short ? (
-                                <p className="text-[13px] text-white/60 leading-relaxed">
+                                <p className="text-[13px] text-zinc-600 leading-relaxed">
                                     {activity.description || activity.description_short}
                                 </p>
                             ) : isInternalLoading ? (
@@ -264,7 +263,7 @@ export default function ActivityCard({
 
                             {/* Larger image when expanded */}
                             {imageUrl && (
-                                <div className="w-full h-36 rounded-xl overflow-hidden border border-white/8">
+                                <div className="w-full h-36 rounded-xl overflow-hidden border border-zinc-200">
                                     <img
                                         src={imageUrl}
                                         alt={activity.place_name || activity.activity}
@@ -281,9 +280,9 @@ export default function ActivityCard({
                                         e.stopPropagation();
                                         window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.place_name || activity.activity)}`, '_blank');
                                     }}
-                                    className="flex items-center gap-1 h-7 px-3 rounded-full border border-white/12 text-[11px] text-white/50 hover:text-teal-400 hover:border-teal-500/40 transition-colors"
+                                    className="flex items-center gap-1 h-7 px-3 rounded-full border border-zinc-200 bg-white text-[11px] font-semibold text-zinc-700 hover:border-zinc-950 hover:text-zinc-950 transition-colors"
                                 >
-                                    <MapPin className="w-3 h-3" /> Buka Maps
+                                    <MapPin className="w-3 h-3 text-teal-600" /> Buka Maps
                                 </button>
 
                                 {/* Set time */}
@@ -293,7 +292,7 @@ export default function ActivityCard({
                                             type="time"
                                             defaultValue={userSetTime || ''}
                                             autoFocus
-                                            className="h-7 px-2 text-[11px] rounded-full border border-white/20 bg-white/8 text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
+                                            className="h-7 px-2 text-[11px] font-semibold rounded-full border border-zinc-300 bg-white text-zinc-950 focus:outline-none focus:ring-1 focus:ring-zinc-950"
                                             onChange={e => setUserSetTime(e.target.value || null)}
                                             onBlur={() => setIsSettingTime(false)}
                                             onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setIsSettingTime(false); }}
@@ -302,7 +301,7 @@ export default function ActivityCard({
                                 ) : (
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setIsSettingTime(true); }}
-                                        className="flex items-center gap-1 h-7 px-3 rounded-full border border-white/12 text-[11px] text-white/40 hover:text-white/70 transition-colors"
+                                        className="flex items-center gap-1 h-7 px-3 rounded-full border border-zinc-200 bg-white text-[11px] font-semibold text-zinc-600 hover:border-zinc-950 hover:text-zinc-950 transition-colors"
                                     >
                                         <Clock className="w-3 h-3" />
                                         {userSetTime || '+ Waktu'}
@@ -311,7 +310,7 @@ export default function ActivityCard({
 
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onAddBelow?.(activity.time); }}
-                                    className="flex items-center gap-1 h-7 px-3 rounded-full border border-white/12 text-[11px] text-white/40 hover:text-teal-400 hover:border-teal-500/30 transition-colors"
+                                    className="flex items-center gap-1 h-7 px-3 rounded-full border border-zinc-200 bg-white text-[11px] font-semibold text-zinc-600 hover:border-zinc-950 hover:text-zinc-950 transition-colors"
                                 >
                                     <PlusCircle className="w-3 h-3" /> Tambah
                                 </button>
@@ -319,12 +318,12 @@ export default function ActivityCard({
                                 {/* Ganti Aktivitas — primary action */}
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onReplace?.(); }}
-                                    className="flex items-center gap-1 h-7 px-3 rounded-full bg-teal-500/15 border border-teal-500/30 text-[11px] text-teal-400 hover:bg-teal-500/25 transition-colors"
+                                    className="flex items-center gap-1 h-7 px-3 rounded-full bg-zinc-950 text-[11px] font-semibold text-white hover:bg-zinc-800 transition-colors"
                                 >
-                                    <RefreshCw className="w-3 h-3" />
+                                    <RefreshCw className="w-3 h-3 text-teal-400" />
                                     Ganti Aktivitas
                                     {!isPro && (
-                                        <span className="ml-1 text-[9px] bg-teal-500/20 px-1.5 py-px rounded-full font-bold">
+                                        <span className="ml-1 text-[9px] bg-white/20 px-1.5 py-px rounded-full font-bold">
                                             {aiEditsUsed}/3
                                         </span>
                                     )}
@@ -332,9 +331,9 @@ export default function ActivityCard({
 
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
-                                    className="flex items-center gap-1 h-7 px-2 rounded-full text-[11px] text-white/30 hover:text-rose-400 transition-colors"
+                                    className="flex items-center gap-1 h-7 px-2 rounded-full text-[11px] text-zinc-400 hover:text-rose-600 transition-colors"
                                 >
-                                    <Trash2 className="w-3 h-3" />
+                                    <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                             </div>
                         </div>

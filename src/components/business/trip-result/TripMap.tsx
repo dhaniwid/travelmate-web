@@ -228,10 +228,10 @@ export default function TripMap({ itinerary, destination, selectedActivityId, on
         }).filter(r => r.path.length > 1);
     }, [itinerary]);
 
-    if (!isLoaded) return <div className="w-full h-full bg-[#0A1628] animate-pulse rounded-2xl" />;
+    if (!isLoaded) return <div className="w-full h-full bg-zinc-100 animate-pulse rounded-2xl" />;
 
     return (
-        <div className="w-full h-full rounded-3xl overflow-hidden shadow-2xl border border-white/20">
+        <div className="w-full h-full rounded-2xl overflow-hidden border border-zinc-200">
             <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={center}

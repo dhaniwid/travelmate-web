@@ -1,17 +1,17 @@
 export default function DestinationLoading() {
     return (
-        <div className="min-h-screen" style={{
-            background: 'linear-gradient(to bottom, #060F1E 0%, #0D5463 40%, #C2500A 75%, #7A2E0A 100%)',
-        }}>
-            {/* Skeleton top bar */}
-            <div className="flex items-center justify-between px-5 pt-12">
-                <div className="h-9 w-24 rounded-full bg-white/10 animate-pulse" />
-                <div className="h-9 w-20 rounded-full bg-white/10 animate-pulse" />
-            </div>
-            {/* Skeleton city name */}
-            <div className="absolute bottom-24 left-6 right-6">
-                <div className="h-14 w-56 rounded-xl bg-white/10 animate-pulse mb-3" />
-                <div className="h-5 w-72 rounded-lg bg-white/8 animate-pulse" />
+        <div className="min-h-screen bg-white max-w-[480px] md:max-w-2xl mx-auto">
+            {/* Skeleton hero */}
+            <div className="relative h-[320px] bg-zinc-100 animate-pulse">
+                <div className="flex items-center justify-between px-5 pt-6">
+                    <div className="h-9 w-9 rounded-full bg-zinc-200" />
+                    <div className="h-9 w-9 rounded-full bg-zinc-200" />
+                </div>
+                <div className="absolute bottom-6 left-5 right-5">
+                    <div className="h-5 w-24 rounded-full bg-zinc-200 mb-2" />
+                    <div className="h-9 w-48 rounded-xl bg-zinc-200 mb-2" />
+                    <div className="h-4 w-64 rounded-lg bg-zinc-200" />
+                </div>
             </div>
         </div>
     );

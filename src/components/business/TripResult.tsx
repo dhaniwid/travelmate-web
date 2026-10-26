@@ -463,7 +463,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
     }
 
     return (
-        <div id="trip-content" className="animate-in fade-in duration-700 pb-20 bg-[#060F1E] min-h-screen">
+        <div id="trip-content" className="animate-in fade-in duration-700 pb-20 bg-white min-h-screen text-zinc-950">
             {/* 0. Scroll-Aware Navbar */}
             <ScrollAwareNavbar
                 title={`Trip to ${trip.destination || 'Unknown'}`}
@@ -474,7 +474,7 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                 onShare={() => setIsShareOpen(true)}
             />
 
-            {/* 1. Hero Header — compact dark */}
+            {/* 1. Hero Header — compact light */}
             <TripHeader
                 data={data}
                 planState={currentPlan}
@@ -504,17 +504,17 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
 
                 {/* ENRICHMENT PROGRESS BANNER - Only show if it's REALLY enriching in background (e.g. legacy or pro) */}
                 {itineraryStatus === 'completed' && enrichmentStatus === 'enriching' && (
-                    <div className="mb-6 bg-gradient-to-r from-teal-950/40 to-blue-950/40 border border-white/8 p-4 rounded-xl flex items-center justify-between gap-4 animate-pulse">
+                    <div className="mb-6 bg-zinc-50 border border-zinc-200 p-4 rounded-xl flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="bg-white/8 p-2 rounded-full">
-                                <Loader2 className="w-5 h-5 text-teal-400 animate-spin" />
+                            <div className="bg-teal-50 p-2 rounded-full border border-teal-200">
+                                <Loader2 className="w-5 h-5 text-teal-600 animate-spin" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-bold text-white">Melengkapi detail tripmu...</h4>
-                                <p className="text-xs text-white/60">Miru sedang menambahkan deskripsi, logistik, dan hidden gems.</p>
+                                <h4 className="text-sm font-bold text-zinc-950">Melengkapi detail tripmu...</h4>
+                                <p className="text-xs text-zinc-500">Miru sedang menambahkan deskripsi, logistik, dan hidden gems.</p>
                             </div>
                         </div>
-                        <Badge variant="secondary" className="bg-white/8 text-teal-400 border-0">
+                        <Badge variant="secondary" className="bg-teal-50 text-teal-700 border border-teal-200">
                             <Sparkles className="w-3 h-3 mr-1" />
                             Proses
                         </Badge>
@@ -524,27 +524,25 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
                 {/* 4. Anonymous Conversion Bridge (Floating) */}
                 {!isSaved && !userId && (
                     <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-2xl animate-in slide-in-from-bottom-10 fade-in duration-1000 delay-500">
-                        <div className="bg-gradient-to-r from-teal-600 to-teal-800 p-1 rounded-2xl shadow-[0_20px_50px_rgba(13,148,136,0.3)]">
-                            <div className="bg-slate-900/40 backdrop-blur-xl rounded-[14px] px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 border border-white/10">
-                                <div className="flex items-center gap-4">
-                                    <div className="bg-rose-500/20 p-2.5 rounded-xl border border-rose-500/30">
-                                        <Sparkles className="w-5 h-5 text-rose-400 animate-pulse" />
-                                    </div>
-                                    <div className="text-center md:text-left">
-                                        <h4 className="text-white font-bold text-sm">⚠️ This trip is temporary and will be lost.</h4>
-                                        <p className="text-teal-100/70 text-xs">Save this trip to your profile now to unlock full editing and access later.</p>
-                                    </div>
+                        <div className="bg-zinc-950 rounded-2xl px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 border border-zinc-800 shadow-2xl">
+                            <div className="flex items-center gap-4">
+                                <div className="bg-teal-500/20 p-2.5 rounded-xl border border-teal-500/30">
+                                    <Sparkles className="w-5 h-5 text-teal-400" />
                                 </div>
-                                <Button
-                                    onClick={() => {
-                                        localStorage.setItem('pending_claim_trip_id', trip.id);
-                                        router.push('/sign-up');
-                                    }}
-                                    className="bg-teal-500 hover:bg-teal-400 text-white font-black px-6 rounded-full shadow-lg hover:scale-105 transition-all text-xs border-b-2 border-teal-700 whitespace-nowrap"
-                                >
-                                    Save to Profile
-                                </Button>
+                                <div className="text-center md:text-left">
+                                    <h4 className="text-white font-bold text-sm">Simpan rencana perjalanan ini</h4>
+                                    <p className="text-zinc-400 text-xs">Simpan ke profilmu agar tidak hilang dan bisa diedit kapan saja.</p>
+                                </div>
                             </div>
+                            <Button
+                                onClick={() => {
+                                    localStorage.setItem('pending_claim_trip_id', trip.id);
+                                    router.push('/sign-up');
+                                }}
+                                className="bg-white hover:bg-zinc-100 text-zinc-950 font-bold px-6 rounded-xl transition-all text-xs whitespace-nowrap"
+                            >
+                                Simpan ke Profil
+                            </Button>
                         </div>
                     </div>
                 )}
@@ -643,41 +641,12 @@ export default function TripResult({ data, isSavedView = false }: TripResultProp
 
             {
                 isUpdating && (
-                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl z-50 animate-in slide-in-from-bottom-4">
-                        <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-                        <span className="text-sm font-bold">Saving Changes...</span>
+                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-zinc-950 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl z-50 animate-in slide-in-from-bottom-4">
+                        <Loader2 className="w-4 h-4 animate-spin text-teal-400" />
+                        <span className="text-sm font-bold">Menyimpan perubahan...</span>
                     </div>
                 )
             }
-
-            {/* MIRU CHAT FAB & DRAWER */}
-            <div className="fixed bottom-6 right-6 z-40">
-                {/* Mobile: icon only */}
-                <Button
-                    onClick={() => setIsChatOpen(true)}
-                    className="md:hidden h-14 w-14 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 shadow-xl hover:scale-110 transition-transform flex items-center justify-center border-2 border-white"
-                >
-                    <Sparkles className="w-6 h-6 text-white" />
-                </Button>
-                {/* Desktop: extended with label */}
-                <Button
-                    onClick={() => setIsChatOpen(true)}
-                    className="hidden md:flex items-center gap-2 h-12 px-5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 shadow-xl hover:scale-105 transition-transform border-2 border-white font-bold text-white text-sm"
-                >
-                    <Sparkles className="w-4 h-4" />
-                    Tanya Miru
-                </Button>
-            </div>
-
-            <MiruChatDrawer
-                isOpen={isChatOpen}
-                onClose={() => setIsChatOpen(false)}
-                tripId={trip.id}
-                onPlanUpdate={(newPlan) => {
-                    setCurrentPlan(newPlan);
-                    // Verify if we need to sync active day/tab?. Usually no, just data.
-                }}
-            />
         </div >
     );
 }

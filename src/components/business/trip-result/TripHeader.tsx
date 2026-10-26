@@ -172,9 +172,9 @@ export default function TripHeader({
 
     return (
         <>
-        <div className="bg-[#0A1628] px-5 pt-14 pb-4">
+        <div className="bg-white border-b border-zinc-200 px-5 pt-6 pb-5 max-w-[480px] md:max-w-2xl lg:max-w-3xl mx-auto">
             {/* Top bar */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-4">
                 <button
                     onClick={() => {
                         const referrer = typeof document !== 'undefined' ? document.referrer : '';
@@ -185,10 +185,10 @@ export default function TripHeader({
                             router.push('/dashboard');
                         }
                     }}
-                    className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/12 flex items-center justify-center transition-colors active:scale-95"
+                    className="w-9 h-9 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center transition-colors active:scale-95"
                     aria-label="Kembali"
                 >
-                    <ChevronLeft className="w-5 h-5 text-white" />
+                    <ChevronLeft className="w-5 h-5 text-zinc-950" />
                 </button>
 
                 <div className="flex items-center gap-2">
@@ -197,40 +197,41 @@ export default function TripHeader({
                         <button
                             onClick={handleSaveTrip}
                             disabled={isSaving}
-                            className="w-9 h-9 rounded-full bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/30 flex items-center justify-center transition-colors active:scale-95"
+                            className="h-9 px-3.5 rounded-full bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors active:scale-95"
                             aria-label="Simpan trip"
                         >
                             {isSaving
-                                ? <Loader2 className="w-4 h-4 text-teal-400 animate-spin" />
-                                : <Sparkles className="w-4 h-4 text-teal-400" />
+                                ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+                                : <Sparkles className="w-3.5 h-3.5 text-teal-400" />
                             }
+                            <span>Simpan</span>
                         </button>
                     )}
 
                     {/* Share */}
                     <button
                         onClick={handleShare}
-                        className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/12 flex items-center justify-center transition-colors active:scale-95"
+                        className="w-9 h-9 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center transition-colors active:scale-95"
                         aria-label="Bagikan trip"
                     >
-                        <Share2 className="w-4 h-4 text-white" />
+                        <Share2 className="w-4 h-4 text-zinc-900" />
                     </button>
 
                     {/* More — PDF + Delete */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <button className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/12 flex items-center justify-center transition-colors active:scale-95" aria-label="Opsi lainnya">
-                                <Printer className="w-4 h-4 text-white" />
+                            <button className="w-9 h-9 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center transition-colors active:scale-95" aria-label="Opsi lainnya">
+                                <Printer className="w-4 h-4 text-zinc-900" />
                             </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44 bg-[#0A1628] border-white/10 rounded-2xl p-1.5 shadow-xl">
-                            <DropdownMenuItem onClick={handleExportPDF} className="cursor-pointer text-white/80 focus:bg-white/8 rounded-xl text-sm gap-2">
+                        <DropdownMenuContent align="end" className="w-44 bg-white border-zinc-200 rounded-xl p-1.5 shadow-xl">
+                            <DropdownMenuItem onClick={handleExportPDF} className="cursor-pointer text-zinc-900 focus:bg-zinc-100 rounded-lg text-sm font-medium gap-2">
                                 <Printer className="w-4 h-4" /> Export PDF
                             </DropdownMenuItem>
                             {isHistoryView && (
                                 <DropdownMenuItem
                                     onClick={handleDeleteTrip}
-                                    className="cursor-pointer text-rose-400 focus:bg-rose-500/10 rounded-xl text-sm gap-2"
+                                    className="cursor-pointer text-rose-600 focus:bg-rose-50 rounded-lg text-sm font-medium gap-2"
                                     disabled={isDeleting}
                                 >
                                     {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -255,16 +256,16 @@ export default function TripHeader({
                 mood="landscape"
                 size="header"
                 alt={`Landmark ${trip.destination}`}
-                className="!w-full !h-48 !rounded-xl mb-4"
+                className="!w-full !h-48 !rounded-xl mb-4 border border-zinc-200"
             />
 
             {/* Eyebrow */}
-            <p className="text-[11px] uppercase tracking-widest text-white/45 mb-1">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-teal-600 mb-1">
                 {trip.destination}{trip.trip_days ? ` · ${trip.trip_days} hari` : ''}
             </p>
 
             {/* Trip name */}
-            <h1 className="text-[20px] font-medium text-white leading-snug mb-3">
+            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-zinc-950 leading-snug mb-3">
                 {activePlan?.tagline || trip.destination || 'Perjalananku'}
             </h1>
 
@@ -274,7 +275,7 @@ export default function TripHeader({
                     {chips.map((chip, i) => (
                         <span
                             key={i}
-                            className="text-[11px] text-white/60 bg-white/8 px-3 py-1 rounded-full"
+                            className="text-xs font-semibold text-zinc-700 bg-zinc-100 border border-zinc-200/80 px-3 py-1 rounded-full"
                         >
                             {chip}
                         </span>

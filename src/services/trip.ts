@@ -36,7 +36,10 @@ export const tripService = {
 
         if (!response.ok) {
             const err = await response.json().catch(() => ({ message: 'Generation failed' }));
-            throw new Error(err.message || 'Generation failed');
+            const error: any = new Error(err.message || 'Generation failed');
+            error.code = err.code;
+            error.status = response.status;
+            throw error;
         }
 
         const reader = response.body!.getReader();

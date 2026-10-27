@@ -25,7 +25,7 @@ import { Activity, ActivityAlternative } from "@/types";
 import { MapPin, Star, Plus, Loader2, Sparkles, Clock, DollarSign } from "lucide-react";
 import { tripService } from "@/services/trip";
 import { MapActivityThumbnail } from "@/components/business/MapActivityThumbnail";
-import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+import { VisuallyHidden } from "radix-ui";
 import { useAuth } from "@clerk/nextjs";
 
 interface ActivityReplacementDrawerProps {

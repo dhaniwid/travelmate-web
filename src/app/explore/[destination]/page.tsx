@@ -255,6 +255,54 @@ export default function DestinationPage({
     const [isGenerating, setIsGenerating] = useState(false);
     const [showUpgrade, setShowUpgrade] = useState(false);
 
+    // ── Restore Draft Picklist & Schedule from sessionStorage (after Sign-In) ─
+    const draftStorageKey = `miru_explore_draft_${slug.toLowerCase()}`;
+
+    useEffect(() => {
+        try {
+            const raw = sessionStorage.getItem(draftStorageKey);
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed.customPlaces) && parsed.customPlaces.length > 0) {
+                setPlaces((prev) => {
+                    const existingIds = new Set(prev.map((p) => p.id));
+                    const newCustom = parsed.customPlaces.filter((cp: PickablePlace) => !existingIds.has(cp.id));
+                    return [...newCustom, ...prev];
+                });
+            }
+            if (Array.isArray(parsed.selectedIds)) setSelectedIds(parsed.selectedIds);
+            if (parsed.scheduleMap && typeof parsed.scheduleMap === 'object') setScheduleMap(parsed.scheduleMap);
+            if (typeof parsed.totalDays === 'number' && parsed.totalDays >= 1) setTotalDays(parsed.totalDays);
+            if (typeof parsed.activeDay === 'number' && parsed.activeDay >= 1) setActiveDay(parsed.activeDay);
+            if (parsed.viewMode === 'canvas' || parsed.viewMode === 'explore') setViewMode(parsed.viewMode);
+        } catch {
+            // ignore corrupted sessionStorage
+        }
+    }, [draftStorageKey]);
+
+    useEffect(() => {
+        try {
+            if (selectedIds.length === 0 && totalDays === 1) {
+                sessionStorage.removeItem(draftStorageKey);
+                return;
+            }
+            const customPlaces = places.filter((p) => p.id.startsWith('custom-'));
+            sessionStorage.setItem(
+                draftStorageKey,
+                JSON.stringify({
+                    selectedIds,
+                    scheduleMap,
+                    totalDays,
+                    activeDay,
+                    viewMode,
+                    customPlaces,
+                })
+            );
+        } catch {
+            // ignore storage quota errors
+        }
+    }, [draftStorageKey, selectedIds, scheduleMap, totalDays, activeDay, viewMode, places]);
+
     // ── Fetch Dynamic AI Discovery from Go Backend (/api/v1/discovery?city=...) ──
     useEffect(() => {
         let cancelled = false;
@@ -399,6 +447,10 @@ export default function DestinationPage({
     };
 
     const handleAddDay = () => {
+        if (!isPro && totalDays >= 3) {
+            setShowUpgrade(true);
+            return;
+        }
         const nextDay = totalDays + 1;
         setTotalDays(nextDay);
         setActiveDay(nextDay);
@@ -542,23 +594,44 @@ export default function DestinationPage({
                 ...(manualPlanData ? { plan_data: manualPlanData } : {}),
             };
 
-            await tripService.createTripStreaming(
-                payload,
-                token,
-                (tripId) => {
-                    toast.success(`Rencana perjalanan ke ${displayName} siap! ✨`);
-                    router.push(`/trips/${tripId}`);
-                },
-                () => {},
-                (msg) => {
-                    throw new Error(msg);
-                }
-            );
+            if (sourceMode === 'manual') {
+                await tripService.createTripStreaming(
+                    payload,
+                    token,
+                    () => {},
+                    (tripId) => {
+                        sessionStorage.removeItem(draftStorageKey);
+                        toast.success(`Rencana perjalanan ke ${displayName} siap! ✨`);
+                        router.push(`/trips/${tripId}`);
+                    },
+                    (msg) => {
+                        throw new Error(msg);
+                    }
+                );
+            } else {
+                await tripService.createTripStreaming(
+                    payload,
+                    token,
+                    (tripId) => {
+                        sessionStorage.removeItem(draftStorageKey);
+                        toast.success(`Rencana perjalanan ke ${displayName} siap! ✨`);
+                        router.push(`/trips/${tripId}`);
+                    },
+                    () => {},
+                    (msg) => {
+                        throw new Error(msg);
+                    }
+                );
+            }
         } catch (err: any) {
+            setIsGenerating(false);
+            if (err?.code === 'free_tier_limit' || err?.status === 403 || err?.message?.includes('PRO')) {
+                setShowUpgrade(true);
+                return;
+            }
             toast.error('Gagal menyusun itinerary', {
                 description: err?.message || 'Silakan coba beberapa saat lagi.',
             });
-            setIsGenerating(false);
         }
     };
 
@@ -774,6 +847,8 @@ export default function DestinationPage({
                         </button>
                     </div>
                 </div>
+
+                <UpgradeModal isOpen={showUpgrade} onClose={() => setShowUpgrade(false)} />
             </div>
         );
     }
@@ -783,15 +858,13 @@ export default function DestinationPage({
         <div className="min-h-screen bg-white text-zinc-950 pb-40 max-w-[480px] md:max-w-2xl mx-auto">
             {/* Zone 1: Hero */}
             <div className="relative h-[260px] bg-zinc-950 overflow-hidden">
-                {(staticDest?.slug || slug.toLowerCase() === 'denpasar') && (
-                    <LandmarkImage
-                        slug={staticDest?.slug ?? 'bali'}
-                        mood="landscape"
-                        size="header"
-                        alt={`Landmark ${displayName}`}
-                        className="!absolute inset-0 !aspect-auto !h-full !rounded-none opacity-85"
-                    />
-                )}
+                <LandmarkImage
+                    slug={staticDest?.slug ?? slug}
+                    mood="landscape"
+                    size="header"
+                    alt={`Landmark ${displayName}`}
+                    className="!absolute inset-0 !aspect-auto !h-full !rounded-none opacity-85"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-zinc-950/20" />
 
                 {/* Top Controls */}
